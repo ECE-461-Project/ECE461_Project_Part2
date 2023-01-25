@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+install_cmd() {
+    echo "ran install"
+}
+
+build_cmd() {
+    echo "ran build"
+}
+
+test_cmd() {
+    echo "ran test"
+}
+
+case "$1" in
+    install)
+        install_cmd && exit 0
+
+        echo "install command failed!"
+        ;;
+    build)
+        build_cmd && exit 0
+
+        echo "build command failed!"
+        ;;
+    test)
+        test_cmd && exit 0
+
+        echo "test command failed!"
+        ;;
+    *)
+        if test -f "$1"; then
+            echo "$1" && exit 0
+
+            echo "using url file failed!"
+        else
+            if test -d "$1"; then
+                echo "$1 is a directory, not a file!"
+            else
+                echo "$1 does not exist!"
+            fi
+        fi
+        ;;
+esac
+
+# if error: exit with code 1
+exit 1
+
