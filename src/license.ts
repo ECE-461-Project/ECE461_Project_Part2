@@ -2,10 +2,10 @@ const promisify = require('util.promisify-all');
 // license-checker has no type file
 const checker = promisify(require('license-checker'));
 
-const path_to_check: String =
+const path_to_check =
   '/home/just007in/Documents/_Class/_ECE461/projects/ECE461_Project';
 
-function get_licenses(path: String): Promise<Object> {
+function get_licenses(path: string): Promise<Object> {
   const options = {
     start: path,
     //failOn: 'hi;test',
