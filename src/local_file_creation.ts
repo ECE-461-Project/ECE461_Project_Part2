@@ -51,7 +51,10 @@ function run_cmd(
   });
 }
 
-export async function clone_and_install(tmp_dir: string, git_url: string) {
+export async function clone_and_install(
+  tmp_dir: string,
+  git_url: string
+): Promise<boolean> {
   const git_folder_name = 'package';
   try {
     const git_out = await run_cmd('git', ['clone', git_url, git_folder_name], {
@@ -60,6 +63,7 @@ export async function clone_and_install(tmp_dir: string, git_url: string) {
     console.log(git_out);
   } catch (err) {
     console.log(err);
+    return false;
   }
   try {
     const npm_out = await run_cmd('npm', ['install'], {
@@ -68,7 +72,9 @@ export async function clone_and_install(tmp_dir: string, git_url: string) {
     console.log(npm_out);
   } catch (err) {
     console.log(err);
+    return false;
   }
+  return true;
 }
 
 //const tmp_dir: string = create_tmp_sync();

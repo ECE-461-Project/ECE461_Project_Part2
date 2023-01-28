@@ -1,24 +1,29 @@
-console.log('Try npm run lint/fix!');
+import {join} from 'path';
 
-const longString =
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ut aliquet diam.';
+import {check_licenses_result} from './license';
+import {
+  create_tmp_sync,
+  clone_and_install,
+  delete_dir,
+} from './local_file_creation';
 
-const trailing = 'Semicolon';
+async function main() {
+  const tmp_dir: string = create_tmp_sync();
+  // note: 'package' is const in local_file_creation, should move for less duplication
+  const path_to_check = join(tmp_dir, 'package');
 
-const why = 'am I tabbed?';
-
-export function doSomeStuff(
-  withThis: string,
-  andThat: string,
-  andThose: string[]
-) {
-  //function on one line
-  if (!andThose.length) {
-    return false;
+  const success = await clone_and_install(
+    tmp_dir,
+    'git@github.com:davglass/license-checker.git'
+  );
+  if (success) {
+    const is_valid = await check_licenses_result(path_to_check);
+    console.log(is_valid);
+  } else {
+    console.log('Unable to analyze local files for licenses');
   }
-  console.log(withThis);
-  console.log(andThat);
-  console.dir(andThose);
-  return;
+
+  delete_dir(tmp_dir);
 }
-// TODO: more examples
+
+main();
