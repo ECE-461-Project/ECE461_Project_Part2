@@ -103,10 +103,3 @@ export async function get_urls(filepath: string) {
     return [];
   }
 }
-
-async function main() {
-  const val = await get_urls('./tests/_urls/url_test1.txt');
-  console.log(val);
-}
-
-main();
