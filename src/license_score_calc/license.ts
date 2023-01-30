@@ -3,15 +3,15 @@ import {join} from 'path';
 import {create_tmp, delete_dir} from './license_fs';
 import {clone_and_install, check_licenses_result} from './license_util';
 
-export async function get_license_score(): Promise<number> {
+export async function get_license_score(repo_url: string): Promise<number> {
   const tmp_dir: string = await create_tmp();
+  if (tmp_dir === '') {
+    return 0;
+  }
   // note: 'package' is const in local_file_creation, should move for less duplication
   const path_to_check = join(tmp_dir, 'package');
 
-  const success = await clone_and_install(
-    tmp_dir,
-    'git@github.com:davglass/license-checker.git'
-  );
+  const success = await clone_and_install(tmp_dir, repo_url);
   if (!success) {
     console.log('Unable to analyze local files for licenses');
     delete_dir(tmp_dir);

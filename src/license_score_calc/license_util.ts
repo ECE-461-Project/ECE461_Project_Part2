@@ -1,10 +1,11 @@
 import {join} from 'path';
 
-import {run_cmd} from '../process';
+import {run_cmd} from '../sub_process_help';
 
 const promisify = require('util.promisify-all');
 // license-checker has no type file
-const checker = promisify(require('license-checker'));
+const checker_orig = require('license-checker');
+const checker = promisify(checker_orig);
 
 export async function clone_and_install(
   tmp_dir: string,
