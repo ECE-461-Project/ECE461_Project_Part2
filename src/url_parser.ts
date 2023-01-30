@@ -50,7 +50,7 @@ export function get_npm_package_name(url: string): string {
   }
 }
 
-export function get_github_url(package_name: string): Promise<string> {
+export function get_github_url(package_name: string): Promise<string | null> {
   return getPackageGithubUrl(package_name);
 }
 
@@ -58,19 +58,24 @@ export async function _get_urls(
   filepath: string
 ): Promise<Promise<string>[] | undefined> {
   try {
-    const unparsed_urls = await read_file(filepath);
+    const unparsed_urls = await exports.read_file(filepath);
     if ('map' in unparsed_urls) {
       const urls = unparsed_urls.map(async (url: string) => {
         let repo_url = url;
-        if (check_if_npm(url)) {
-          const package_name = get_npm_package_name(url);
+        if (exports.check_if_npm(url)) {
+          const package_name = exports.get_npm_package_name(url);
           if (package_name) {
-            repo_url = await get_github_url(package_name);
+            const val = await exports.get_github_url(package_name);
+            if (val) {
+              repo_url = val;
+            } else {
+              repo_url = '';
+            }
           } else {
             return '';
           }
         }
-        if (check_if_github(repo_url)) {
+        if (exports.check_if_github(repo_url)) {
           return repo_url;
         } else {
           return '';
@@ -87,7 +92,7 @@ export async function _get_urls(
 }
 
 export async function get_urls(filepath: string) {
-  const data: Promise<string>[] | undefined = await _get_urls(filepath);
+  const data: Promise<string>[] | undefined = await exports._get_urls(filepath);
   const valid_urls: string[] = [];
   if (data) {
     for await (const url of data) {

@@ -4,3 +4,5 @@ https://github.com/davglass/license-checker
 not_a_url
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Backreferences
 https://www.npmjs.com/package/ajax?activeTab=dependencies
+https://www.npmjs.com/packages/get-package-github-url
+https://github.co/marcofugaro/get-package-github-url
