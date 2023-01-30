@@ -17,6 +17,7 @@
     "posttest": "npm run lint"
   },
   "dependencies": {
+    "get-package-github-url": "^1.0.5",
     "license-checker": "^25.0.1",
     "util": "^0.12.5",
     "util.promisify-all": "^1.0.2"
