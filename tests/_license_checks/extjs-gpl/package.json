@@ -1,0 +1,29 @@
+{
+  "name": "extjs-gpl",
+  "version": "6.2.0",
+  "description": "GPL licensed version of Sencha Ext JS",
+  "main": "ext-bootstrap.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tananaev/extjs-gpl.git"
+  },
+  "keywords": [
+    "ext",
+    "js",
+    "extjs",
+    "sencha",
+    "gpl"
+  ],
+  "author": "Anton Tananaev",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/tananaev/extjs-gpl/issues"
+  },
+  "homepage": "https://github.com/tananaev/extjs-gpl#readme"
+}
