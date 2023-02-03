@@ -3,6 +3,11 @@ import {createInterface} from 'readline';
 
 const getPackageGithubUrl = require('get-package-github-url');
 
+export interface URL_PARSE {
+  original_url: string;
+  github_repo_url: string;
+}
+
 //https://levelup.gitconnected.com/how-to-read-a-file-line-by-line-in-javascript-48d9a688fe49
 export function read_file(
   filepath: string
@@ -56,34 +61,33 @@ export function get_github_url(package_name: string): Promise<string | null> {
 
 export async function _get_urls(
   filepath: string
-): Promise<Promise<string>[] | undefined> {
+): Promise<Promise<URL_PARSE>[] | undefined> {
   try {
     const unparsed_urls = await exports.read_file(filepath);
     if ('map' in unparsed_urls) {
       const urls = unparsed_urls.map(async (url: string) => {
-        let repo_url = url;
+        const url_parse: URL_PARSE = {
+          original_url: url,
+          github_repo_url: '',
+        };
         if (exports.check_if_npm(url)) {
           const package_name = exports.get_npm_package_name(url);
           if (package_name) {
-            const val = await exports.get_github_url(package_name);
-            if (val) {
-              repo_url = val;
-            } else {
-              repo_url = '';
+            const potential_repo = await exports.get_github_url(package_name);
+            if (potential_repo) {
+              if (exports.check_if_github(potential_repo)) {
+                url_parse.github_repo_url = potential_repo;
+              }
             }
-          } else {
-            return '';
           }
+        } else if (exports.check_if_github(url)) {
+          url_parse.github_repo_url = url;
         }
-        if (exports.check_if_github(repo_url)) {
-          return repo_url;
-        } else {
-          return '';
-        }
+        return url_parse;
       });
       return urls;
     } else {
-      return undefined;
+      return undefined; // try-catch means can never be here
     }
   } catch (err) {
     console.log(err);
@@ -91,19 +95,16 @@ export async function _get_urls(
   return undefined;
 }
 
-export async function get_urls(filepath: string) {
-  const data: Promise<string>[] | undefined = await exports._get_urls(filepath);
-  const valid_urls: string[] = [];
+export async function get_urls(filepath: string): Promise<URL_PARSE[]> {
+  const data: Promise<URL_PARSE>[] | undefined = await exports._get_urls(
+    filepath
+  );
   if (data) {
-    for await (const url of data) {
-      if (url) {
-        console.log(url);
-        valid_urls.push(url);
-      } else {
-        console.log('not valid url or github repo!');
-      }
+    const final_data: URL_PARSE[] = [];
+    for await (const url_parse of data) {
+      final_data.push(url_parse);
     }
-    return valid_urls;
+    return final_data;
   } else {
     return [];
   }
