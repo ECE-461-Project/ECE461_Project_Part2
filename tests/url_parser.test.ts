@@ -92,27 +92,53 @@ describe('testing get_github_url', () => {
   });
 });
 
-describe('testing _get_urls and get_urls', () => {
+describe('testing _get_urls', () => {
   test('should not work', async () => {
     expect(await url_parser._get_urls('asdf')).toBe(undefined);
   });
   test('should work', async () => {
     const val = await url_parser._get_urls('./tests/_urls/url_test1.txt');
-    const final: string[] = [];
+    const final: url_parser.URL_PARSE[] = [];
     if (val) {
       for await (const url of val) {
         final.push(url);
       }
     }
     expect(final).toStrictEqual([
-      'https://github.com/jonschlinkert/get-repository-url',
-      'https://github.com/vuongtaquoc/url-parser',
-      'https://github.com/davglass/license-checker',
-      '',
-      '',
-      'https://github.com/joehewitt/ajax',
-      '',
-      '',
+      {
+        github_repo_url: 'https://github.com/jonschlinkert/get-repository-url',
+        original_url: 'https://www.npmjs.com/package/get-repository-url',
+      },
+      {
+        github_repo_url: 'https://github.com/vuongtaquoc/url-parser',
+        original_url: 'https://www.npmjs.com/package/url_parser',
+      },
+      {
+        github_repo_url: 'https://github.com/davglass/license-checker',
+        original_url: 'https://github.com/davglass/license-checker',
+      },
+      {
+        github_repo_url: '',
+        original_url: 'not_a_url',
+      },
+      {
+        github_repo_url: '',
+        original_url:
+          'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Backreferences',
+      },
+      {
+        github_repo_url: 'https://github.com/joehewitt/ajax',
+        original_url:
+          'https://www.npmjs.com/package/ajax?activeTab=dependencies',
+      },
+      {
+        github_repo_url: '',
+        original_url: 'https://www.npmjs.com/packages/get-package-github-url',
+      },
+      {
+        github_repo_url: '',
+        original_url: 'https://github.co/marcofugaro/get-package-github-url',
+      },
     ]);
   });
 });
@@ -120,16 +146,48 @@ describe('testing get_urls', () => {
   test('should work get_urls', async () => {
     const val = await url_parser.get_urls('./tests/_urls/url_test1.txt');
     expect(val).toStrictEqual([
-      'https://github.com/jonschlinkert/get-repository-url',
-      'https://github.com/vuongtaquoc/url-parser',
-      'https://github.com/davglass/license-checker',
-      'https://github.com/joehewitt/ajax',
+      {
+        github_repo_url: 'https://github.com/jonschlinkert/get-repository-url',
+        original_url: 'https://www.npmjs.com/package/get-repository-url',
+      },
+      {
+        github_repo_url: 'https://github.com/vuongtaquoc/url-parser',
+        original_url: 'https://www.npmjs.com/package/url_parser',
+      },
+      {
+        github_repo_url: 'https://github.com/davglass/license-checker',
+        original_url: 'https://github.com/davglass/license-checker',
+      },
+      {
+        github_repo_url: '',
+        original_url: 'not_a_url',
+      },
+      {
+        github_repo_url: '',
+        original_url:
+          'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Backreferences',
+      },
+      {
+        github_repo_url: 'https://github.com/joehewitt/ajax',
+        original_url:
+          'https://www.npmjs.com/package/ajax?activeTab=dependencies',
+      },
+      {
+        github_repo_url: '',
+        original_url: 'https://www.npmjs.com/packages/get-package-github-url',
+      },
+      {
+        github_repo_url: '',
+        original_url: 'https://github.co/marcofugaro/get-package-github-url',
+      },
     ]);
   });
   test('should not work', async () => {
     expect(await url_parser.get_urls('asdf')).toStrictEqual([]);
   });
   test('should be empty work', async () => {
-    expect(await url_parser.get_urls('./tests/_urls/empty.txt')).toStrictEqual([]);
+    expect(await url_parser.get_urls('./tests/_urls/empty.txt')).toStrictEqual(
+      []
+    );
   });
 });
