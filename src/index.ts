@@ -1,5 +1,6 @@
 import {get_license_score} from './license_score_calc/license';
 import {get_urls, URL_PARSE} from './url_parser';
+import {create_logger} from './logging_setup';
 
 const arrayToNdjson = require('array-to-ndjson');
 
@@ -32,8 +33,9 @@ function net_score_formula(subscores: SCORE_OUT): number {
 }
 
 async function main() {
+  create_logger();
   const args = process.argv.slice(2);
-  console.log(args);
+  globalThis.logger.debug(`main args: ${args}`);
 
   const urls = await get_urls(args[0]);
 

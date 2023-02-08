@@ -8,6 +8,9 @@ import * as sub_process_help from '../../src/sub_process_help';
 const promisify = require('util.promisify-all');
 const checker_orig = require('license-checker');
 const checker = promisify(checker_orig);
+import {create_logger} from '../../src/logging_setup';
+
+create_logger();
 
 describe('testing clone_and_install', () => {
   test('clone_and_install succeeds', async () => {

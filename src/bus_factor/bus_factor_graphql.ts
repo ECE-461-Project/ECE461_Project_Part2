@@ -25,6 +25,9 @@ export async function get_number_forks(
   if (matches === null) {
     return undefined;
   }
+  if (process.env.GITHUB_TOKEN === undefined) {
+    throw new Error('GITHUB_TOKEN is not defined');
+  }
   //https://stepzen.com/blog/consume-graphql-in-javascript
   // code using https request example
   const data = JSON.stringify({
@@ -38,7 +41,7 @@ export async function get_number_forks(
     }
     `,
   });
-  console.log(JSON.parse(data));
+  globalThis.logger.debug('get_number_forks query: ' + data);
   const options = {
     hostname: 'api.github.com',
     path: '/graphql',
@@ -56,7 +59,9 @@ export async function get_number_forks(
       const req = request(options, res => {
         res.setEncoding('utf8');
         let data = '';
-        console.log(`statusCode: ${res.statusCode}`);
+        globalThis.logger.debug(
+          `get_number_forks: statusCode: ${res.statusCode}`
+        );
         res.on('data', d => {
           data += d;
         });
@@ -64,7 +69,7 @@ export async function get_number_forks(
           resolve(JSON.parse(data));
         });
       });
-      req.on('error', error => {
+      req.on('error', (error: ReferenceError) => {
         reject(error);
       });
       req.write(data);
@@ -73,10 +78,16 @@ export async function get_number_forks(
   };
   try {
     const return_value: RESPONSE = await do_request(options, data);
-    console.log(JSON.stringify(return_value, null, 2));
+    globalThis.logger.debug(
+      'get_number_forks response: ' + JSON.stringify(return_value, null, 2)
+    );
     return return_value.data.repository.forks.totalCount;
   } catch (err) {
-    console.log(err);
+    if (err instanceof Error) {
+      globalThis.logger.error(
+        `get_number_forks error: ${err.message}, stack: ${err.stack}`
+      );
+    }
   }
   return undefined;
 }

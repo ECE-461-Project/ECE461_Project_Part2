@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 
 import * as url_parser from '../src/url_parser';
+import {create_logger} from '../src/logging_setup';
+
+create_logger();
 
 describe('testing readfile', () => {
   test('invalid/nonexistent file', async () => {

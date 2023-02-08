@@ -5,6 +5,9 @@ import * as os from 'os';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import {PathLike, RmOptions} from 'fs';
+import {create_logger} from '../../src/logging_setup';
+
+create_logger();
 
 //import {tmpdir} from 'os';
 //import {rm, mkdtemp} from 'fs/promises';

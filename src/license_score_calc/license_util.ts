@@ -16,28 +16,26 @@ export async function clone_and_install(
     const git_out = await run_cmd('git', ['clone', git_url, git_folder_name], {
       cwd: tmp_dir,
     });
-    console.log(git_out);
+    globalThis.logger.debug(git_out);
   } catch (err) {
-    console.log(err);
+    if (err instanceof Error) {
+      globalThis.logger.error(`Error while cloning: ${err.message}`);
+    }
     return false;
   }
   try {
     const npm_out = await run_cmd('npm', ['install'], {
       cwd: join(tmp_dir, git_folder_name),
     });
-    console.log(npm_out);
+    globalThis.logger.debug(npm_out);
   } catch (err) {
-    console.log(err);
+    if (err instanceof Error) {
+      globalThis.logger.error(`Error while npm install: ${err.message}`);
+    }
     return false;
   }
   return true;
 }
-
-//async function output() {
-//  for await (const data of child.stdout) {
-//    console.log(data.toString());
-//  }
-//}
 
 // Example of using promise using async
 // https://janelia-flyem.github.io/licenses.html
@@ -64,19 +62,22 @@ export async function check_licenses_result(
       'MIT|Apache|ISC|WTFPL|BSD|BSD-Source-Code|CC0-1.0|Public Domain|LGPL-2.1-only|CC-BY-*'
     );
     const unhandled_regex = new RegExp('Custom|Unlicense');
-    //console.log(licenses);
     for (const [k, v] of Object.entries(licenses)) {
       if (license_regex.exec(v['licenses'])) {
-        console.log(`${k} has valid license: ${v['licenses']}`);
+        globalThis.logger.debug(`${k} has valid license: ${v['licenses']}`);
       } else if (unhandled_regex.exec(v['licenses'])) {
-        console.log(`${k} has unhandled license: ${v['licenses']}`);
+        globalThis.logger.debug(`${k} has unhandled license: ${v['licenses']}`);
       } else {
-        console.log(`${k} has invalid license: ${v['licenses']}`);
+        globalThis.logger.debug(`${k} has invalid license: ${v['licenses']}`);
         is_valid = false;
       }
     }
   } catch (err) {
-    console.log(err);
+    if (err instanceof Error) {
+      globalThis.logger.error(
+        `Error while license checking: ${err.message}, stack: ${err.stack}`
+      );
+    }
     return false;
   }
   return is_valid;

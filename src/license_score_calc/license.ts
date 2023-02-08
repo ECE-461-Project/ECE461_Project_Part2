@@ -13,12 +13,12 @@ export async function get_license_score(repo_url: string): Promise<number> {
 
   const success = await clone_and_install(tmp_dir, repo_url);
   if (!success) {
-    console.log('Unable to analyze local files for licenses');
+    globalThis.logger.info('Unable to analyze local files for licenses');
     delete_dir(tmp_dir);
     return 0;
   }
   const is_valid = await check_licenses_result(path_to_check);
-  console.log(is_valid);
+  globalThis.logger.info(`license status for ${repo_url}: ${is_valid}`);
 
   const score = is_valid ? 1 : 0;
 

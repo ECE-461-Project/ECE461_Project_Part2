@@ -90,7 +90,9 @@ export async function _get_urls(
       return undefined; // try-catch means can never be here
     }
   } catch (err) {
-    console.log(err);
+    if (err instanceof Error) {
+      globalThis.logger.error(`_get_urls: ${err.message}, stack: ${err.stack}`);
+    }
   }
   return undefined;
 }
