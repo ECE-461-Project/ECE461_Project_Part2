@@ -23,7 +23,7 @@ export async function get_number_forks(
   const reg = new RegExp('github\\.com/([A-Za-z0-9_]*-*)+/([A-Za-z0-9_]*-*)+');
   const matches = github_repo_url.match(reg);
   if (matches === null) {
-    return;
+    return undefined;
   }
   //https://stepzen.com/blog/consume-graphql-in-javascript
   // code using https request example
@@ -80,7 +80,3 @@ export async function get_number_forks(
   }
   return undefined;
 }
-
-(async () => {
-  console.log(await get_number_forks('https://github.com/torvalds/linux'));
-})();
