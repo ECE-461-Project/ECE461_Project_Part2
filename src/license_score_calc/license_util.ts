@@ -24,7 +24,7 @@ export async function clone_and_install(
     return false;
   }
   try {
-    const npm_out = await run_cmd('npm', ['install'], {
+    const npm_out = await run_cmd('npm', ['install', '--omit=dev'], {
       cwd: join(tmp_dir, git_folder_name),
     });
     globalThis.logger.debug(npm_out);
@@ -61,7 +61,7 @@ export async function check_licenses_result(
     const license_regex = new RegExp(
       'MIT|Apache|ISC|WTFPL|BSD|BSD-Source-Code|CC0-1.0|Public Domain|LGPL-2.1-only|CC-BY-*'
     );
-    const unhandled_regex = new RegExp('Custom|Unlicense');
+    const unhandled_regex = new RegExp('Custom|Unlicense|UNLICENSED');
     for (const [k, v] of Object.entries(licenses)) {
       if (license_regex.exec(v['licenses'])) {
         globalThis.logger.debug(`${k} has valid license: ${v['licenses']}`);
