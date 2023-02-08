@@ -6,10 +6,12 @@ import {join} from 'path';
 export async function create_tmp(): Promise<string> {
   try {
     const tmpDir = await mkdtemp(join(tmpdir(), 'npm-package-data-'));
-    console.log(tmpDir);
+    globalThis.logger.info(`Created temp folder: ${tmpDir}`);
     return tmpDir;
   } catch (err) {
-    console.log(err);
+    if (err instanceof Error) {
+      globalThis.logger.info('temp folder creation failed');
+    }
   }
   return '';
 }
@@ -20,6 +22,6 @@ export async function delete_dir(directory: string) {
       await rm(directory, {recursive: true, force: true});
     }
   } catch (err) {
-    console.log(err);
+    globalThis.logger.error(`deleting directory ${directory} failed`);
   }
 }

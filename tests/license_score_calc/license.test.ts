@@ -3,6 +3,9 @@ import * as license_fs from '../../src/license_score_calc/license_fs';
 import * as license_util from '../../src/license_score_calc/license_util';
 
 import {get_license_score} from '../../src/license_score_calc/license';
+import {create_logger} from '../../src/logging_setup';
+
+create_logger();
 
 describe('testing get_license_score', () => {
   jest.spyOn(license_fs, 'delete_dir').mockResolvedValue(undefined);
