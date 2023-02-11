@@ -2,6 +2,7 @@ import {get_license_score} from './license_score_calc/license';
 import {get_urls, URL_PARSE} from './url_parser';
 import {create_logger} from './logging_setup';
 import {get_bus_factor_score} from './bus_factor/bus_factor';
+import {get_responsiveness_score} from './responsiveness_factor/responsiveness';
 
 const arrayToNdjson = require('array-to-ndjson');
 
@@ -27,8 +28,8 @@ function net_score_formula(subscores: SCORE_OUT): number {
   subscores.License * (
     (subscores.RampUp) +
     (subscores.Correctness) +
-    (subscores.BusFactor * 1) +
-    (subscores.ResponsiveMaintainer * 0)
+    (subscores.BusFactor * 0.6) +
+    (subscores.ResponsiveMaintainer * 0.4)
   );
   return net_score;
 }
@@ -56,9 +57,15 @@ async function main() {
       const bus_factor_sub_score = get_bus_factor_score(
         url_parse.github_repo_url
       );
+      const responsiveness_sub_score = get_responsiveness_score(
+        url_parse.github_repo_url
+      );
 
       score.License = await license_sub_score;
       score.BusFactor = Number((await bus_factor_sub_score).toFixed(3));
+      score.ResponsiveMaintainer = Number(
+        (await responsiveness_sub_score).toFixed(2)
+      );
       score.NetScore = net_score_formula(score);
 
       return score;
