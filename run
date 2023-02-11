@@ -1,17 +1,28 @@
 #!/usr/bin/env bash
 install_cmd() {
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm install v18.14.0
+    nvm use v18.14.0
     npm install
-    npm install axios
 }
 
 build_cmd() {
-    echo "ran build"
+    npm run compile
 }
 
 test_cmd() {
-    echo "ran test"
+    export LOG_FILE=log_file.txt
+    export LOG_LEVEL=0
+    export GITHUB_TOKEN=none
+    python3 run_test.py
 }
 
+run_cmd() {
+    node build/src/index.js "$1"
+}
 case "$1" in
     install)
         install_cmd && exit 0
@@ -30,7 +41,7 @@ case "$1" in
         ;;
     *)
         if test -f "$1"; then
-            echo "$1" && exit 0
+            run_cmd && exit 0
 
             echo "using url file failed!"
         else

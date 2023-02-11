@@ -20,7 +20,7 @@ interface RESPONSE {
 export async function get_number_forks(
   github_repo_url: string
 ): Promise<number | undefined> {
-  const reg = new RegExp('github\\.com/([A-Za-z0-9_]*-*)+/([A-Za-z0-9_]*-*)+');
+  const reg = new RegExp('github\\.com/(.+)/(.+)');
   const matches = github_repo_url.match(reg);
   if (matches === null) {
     return undefined;
