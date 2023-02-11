@@ -7,6 +7,7 @@ install_cmd() {
     nvm install v18.14.0
     nvm use v18.14.0
     npm install
+    rm -rf build
 }
 
 build_cmd() {
