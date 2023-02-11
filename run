@@ -10,6 +10,11 @@ install_cmd() {
 }
 
 build_cmd() {
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm install v18.14.0 > /dev/null 2>&1
+    nvm use v18.14.0 > /dev/null
     npm run compile
 }
 
@@ -17,10 +22,20 @@ test_cmd() {
     export LOG_FILE=log_file.txt
     export LOG_LEVEL=0
     export GITHUB_TOKEN=none
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm install v18.14.0 > /dev/null 2>&1
+    nvm use v18.14.0 > /dev/null
     python3 run_test.py
 }
 
 run_cmd() {
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm install v18.14.0 > /dev/null 2>&1
+    nvm use v18.14.0 > /dev/null
     node build/src/index.js "$1"
 }
 case "$1" in
@@ -41,7 +56,7 @@ case "$1" in
         ;;
     *)
         if test -f "$1"; then
-            run_cmd && exit 0
+		run_cmd $1 && exit 0
 
             echo "using url file failed!"
         else
