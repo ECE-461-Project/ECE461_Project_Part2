@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 install_cmd() {
     npm install
-    npm install axios
 }
 
 build_cmd() {
