@@ -9,7 +9,7 @@ def main():
     for line in lines:
       if "All files" in line:
         parts = line.split('|')
-        percentage = parts[1].strip()
+        percentage = parts[4].strip()
     lines = process.stderr.split('\n')
     for line in lines:
       if "Tests:" in line:
