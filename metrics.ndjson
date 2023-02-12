@@ -1,3 +1,4 @@
 {"metric":"BusFactor", "api":"graphql", "filepath":"src/bus_factor/bus_factor_graphql.ts", "line": 80}
+{"metric":"BusFactor", "api":"rest", "filepath":"src/bus_factor/bus_factor_restapi.ts", "line": 31}
 {"metric":"ResponsiveMaintainer", "api":"rest", "filepath":"src/responsiveness_factor/responsiveness.ts", "line" 31}
 {"metric":"License", "api":"clone","filepath":"src/license_score_calc/license.ts","line":14}
