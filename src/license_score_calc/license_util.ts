@@ -1,41 +1,7 @@
-import {join} from 'path';
-
-import {run_cmd} from '../sub_process_help';
-
 const promisify = require('util.promisify-all');
 // license-checker has no type file
 const checker_orig = require('license-checker');
 const checker = promisify(checker_orig);
-
-export async function clone_and_install(
-  tmp_dir: string,
-  git_url: string
-): Promise<boolean> {
-  const git_folder_name = 'package';
-  try {
-    const git_out = await run_cmd('git', ['clone', git_url, git_folder_name], {
-      cwd: tmp_dir,
-    });
-    globalThis.logger.debug(git_out);
-  } catch (err) {
-    if (err instanceof Error) {
-      globalThis.logger.error(`Error while cloning: ${err.message}`);
-    }
-    return false;
-  }
-  try {
-    const npm_out = await run_cmd('npm', ['install', '--omit=dev'], {
-      cwd: join(tmp_dir, git_folder_name),
-    });
-    globalThis.logger.debug(npm_out);
-  } catch (err) {
-    if (err instanceof Error) {
-      globalThis.logger.error(`Error while npm install: ${err.message}`);
-    }
-    return false;
-  }
-  return true;
-}
 
 // Example of using promise using async
 // https://janelia-flyem.github.io/licenses.html

@@ -2,6 +2,10 @@ import {get_responsiveness_score} from '../../src/responsiveness_factor/responsi
 
 import {create_logger} from '../../src/logging_setup';
 
+process.env.LOG_LEVEL = '0';
+process.env.LOG_FILE = 'log_file.txt';
+import * as dotenv from 'dotenv';
+dotenv.config();
 create_logger();
 
 describe('testing get_percent_owner', () => {
