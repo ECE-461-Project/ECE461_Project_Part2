@@ -3,7 +3,7 @@ import {get_urls, URL_PARSE} from './url_parser';
 import {create_logger} from './logging_setup';
 import {get_bus_factor_score} from './bus_factor/bus_factor';
 import {get_responsiveness_score} from './responsiveness_factor/responsiveness';
-import {git_clone, create_tmp, delete_dir} from 'git_clone';
+import {git_clone, create_tmp, delete_dir} from './git_clone';
 import {join} from 'path';
 
 const arrayToNdjson = require('array-to-ndjson');
