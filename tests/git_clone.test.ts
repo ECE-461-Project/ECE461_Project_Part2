@@ -6,11 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import {PathLike, RmOptions} from 'fs';
-import {create_logger} from '../src/logging_setup';
 
-process.env.LOG_LEVEL = '0';
-process.env.LOG_FILE = 'log_file.txt';
-create_logger();
 //import {tmpdir} from 'os';
 //import {rm, mkdtemp} from 'fs/promises';
 //import {join} from 'path';

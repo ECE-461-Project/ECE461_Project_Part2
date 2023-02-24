@@ -7,11 +7,11 @@ import {run_cmd} from './sub_process_help';
 export async function create_tmp(): Promise<string> {
   try {
     const tmpDir = await mkdtemp(join(tmpdir(), 'npm-package-data-'));
-    globalThis.logger.info(`Created temp folder: ${tmpDir}`);
+    globalThis.logger?.info(`Created temp folder: ${tmpDir}`);
     return tmpDir;
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger.info('temp folder creation failed');
+      globalThis.logger?.info('temp folder creation failed');
     }
     throw new Error('Temporary Directory Creation failed');
   }
@@ -23,7 +23,7 @@ export async function delete_dir(directory: string) {
       await rm(directory, {recursive: true, force: true});
     }
   } catch (err) {
-    globalThis.logger.error(`deleting directory ${directory} failed`);
+    globalThis.logger?.error(`deleting directory ${directory} failed`);
   }
 }
 
@@ -36,10 +36,10 @@ export async function git_clone(
     const git_out = await run_cmd('git', ['clone', git_url, git_folder_name], {
       cwd: tmp_dir,
     });
-    globalThis.logger.debug(git_out);
+    globalThis.logger?.debug(git_out);
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger.error(`Error while cloning: ${err.message}`);
+      globalThis.logger?.error(`Error while cloning: ${err.message}`);
     }
     return false;
   }
@@ -52,10 +52,10 @@ export async function npm_install(tmp_dir: string): Promise<boolean> {
     const npm_out = await run_cmd('npm', ['install', '--omit=dev'], {
       cwd: join(tmp_dir, git_folder_name),
     });
-    globalThis.logger.debug(npm_out);
+    globalThis.logger?.debug(npm_out);
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger.error(`Error while npm install: ${err.message}`);
+      globalThis.logger?.error(`Error while npm install: ${err.message}`);
     }
     return false;
   }

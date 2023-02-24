@@ -18,7 +18,7 @@ export async function get_license_score(
       (await readFile(join(local_repo_path, 'package.json'))).toString()
     );
     const license: string | undefined = package_json.license;
-    globalThis.logger.info(`${repo_url} has license: ${license}`);
+    globalThis.logger?.info(`${repo_url} has license: ${license}`);
 
     const license_regex = new RegExp(
       'MIT|Apache|ISC|WTFPL|BSD|BSD-Source-Code|CC0-1.0|Public Domain|LGPL-2.1-only|CC-BY-*'
@@ -30,7 +30,7 @@ export async function get_license_score(
     }
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger.error(`License Score calc got error: ${err.message}`);
+      globalThis.logger?.error(`License Score calc got error: ${err.message}`);
     }
   }
   return 0;

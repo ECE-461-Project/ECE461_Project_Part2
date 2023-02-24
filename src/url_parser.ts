@@ -91,7 +91,9 @@ export async function _get_urls(
     }
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger.error(`_get_urls: ${err.message}, stack: ${err.stack}`);
+      globalThis.logger?.error(
+        `_get_urls: ${err.message}, stack: ${err.stack}`
+      );
     }
   }
   return undefined;

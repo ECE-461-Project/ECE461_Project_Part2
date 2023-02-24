@@ -56,7 +56,7 @@ export async function get_responsiveness_score(
       }
     }
   } catch (err) {
-    globalThis.logger.error('Error in get_percent_owner ' + err);
+    globalThis.logger?.error('Error in get_percent_owner ' + err);
   }
   return 0;
 }
