@@ -39,7 +39,7 @@ function net_score_formula(subscores: SCORE_OUT): number {
 async function main() {
   create_logger();
   const args = process.argv.slice(2);
-  globalThis.logger.debug(`main args: ${args}`);
+  globalThis.logger?.debug(`main args: ${args}`);
 
   const urls = await get_urls(args[0]);
 
@@ -70,7 +70,7 @@ async function main() {
             git_repo_path
           );
         } else {
-          globalThis.logger.error(
+          globalThis.logger?.error(
             'Cloning repo failed, subscores dependent on local repo resolved to 0!'
           );
           license_sub_score = new Promise(resolve => {

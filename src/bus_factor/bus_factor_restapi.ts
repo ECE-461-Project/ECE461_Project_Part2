@@ -36,7 +36,6 @@ export async function get_percent_owner(
     await axios.get(commitsAdr, config).then((response: any) => {
       commitsData = response.data;
     });
-    //globalThis.logger.debug('get_number_contributors query: ' + repo.data);
     const owner = repoData.owner.id;
     let ownerCommits = 0;
     let otherCommits = 0;
@@ -54,7 +53,7 @@ export async function get_percent_owner(
     return percentOwner;
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger.error('Error in get_percent_owner ' + err.message);
+      globalThis.logger?.error('Error in get_percent_owner ' + err.message);
     }
   }
   return undefined;

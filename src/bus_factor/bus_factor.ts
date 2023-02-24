@@ -12,12 +12,12 @@ export async function get_bus_factor_score(
   if (typeof percent_owner === 'number') {
     score += 0.75 * percent_owner;
   }
-  globalThis.logger.info(`bus_factor percent_owner score ${score}`);
+  globalThis.logger?.info(`bus_factor percent_owner score ${score}`);
   if (typeof number_forks === 'number') {
     if (number_forks > 0) {
       score += 0.25 * (1 - 1 / number_forks);
     }
   }
-  globalThis.logger.info(`bus_factor score ${score}`);
+  globalThis.logger?.info(`bus_factor score ${score}`);
   return score;
 }

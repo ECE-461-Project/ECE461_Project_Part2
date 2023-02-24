@@ -13,11 +13,11 @@ export function run_cmd(
       output += data.toString();
     });
     child.on('close', (code: number) => {
-      globalThis.logger.debug(`child process ${cmd} ${args} closed on ${code}`);
+      globalThis.logger?.debug(`child process ${cmd} ${args} closed on ${code}`);
       resolve(output);
     });
     child.on('exit', (code: number) => {
-      globalThis.logger.debug(`child process ${cmd} ${args} exit on ${code}`);
+      globalThis.logger?.debug(`child process ${cmd} ${args} exit on ${code}`);
       resolve(output);
     });
     child.on('error', (err: ReferenceError) => {

@@ -41,7 +41,7 @@ export async function get_number_forks(
     }
     `,
   });
-  globalThis.logger.debug('get_number_forks query: ' + data);
+  globalThis.logger?.debug('get_number_forks query: ' + data);
   const options = {
     hostname: 'api.github.com',
     path: '/graphql',
@@ -59,7 +59,7 @@ export async function get_number_forks(
       const req = request(options, res => {
         res.setEncoding('utf8');
         let data = '';
-        globalThis.logger.debug(
+        globalThis.logger?.debug(
           `get_number_forks: statusCode: ${res.statusCode}`
         );
         res.on('data', d => {
@@ -78,13 +78,13 @@ export async function get_number_forks(
   };
   try {
     const return_value: RESPONSE = await do_request(options, data);
-    globalThis.logger.debug(
+    globalThis.logger?.debug(
       'get_number_forks response: ' + JSON.stringify(return_value, null, 2)
     );
     return return_value.data.repository.forks.totalCount;
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger.error(
+      globalThis.logger?.error(
         `get_number_forks error: ${err.message}, stack: ${err.stack}`
       );
     }
