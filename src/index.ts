@@ -5,6 +5,7 @@ import {get_bus_factor_score} from './bus_factor/bus_factor';
 import {get_responsiveness_score} from './responsiveness_factor/responsiveness';
 import {git_clone, create_tmp, delete_dir} from './git_clone';
 import {join} from 'path';
+import {get_ramp_up_score} from './ramp_up_factor/ramp_up';
 
 const arrayToNdjson = require('array-to-ndjson');
 
@@ -26,12 +27,13 @@ interface SCORE_OUT {
 
 function net_score_formula(subscores: SCORE_OUT): number {
   // prettier-ignore
+  // Temp fix to include ramp up in net score calc
   const net_score: number =
   subscores.License * (
-    (subscores.RampUp) +
+    (subscores.RampUp * 0.3) +
     (subscores.Correctness) +
-    (subscores.BusFactor * 0.6) +
-    (subscores.ResponsiveMaintainer * 0.4)
+    (subscores.BusFactor * 0.5) +
+    (subscores.ResponsiveMaintainer * 0.2)
   );
   return net_score;
 }
@@ -75,12 +77,15 @@ async function score_calc(url_parse: URL_PARSE) {
       url_parse.github_repo_url
     );
 
+    const ramp_up_sub_score = get_ramp_up_score(git_repo_path);
+
     // Resolve subscores
     score.License = await license_sub_score;
     score.BusFactor = Number((await bus_factor_sub_score).toFixed(3));
     score.ResponsiveMaintainer = Number(
       (await responsiveness_sub_score).toFixed(2)
     );
+    score.RampUp = await ramp_up_sub_score;
 
     // Calculate subscores
     score.NetScore = net_score_formula(score);
