@@ -2,7 +2,7 @@
 const fetch = require("node-fetch");
 import {request} from 'https';
 
-const secretKey: string|undefined = process.env.GITHUB_TOKEN;
+const secretKey: string|undefined = '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';
 
 if(!secretKey){   
         globalThis.logger?.error(`GITHUB Token not defined`);
@@ -143,8 +143,11 @@ async function GraphQl_Data(github_repo_url: string) : Promise<any> {
     const normalizedClosedIssues = data.repository.closedIssues.totalCount / totalIssues;
 
     // Normalize the values for pull requests to range [0, 1]
-    const normalizedPullRequests = data.repository.closedPullRequest.totalCount / totalPullRequests;
-    const normalizedMergedPullRequests = data.repository.mergedPullRequests.totalCount / totalPullRequests;
+    //const normalizedPullRequests = data.repository.closedPullRequest.totalCount / totalPullRequests;
+    const pullRequestCorrectness = data.repository.mergedPullRequests.totalCount / (data.repository.closedPullRequest.totalCount + data.repository.mergedPullRequests.totalCount);//totalPullRequests;
+
+    globalThis.logger?.info('MergedPullRequests = ' + data.repository.mergedPullRequests.totalCount);
+    globalThis.logger?.info('ClosedPullRequests = ' + data.repository.closedPullRequest.totalCount);
     
     const normalizedSecurityAdvisories = data.securityAdvisories.totalCount / (data.securityAdvisories.totalCount + data.repository.vulnerabilityAlerts.totalCount);
     const normalizedVulnerabilities = data.repository.vulnerabilityAlerts.totalCount / (data.securityVulnerabilities.totalCount + data.repository.vulnerabilityAlerts.totalCount);
@@ -153,11 +156,21 @@ async function GraphQl_Data(github_repo_url: string) : Promise<any> {
     // Calculate the repository correctness score based on the normalized metrics
     const issueCorrectness = normalizedClosedIssues / (normalizedOpenIssues + normalizedClosedIssues);
     
-    const pullRequestCorrectness =  normalizedPullRequests/normalizedMergedPullRequests;
+    //const pullRequestCorrectness =  normalizedMergedPullRequests/normalizedPullRequests;
 
     const securityCorrectness = 1 - normalizedSecurityAdvisories - normalizedVulnerabilities;
-    const correctnessScore = 0.4 * issueCorrectness + 0.4 * pullRequestCorrectness + 0.2 * securityCorrectness;
+
+    //globalThis.logger?.info('pullRequest correctness = ' + pullRequestCorrectness);
+    //globalThis.logger?.info('normalizedMergedPullRequests = ' + normalizedMergedPullRequests);
+    //globalThis.logger?.info('normalizedPullRequests = ' + normalizedPullRequests);
     
+    //globalThis.logger?.info('issue Correctness = ' + issueCorrectness);
+    //globalThis.logger?.info('security correctness = ' + securityCorrectness);
+
+    const temp_correctnessScore = 0.4 * issueCorrectness + 0.4 * pullRequestCorrectness + 0.2 * securityCorrectness;
+    
+    let correctnessScore = Math.round(temp_correctnessScore * 100) / 100;
+
     return correctnessScore;
 
   }
