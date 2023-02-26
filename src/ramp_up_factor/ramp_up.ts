@@ -18,9 +18,7 @@ const getAllFiles = function (dirPath: string, arrayOfFiles: string[]) {
   return arrayOfFiles;
 };
 
-async function countCommentToSLOCRatioInRepo(
-  repoName: string
-): Promise<number> {
+async function get_ratio(repoName: string): Promise<number> {
   return new Promise(resolve => {
     // Get a list of all files in the repository
     const array_of_files = getAllFiles(repoName, []);
@@ -80,9 +78,7 @@ export async function get_ramp_up_score(
   local_repo_path: string
 ): Promise<number> {
   try {
-    const ratio_lines: number = await countCommentToSLOCRatioInRepo(
-      local_repo_path
-    );
+    const ratio_lines: number = await get_ratio(local_repo_path);
     return compute_ramp_up_score(ratio_lines);
   } catch (err) {
     globalThis.logger?.error(`RampUp Score calc got error: ${err}`);
