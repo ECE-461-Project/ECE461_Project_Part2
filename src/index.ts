@@ -6,6 +6,7 @@ import {get_responsiveness_score} from './responsiveness_factor/responsiveness';
 import {git_clone, create_tmp, delete_dir} from './git_clone';
 import {join} from 'path';
 import {get_ramp_up_score} from './ramp_up_factor/ramp_up';
+import {get_correctness_score} from './correctness/correctness';
 
 const arrayToNdjson = require('array-to-ndjson');
 
@@ -79,6 +80,8 @@ async function score_calc(url_parse: URL_PARSE) {
 
     const ramp_up_sub_score = get_ramp_up_score(git_repo_path);
 
+    const correctness_sub_score = get_correctness_score(git_repo_path);
+
     // Resolve subscores
     score.License = await license_sub_score;
     score.BusFactor = Number((await bus_factor_sub_score).toFixed(3));
@@ -86,6 +89,9 @@ async function score_calc(url_parse: URL_PARSE) {
       (await responsiveness_sub_score).toFixed(2)
     );
     score.RampUp = await ramp_up_sub_score;
+    score.Correctness = await correctness_sub_score;
+
+    console.log(score.Correctness);
 
     // Calculate subscores
     score.NetScore = net_score_formula(score);
