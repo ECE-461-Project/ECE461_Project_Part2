@@ -7,7 +7,7 @@ describe('testing get_ramp_up_score', () => {
   test('get_license_score invalid', async () => {
     expect(await get_ramp_up_score('./tests/_ramp')).toBe(0);
   });
-  test('get_license_score valid', async () => {
+  test('get_ramp_up_score valid', async () => {
     expect(await get_ramp_up_score('./tests/_rampup_checks/_test_1')).toBe(1);
   });
 });
