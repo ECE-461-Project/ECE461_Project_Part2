@@ -2,7 +2,7 @@
 const fetch = require("node-fetch");
 import {request} from 'https';
 
-const secretKey: string|undefined = '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';
+const secretKey: string|undefined = process.env.GITHUB_TOKEN;
 
 if(!secretKey){   
         globalThis.logger?.error(`GITHUB Token not defined`);
