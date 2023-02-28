@@ -125,7 +125,7 @@ async function GraphQl_Data(github_repo_url: string) : Promise<any> {
       return result;
 
     } catch (error) {
-        globalThis.logger?.error(`RampUp Score calc got error: ${error}`);
+        globalThis.logger?.error(`Correctness Score calc got error: ${error}`);
     }
       return null;
   };
