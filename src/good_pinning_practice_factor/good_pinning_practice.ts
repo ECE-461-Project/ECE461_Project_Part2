@@ -1,13 +1,12 @@
 import {readFile} from 'fs/promises';
 import {join} from 'path';
 
+// Regex from official semver exact versioning regex, and
+// https://gist.github.com/jhorsman/62eeea161a13b80e39f5249281e17c39
 export function check_if_pinned(dependency_version: string): boolean {
-  console.log(dependency_version);
-  //const pinned_regex = /^=*\d+\.\d+/gm;
   const pinned_regex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
   const match = dependency_version.match(pinned_regex);
-  console.log(match);
   if (match === null) {
     return false;
   } else {
@@ -15,7 +14,7 @@ export function check_if_pinned(dependency_version: string): boolean {
   }
 }
 
-export async function get_dependencies_score(
+export async function get_good_pinning_practice_score(
   repo_url: string,
   local_repo_path: string
 ): Promise<number> {
@@ -39,8 +38,6 @@ export async function get_dependencies_score(
           }
         }
       }
-      console.log(num_dependencies);
-      console.log(num_pinned_dependencies);
       globalThis.logger?.info(
         `${repo_url} has ${num_dependencies} dependencies and ${num_pinned_dependencies} pinned!`
       );
