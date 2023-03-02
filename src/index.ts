@@ -33,7 +33,7 @@ function net_score_formula(subscores: SCORE_OUT): number {
   subscores.License * (
     (subscores.RampUp * 0.3) +
     (subscores.BusFactor * 0.3) +
-    (subscores.ResponsiveMaintainer * 0.2) + 
+    (subscores.ResponsiveMaintainer * 0.2) +
     (subscores.Correctness * 0.2)
   );
   return net_score;
@@ -80,7 +80,9 @@ async function score_calc(url_parse: URL_PARSE) {
 
     const ramp_up_sub_score = get_ramp_up_score(git_repo_path);
 
-    const correctness_sub_score = get_correctness_score(url_parse.github_repo_url);
+    const correctness_sub_score = get_correctness_score(
+      url_parse.github_repo_url
+    );
 
     // Resolve subscores
     score.License = await license_sub_score;
