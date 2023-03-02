@@ -1,4 +1,4 @@
-pimport {get_license_score} from './license_score_calc/license';
+import {get_license_score} from './license_score_calc/license';
 import {get_urls, URL_PARSE} from './url_parser';
 import {create_logger} from './logging_setup';
 import {get_bus_factor_score} from './bus_factor/bus_factor';
