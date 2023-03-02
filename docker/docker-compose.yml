@@ -1,5 +1,4 @@
-version: '1'
-# network as of right now is just the docker default
+version: '3'
 services:
   sql-database:
     image: mariadb:latest
@@ -12,6 +11,8 @@ services:
       - ./init.sql:/data/application/init.sql
     ports:
       - 3306:3306
+    networks:
+      - SQL-Net
   adminer:
     image: adminer:latest
     container_name: adminer_container
@@ -21,6 +22,10 @@ services:
       - 8080:8080
     links:
       - sql-database
+    networks:
+      - SQL-Net
 
 volumes:
   mariadb_volume1:
+networks:
+  SQL-Net:
