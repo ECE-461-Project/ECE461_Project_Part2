@@ -3,7 +3,10 @@ import {join} from 'path';
 
 // Regex from official semver exact versioning regex, and
 // https://gist.github.com/jhorsman/62eeea161a13b80e39f5249281e17c39
+// method of testing https://regex101.com/r/F0H152/1
 export function check_if_pinned(dependency_version: string): boolean {
+  // figure out if tilde patching is valid spec
+  // figure out if 1.2.x is valid spec (is probably, this regex does not do this)
   const pinned_regex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
   const match = dependency_version.match(pinned_regex);
