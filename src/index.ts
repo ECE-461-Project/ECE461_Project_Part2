@@ -100,7 +100,9 @@ async function score_calc(url_parse: URL_PARSE) {
     );
     score.RampUp = Number((await ramp_up_sub_score).toFixed(3));
     score.Correctness = Number((await correctness_sub_score).toFixed(3));
-    score.GoodPinningPractice = Number((await good_pinning_practice_sub_score).toFixed(3));
+    score.GoodPinningPractice = Number(
+      (await good_pinning_practice_sub_score).toFixed(3)
+    );
 
     // Calculate subscores
     score.NetScore = Number(net_score_formula(score).toFixed(3));

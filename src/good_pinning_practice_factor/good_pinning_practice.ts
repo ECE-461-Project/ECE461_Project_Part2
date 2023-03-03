@@ -42,7 +42,7 @@ export async function get_good_pinning_practice_score(
         `${repo_url} has ${num_dependencies} dependencies and ${num_pinned_dependencies} pinned!`
       );
       if (num_pinned_dependencies > 0) {
-        return 1 / num_pinned_dependencies;
+        return 1 / (1 + num_pinned_dependencies);
       } else {
         return 1;
       }
@@ -51,11 +51,10 @@ export async function get_good_pinning_practice_score(
     }
   } catch (err) {
     if (err instanceof Error) {
-      console.log(err.message);
       globalThis.logger?.error(
         `Dependencies Score calc got error, returning 1: ${err.message}`
       );
     }
-    return 1;
+    return 0;
   }
 }
