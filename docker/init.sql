@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS packages (
   LicenseScore FLOAT UNSIGNED DEFAULT 0,
   RampUpScore FLOAT UNSIGNED DEFAULT 0,
   ResponsivenessScore FLOAT UNSIGNED DEFAULT 0,
-  PinnedVersionScore FLOAT UNSIGNED DEFAULT 0,
+  GoodPinningPracticeScore FLOAT UNSIGNED DEFAULT 0,
   PullRequestScore FLOAT UNSIGNED DEFAULT 0,
   UploadDate DATETIME NOT NULL,
   FK_UserID INT UNSIGNED NOT NULL,
@@ -40,6 +40,6 @@ CREATE TABLE IF NOT EXISTS packages (
   CHECK (LicenseScore<=1),
   CHECK (RampUpScore<=1),
   CHECK (ResponsivenessScore<=1),
-  CHECK (PinnedVersionScore<=1),
+  CHECK (GoodPinningPracticeScore<=1),
   CHECK (PullRequestScore<=1)
 );
