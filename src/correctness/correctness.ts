@@ -9,10 +9,6 @@ if (!secretKey) {
   throw new Error('GITHUB_TOKEN is not defined');
 }
 
-/*const octokit = new Octokit({
-  auth: secretKey,
-});*/
-
 async function GraphQl_Data(github_repo_url: string): Promise<any> {
   try {
     const reg = new RegExp('github\\.com/(.+)/(.+)');
