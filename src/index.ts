@@ -7,6 +7,7 @@ import {git_clone, create_tmp, delete_dir} from './git_clone';
 import {join} from 'path';
 import {get_ramp_up_score} from './ramp_up_factor/ramp_up';
 import {get_correctness_score} from './correctness/correctness';
+import {get_good_pinning_practice_score} from './good_pinning_practice_factor/good_pinning_practice';
 
 const arrayToNdjson = require('array-to-ndjson');
 
@@ -18,6 +19,7 @@ interface SCORE_OUT {
   BusFactor: number;
   ResponsiveMaintainer: number;
   License: number;
+  GoodPinningPractice: number;
 }
 
 //get_license_score('git@github.com:davglass/license-checker.git').then(
@@ -33,7 +35,7 @@ function net_score_formula(subscores: SCORE_OUT): number {
   subscores.License * (
     (subscores.RampUp * 0.3) +
     (subscores.BusFactor * 0.3) +
-    (subscores.ResponsiveMaintainer * 0.2) + 
+    (subscores.ResponsiveMaintainer * 0.2) +
     (subscores.Correctness * 0.2)
   );
   return net_score;
@@ -48,6 +50,7 @@ async function score_calc(url_parse: URL_PARSE) {
     BusFactor: 0,
     ResponsiveMaintainer: 0,
     License: 0,
+    GoodPinningPractice: 0,
   };
   let temp_dir = '';
   try {
@@ -80,7 +83,14 @@ async function score_calc(url_parse: URL_PARSE) {
 
     const ramp_up_sub_score = get_ramp_up_score(git_repo_path);
 
-    const correctness_sub_score = get_correctness_score(url_parse.github_repo_url);
+    const correctness_sub_score = get_correctness_score(
+      url_parse.github_repo_url
+    );
+
+    const good_pinning_practice_sub_score = get_good_pinning_practice_score(
+      url_parse.github_repo_url,
+      git_repo_path
+    );
 
     // Resolve subscores
     score.License = await license_sub_score;
@@ -88,13 +98,14 @@ async function score_calc(url_parse: URL_PARSE) {
     score.ResponsiveMaintainer = Number(
       (await responsiveness_sub_score).toFixed(2)
     );
-    score.RampUp = await ramp_up_sub_score;
-    score.Correctness = await correctness_sub_score;
-
-    //console.log(score.Correctness);
+    score.RampUp = Number((await ramp_up_sub_score).toFixed(3));
+    score.Correctness = Number((await correctness_sub_score).toFixed(3));
+    score.GoodPinningPractice = Number(
+      (await good_pinning_practice_sub_score).toFixed(3)
+    );
 
     // Calculate subscores
-    score.NetScore = net_score_formula(score);
+    score.NetScore = Number(net_score_formula(score).toFixed(3));
   } catch (err) {
     if (err instanceof Error) {
       if (err.message === 'Temporary Directory Creation failed') {
