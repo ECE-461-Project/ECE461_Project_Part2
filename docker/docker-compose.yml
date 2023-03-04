@@ -1,0 +1,31 @@
+version: '3'
+services:
+  sql-database:
+    image: mariadb:latest
+    container_name: mariadb_container
+    environment:
+      - MARIADB_ROOT_PASSWORD=secret_password
+    command: --default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql
+    volumes:
+      - mariadb_volume1:/var/lib/mysql
+      - ./init.sql:/data/application/init.sql
+    ports:
+      - 3306:3306
+    networks:
+      - SQL-Net
+  adminer:
+    image: adminer:latest
+    container_name: adminer_container
+    environment:
+      ADMINER_DEFAULT_SERVER: sql-database
+    ports:
+      - 8080:8080
+    links:
+      - sql-database
+    networks:
+      - SQL-Net
+
+volumes:
+  mariadb_volume1:
+networks:
+  SQL-Net:
