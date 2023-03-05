@@ -31,3 +31,4 @@ jobs:
     - run: npx jest --silent=true --coverage
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
+    - run: npm run lint
