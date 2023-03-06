@@ -40,7 +40,7 @@ function get_owner_repo(github_repo_url: string): OWNER_REPO | undefined {
   }
 }
 
-export async function fetch_graphql_data(
+export async function fetch_score_with_graphql_data(
   github_repo_url: string
 ): Promise<number | undefined> {
   if (process.env.GITHUB_TOKEN === undefined) {
@@ -49,6 +49,9 @@ export async function fetch_graphql_data(
 
   const owner_repo = get_owner_repo(github_repo_url);
   if (owner_repo === undefined) {
+    globalThis.logger?.info(
+      '%PR Factor: Could not find owner/repo for GraphQL calls!'
+    );
     return undefined;
   }
 
@@ -76,7 +79,6 @@ export async function fetch_graphql_data(
     if (query_result !== undefined) {
       const jdata = JSON.parse(JSON.stringify(query_result));
       tot_commit_count = jdata.repository.object.history.totalCount;
-      console.log(tot_commit_count);
     } else {
       globalThis.logger?.info(
         '%PR Factor: could not get total commit count of repo - returning 0.'
@@ -95,7 +97,7 @@ export async function fetch_graphql_data(
     let tot_commit_with_reviewed_pr = 0;
     let tot_pr_count = 0;
     let has_next_page = false;
-    let end_cursor = "";
+    let end_cursor = '';
     query_result_pre_loop = await graphql({
       query: `query PR_REAL_FIRST_Query($owner: String!, $repo: String!) {
   repository(owner: $owner, name: $repo) {
@@ -124,14 +126,19 @@ export async function fetch_graphql_data(
     });
     if (query_result_pre_loop !== undefined) {
       const jdata = JSON.parse(JSON.stringify(query_result_pre_loop));
+      // iterate through first result and determine if pagination needed
       tot_pr_count = jdata.repository.pullRequests.totalCount;
+      globalThis.logger?.debug(
+        `%PR Factor: Total PR count for pagination ${tot_pr_count}`
+      );
       has_next_page = jdata.repository.pullRequests.pageInfo.hasNextPage;
       end_cursor = jdata.repository.pullRequests.pageInfo.endCursor;
-      console.log(tot_pr_count);
-      console.log(typeof has_next_page);
-      console.log(has_next_page);
-      console.log(typeof end_cursor);
-      console.log(end_cursor);
+      const nodes = jdata.repository.pullRequests.nodes;
+      for (const node of nodes) {
+        if (node.reviews.totalCount > 0) {
+          tot_commit_with_reviewed_pr += node.commits.totalCount;
+        }
+      }
     } else {
       globalThis.logger?.info(
         '%PR Factor: could not get total PR count of repo - returning 0.'
@@ -144,10 +151,67 @@ export async function fetch_graphql_data(
       );
       return 0;
     }
+    // loop through queries multiple times for pagination
+    let loop_count = 1;
+    while (has_next_page === true) {
+      globalThis.logger?.debug(`%PR Looping: Paginate ${loop_count}`);
+      let query_result_in_loop: GraphQlQueryResponseData | undefined =
+        undefined;
+      query_result_in_loop = await graphql({
+        query: `query PR_LOOP_PAGINATE_Query($owner: String!, $repo: String!, $after: String!) {
+  repository(owner: $owner, name: $repo) {
+    pullRequests(states: MERGED, after: $after, first: 100) {
+      totalCount
+      nodes {
+        reviews(states: APPROVED) {
+          totalCount
+        }
+        commits {
+          totalCount
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}`,
+        owner: owner_repo.owner,
+        repo: owner_repo.repo,
+        after: end_cursor,
+        headers: {
+          authorization: 'bearer ' + process.env.GITHUB_TOKEN,
+        },
+      });
+      if (query_result_in_loop !== undefined) {
+        const jdata2 = JSON.parse(JSON.stringify(query_result_in_loop));
+        has_next_page = jdata2.repository.pullRequests.pageInfo.hasNextPage;
+        end_cursor = jdata2.repository.pullRequests.pageInfo.endCursor;
+        // iterate through each query result and determine if pagination needed
+        const nodes2 = jdata2.repository.pullRequests.nodes;
+        for (const node of nodes2) {
+          if (node.reviews.totalCount > 0) {
+            tot_commit_with_reviewed_pr += node.commits.totalCount;
+          }
+        }
+      } else {
+        globalThis.logger?.info(
+          '%PR Factor: could not get query loop PR fetch of repo - returning 0.'
+        );
+        return 0;
+      }
+      loop_count++;
+    }
+    globalThis.logger?.debug(`%PR DONE PAGINATING LOOPS# ${loop_count}`);
+
+    // DONE PAGINATING AND FETCHING ALL COMMITS MERGED WITH AN APPROVING REVIEW.
+    // NOW CALCULATE / return METRIC
+    return tot_commit_with_reviewed_pr / tot_commit_count;
   } catch (error) {
     if (error instanceof GraphqlResponseError) {
       globalThis.logger?.error(
-        '%PR Factor: GraphQL call failed: ${error.message}'
+        `%PR Factor: GraphQL call failed: ${error.message}`
       );
     } else {
       globalThis.logger?.error(
@@ -156,6 +220,4 @@ export async function fetch_graphql_data(
     }
     return 0;
   }
-  console.log(owner_repo);
-  return 1;
 }

@@ -32,13 +32,15 @@ interface SCORE_OUT {
 
 function net_score_formula(subscores: SCORE_OUT): number {
   // prettier-ignore
-  // Temp fix to include ramp up in net score calc
+  // include 2 new metrics for Part 2
   const net_score: number =
   subscores.License * (
     (subscores.RampUp * 0.3) +
-    (subscores.BusFactor * 0.3) +
-    (subscores.ResponsiveMaintainer * 0.2) +
-    (subscores.Correctness * 0.2)
+    (subscores.BusFactor * 0.2) +
+    (subscores.ResponsiveMaintainer * 0.05) +
+    (subscores.Correctness * 0.2) +
+    (subscores.GoodPinningPractice * 0.2) +
+    (subscores.PercReviewedPR * 0.05)
   );
   return net_score;
 }
