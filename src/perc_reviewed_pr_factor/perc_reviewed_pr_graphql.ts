@@ -40,6 +40,26 @@ function get_owner_repo(github_repo_url: string): OWNER_REPO | undefined {
   }
 }
 
+/*
+	Description of how this metric is calculated:
+	1. check if GITHUB_TOKEN defined, throw error if not
+	2. get owner/repo strings from github URL input to be used in GraphQL queries
+	3. GraphQL query to fetch total commit count of the repository
+	4. GraphQL query to fetch nodes of each PR in the repository
+	that was merged into master, also checking for commit count of each PR
+	and whether it had an APPROVING review. First query returns first 100
+	PRs and a pagination return of if there is another page and the end cursor if so.
+	5. If there is more than 100 PRs, pagination loop starts. This loop
+	performs a similar query to (4) but with pagination, getting the first 100
+	PRs after the last end cursor.
+	6. Accumulate the total count of commits by adding when a merged PR is found that has
+	a minimum of 1 approving review.
+	7. Once pagination is complete, the accumulation is also completed.
+	8. The final score of "% of codebase that was written with a PR and a review"
+	is the accumulated commit count of each merged PR with an approving review /
+	the total commit count of the repo fetched in (3).
+*/
+
 export async function fetch_score_with_graphql_data(
   github_repo_url: string
 ): Promise<number | undefined> {
