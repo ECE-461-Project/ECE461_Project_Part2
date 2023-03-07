@@ -18,15 +18,16 @@
     "posttest": "npm run lint"
   },
   "dependencies": {
+    "@octokit/graphql": "^5.0.5",
     "array-to-ndjson": "^1.0.1",
     "axios": "^1.3.2",
     "dotenv": "^16.0.3",
     "get-package-github-url": "^1.0.5",
     "mariadb": "^3.1.0",
+    "node-fetch": "^2.6.9",
     "octokit": "^2.0.14",
     "util": "^0.12.5",
-    "winston": "^3.8.2",
-    "node-fetch": "^2.6.9"
+    "winston": "^3.8.2"
   },
   "engines": {
     "node": ">=14.0.0"
