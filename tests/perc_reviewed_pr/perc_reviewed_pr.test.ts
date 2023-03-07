@@ -1,6 +1,7 @@
 import {fetch_score_with_graphql_data} from '../../src/perc_reviewed_pr_factor/perc_reviewed_pr_graphql'
 
 describe('testing fetch_score_with_graphql_data', () => {
+  jest.setTimeout(15000);
   test('should return the percent of commits pushed with PR and review - no pagination', async () => {
     expect(
       !(await fetch_score_with_graphql_data('https://github.com/torvalds/linux'))
