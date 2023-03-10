@@ -1,5 +1,17 @@
 version: '3'
 services:
+  express-api:
+    build:
+      context: ../
+      dockerfile: ./docker/API/Dockerfile
+    container_name: express-api
+    volumes:
+      - ../src:/usr/src/app/src
+    ports:
+      - 3000:3000
+    networks:
+      - API-Net
+      - SQL-Net
   sql-database:
     image: mariadb:latest
     container_name: mariadb_container
@@ -29,3 +41,4 @@ volumes:
   mariadb_volume1:
 networks:
   SQL-Net:
+  API-Net:

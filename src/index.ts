@@ -8,6 +8,7 @@ import {join} from 'path';
 import {get_ramp_up_score} from './ramp_up_factor/ramp_up';
 import {get_correctness_score} from './correctness/correctness';
 import {get_good_pinning_practice_score} from './good_pinning_practice_factor/good_pinning_practice';
+import {get_perc_reviewed_pr_score} from './perc_reviewed_pr_factor/perc_reviewed_pr';
 
 const arrayToNdjson = require('array-to-ndjson');
 
@@ -20,6 +21,7 @@ interface SCORE_OUT {
   ResponsiveMaintainer: number;
   License: number;
   GoodPinningPractice: number;
+  PercReviewedPR: number;
 }
 
 //get_license_score('git@github.com:davglass/license-checker.git').then(
@@ -30,13 +32,15 @@ interface SCORE_OUT {
 
 function net_score_formula(subscores: SCORE_OUT): number {
   // prettier-ignore
-  // Temp fix to include ramp up in net score calc
+  // include 2 new metrics for Part 2
   const net_score: number =
   subscores.License * (
     (subscores.RampUp * 0.3) +
-    (subscores.BusFactor * 0.3) +
-    (subscores.ResponsiveMaintainer * 0.2) +
-    (subscores.Correctness * 0.2)
+    (subscores.BusFactor * 0.2) +
+    (subscores.ResponsiveMaintainer * 0.05) +
+    (subscores.Correctness * 0.2) +
+    (subscores.GoodPinningPractice * 0.2) +
+    (subscores.PercReviewedPR * 0.05)
   );
   return net_score;
 }
@@ -51,6 +55,7 @@ async function score_calc(url_parse: URL_PARSE) {
     ResponsiveMaintainer: 0,
     License: 0,
     GoodPinningPractice: 0,
+    PercReviewedPR: 0,
   };
   let temp_dir = '';
   try {
@@ -92,6 +97,10 @@ async function score_calc(url_parse: URL_PARSE) {
       git_repo_path
     );
 
+    const perc_reviewed_pr_sub_score = get_perc_reviewed_pr_score(
+      url_parse.github_repo_url
+    );
+
     // Resolve subscores
     score.License = await license_sub_score;
     score.BusFactor = Number((await bus_factor_sub_score).toFixed(3));
@@ -102,6 +111,9 @@ async function score_calc(url_parse: URL_PARSE) {
     score.Correctness = Number((await correctness_sub_score).toFixed(3));
     score.GoodPinningPractice = Number(
       (await good_pinning_practice_sub_score).toFixed(3)
+    );
+    score.PercReviewedPR = Number(
+      (await perc_reviewed_pr_sub_score).toFixed(3)
     );
 
     // Calculate subscores
