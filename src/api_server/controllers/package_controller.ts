@@ -33,6 +33,9 @@ export async function package_id_get(req: Request, res: Response) {
   //console.log(`GET /package/id ${JSON.stringify(req.params)}`);
   let conn;
   try {
+    // CHECK AUTH -> response code 400 if failure!
+    // TODO
+
     conn = await pool.getConnection();
     await conn.query('USE custom_repository');
     const query_data: PackagesQuery[] = await conn.query(
