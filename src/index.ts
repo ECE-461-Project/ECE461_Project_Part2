@@ -142,13 +142,16 @@ async function main() {
   const args = process.argv.slice(2);
   globalThis.logger?.debug(`main args: ${args}`);
 
-  const urls = await get_urls(args[0]);
-
+  const url = await get_urls(args[0]);
+  if (url === undefined) {
+    throw new Error('Undefined URL input!');
+  }
   // Each url score computed one by one -> slow!
-  const score_list: Promise<SCORE_OUT>[] = urls.map(score_calc);
+  const score_list: Promise<SCORE_OUT> = score_calc(url);
 
   // All scores out at same time
-  arrayToNdjson(await Promise.all(score_list)).pipe(process.stdout);
+  const score_list_resolved = await Promise.resolve(score_list);
+  console.log(score_list_resolved);
 }
 
 main();

@@ -60,35 +60,28 @@ export function get_github_url(package_name: string): Promise<string | null> {
 }
 
 export async function _get_urls(
-  filepath: string
-): Promise<Promise<URL_PARSE>[] | undefined> {
+  url: string
+): Promise<Promise<URL_PARSE> | undefined> {
   try {
-    const unparsed_urls = await exports.read_file(filepath);
-    if ('map' in unparsed_urls) {
-      const urls = unparsed_urls.map(async (url: string) => {
-        const url_parse: URL_PARSE = {
-          original_url: url,
-          github_repo_url: '',
-        };
-        if (exports.check_if_npm(url)) {
-          const package_name = exports.get_npm_package_name(url);
-          if (package_name) {
-            const potential_repo = await exports.get_github_url(package_name);
-            if (potential_repo) {
-              if (exports.check_if_github(potential_repo)) {
-                url_parse.github_repo_url = potential_repo;
-              }
-            }
+    const unparsed_url = url;
+    const url_parse: URL_PARSE = {
+      original_url: unparsed_url,
+      github_repo_url: '',
+    };
+    if (exports.check_if_npm(url)) {
+      const package_name = exports.get_npm_package_name(url);
+      if (package_name) {
+        const potential_repo = await exports.get_github_url(package_name);
+        if (potential_repo) {
+          if (exports.check_if_github(potential_repo)) {
+            url_parse.github_repo_url = potential_repo;
           }
-        } else if (exports.check_if_github(url)) {
-          url_parse.github_repo_url = url;
         }
-        return url_parse;
-      });
-      return urls;
-    } else {
-      return undefined; // try-catch means can never be here
+      }
+    } else if (exports.check_if_github(url)) {
+      url_parse.github_repo_url = url;
     }
+    return url_parse;
   } catch (err) {
     if (err instanceof Error) {
       globalThis.logger?.error(
@@ -99,17 +92,7 @@ export async function _get_urls(
   return undefined;
 }
 
-export async function get_urls(filepath: string): Promise<URL_PARSE[]> {
-  const data: Promise<URL_PARSE>[] | undefined = await exports._get_urls(
-    filepath
-  );
-  if (data) {
-    const final_data: URL_PARSE[] = [];
-    for await (const url_parse of data) {
-      final_data.push(url_parse);
-    }
-    return final_data;
-  } else {
-    return [];
-  }
+export async function get_urls(url: string): Promise<URL_PARSE | undefined> {
+  const data: Promise<URL_PARSE> | undefined = await exports._get_urls(url);
+  return data;
 }
