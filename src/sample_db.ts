@@ -19,6 +19,7 @@ const pool = mariadb.createPool({
 });
 
 // This is a sample async function that creates a connection, does some stuff, and closes the connection
+// CAN ALSO use pool.query
 async function asyncFunction() {
   let conn;
   try {

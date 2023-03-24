@@ -5,6 +5,8 @@ services:
       context: ../
       dockerfile: ./docker/API/Dockerfile
     container_name: express-api
+    depends_on:
+      - sql-database
     volumes:
       - ../src:/usr/src/app/src
     ports:
@@ -28,6 +30,8 @@ services:
   adminer:
     image: adminer:latest
     container_name: adminer_container
+    depends_on:
+      - sql-database
     environment:
       ADMINER_DEFAULT_SERVER: sql-database
     ports:
