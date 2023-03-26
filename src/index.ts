@@ -8,7 +8,7 @@ import {join} from 'path';
 import {get_ramp_up_score} from './ramp_up_factor/ramp_up';
 import {get_correctness_score} from './correctness/correctness';
 import {get_good_pinning_practice_score} from './good_pinning_practice_factor/good_pinning_practice';
-import {get_perc_reviewed_pr_score} from './perc_reviewed_pr_factor/perc_reviewed_pr';
+import {get_perc_reviewed_pr_score} from './pull_request_factor/pull_request_score';
 
 const arrayToNdjson = require('array-to-ndjson');
 
@@ -21,7 +21,7 @@ interface SCORE_OUT {
   ResponsiveMaintainer: number;
   License: number;
   GoodPinningPractice: number;
-  PercReviewedPR: number;
+  PullRequest: number;
 }
 
 //get_license_score('git@github.com:davglass/license-checker.git').then(
@@ -40,7 +40,7 @@ function net_score_formula(subscores: SCORE_OUT): number {
     (subscores.ResponsiveMaintainer * 0.05) +
     (subscores.Correctness * 0.2) +
     (subscores.GoodPinningPractice * 0.1) +
-    (subscores.PercReviewedPR * 0.05)
+    (subscores.PullRequest * 0.05)
   );
   return net_score;
 }
@@ -55,7 +55,7 @@ async function score_calc(url_parse: URL_PARSE) {
     ResponsiveMaintainer: 0,
     License: 0,
     GoodPinningPractice: 0,
-    PercReviewedPR: 0,
+    PullRequest: 0,
   };
   let temp_dir = '';
   try {
@@ -97,7 +97,7 @@ async function score_calc(url_parse: URL_PARSE) {
       git_repo_path
     );
 
-    const perc_reviewed_pr_sub_score = get_perc_reviewed_pr_score(
+    const pull_request_sub_score = get_perc_reviewed_pr_score(
       url_parse.github_repo_url
     );
 
@@ -112,9 +112,7 @@ async function score_calc(url_parse: URL_PARSE) {
     score.GoodPinningPractice = Number(
       (await good_pinning_practice_sub_score).toFixed(3)
     );
-    score.PercReviewedPR = Number(
-      (await perc_reviewed_pr_sub_score).toFixed(3)
-    );
+    score.PullRequest = Number((await pull_request_sub_score).toFixed(3));
 
     // Calculate subscores
     score.NetScore = Number(net_score_formula(score).toFixed(3));

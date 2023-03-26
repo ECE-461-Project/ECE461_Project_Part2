@@ -1,4 +1,4 @@
-import {fetch_score_with_graphql_data} from './perc_reviewed_pr_graphql';
+import {fetch_score_with_graphql_data} from './pull_request_score_graphql';
 
 export async function get_perc_reviewed_pr_score(
   repo_url: string
