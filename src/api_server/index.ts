@@ -11,6 +11,7 @@ import authenticate = require('./routes/authenticate');
 import reset = require('./routes/reset');
 import pack = require('./routes/package');
 import {pool} from './db_connector';
+import {create_logger} from '../logging_setup';
 
 // Environment Setup
 dotenv.config({
@@ -26,6 +27,9 @@ const app: Express = express();
 
 // Set up logging using Morgan to stdout
 app.use(morgan('dev'));
+
+// set up part 1 logging
+create_logger();
 
 // Set up body parsers middleware
 app.use(express.json());

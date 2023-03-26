@@ -1,6 +1,6 @@
-import {fetch_score_with_graphql_data} from './pull_request_score_graphql';
+import {fetch_score_with_graphql_data} from './good_engineering_process_graphql';
 
-export async function get_perc_reviewed_pr_score(
+export async function get_good_engineering_process_score(
   repo_url: string
 ): Promise<number> {
   const score: number | undefined = await fetch_score_with_graphql_data(
