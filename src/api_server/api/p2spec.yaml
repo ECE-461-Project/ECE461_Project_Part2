@@ -610,14 +610,20 @@ components:
 
         If the Project 1 that you inherited does not support one or more of the original properties, denote this with the value "-1".
       required:
+      - NetScore
       - RampUp
       - Correctness
       - BusFactor
       - ResponsiveMaintainer
       - LicenseScore
       - GoodPinningPractice
+      - GoodEngineeringProcess
       type: object
       properties:
+        NetScore:
+          format: double
+          description: ""
+          type: number
         BusFactor:
           format: double
           description: ""
@@ -645,6 +651,10 @@ components:
             \ there are zero dependencies, they should receive a 1.0 rating. If there
             \ are two dependencies, one pinned to this degree, then they should receive
             \ a Â½ = 0.5 rating)."
+          type: number
+        GoodEngineeringProcess:
+          format: double
+          description: "The fraction of project code that was introduced through pull requests with a code review)."
           type: number
     PackageHistoryEntry:
       description: One entry of the history of this package.
