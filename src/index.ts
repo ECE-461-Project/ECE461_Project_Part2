@@ -10,8 +10,6 @@ import {get_correctness_score} from './correctness/correctness';
 import {get_good_pinning_practice_score} from './good_pinning_practice_factor/good_pinning_practice';
 import {get_perc_reviewed_pr_score} from './pull_request_factor/pull_request_score';
 
-const arrayToNdjson = require('array-to-ndjson');
-
 interface SCORE_OUT {
   URL: string;
   NetScore: number;
@@ -149,6 +147,7 @@ async function main() {
 
   // All scores out at same time
   const score_list_resolved = await Promise.resolve(score_list);
+  // TODO: have main return the score list to populate database?
   console.log(score_list_resolved);
 }
 
