@@ -1,6 +1,6 @@
 // You should use models for return
 import {Request, Response} from 'express';
-import {pool} from '../db_connector';
+import {sequelize, packages} from '../db_connector';
 import {
   ModelPackage,
   PackageMetadata,
@@ -10,27 +10,6 @@ import {
 import {generate_base64_zip_of_dir} from '../zip_files';
 import {get_scores_from_url, SCORE_OUT} from '../../score_calculations';
 
-// This is the interface for a select * from the packages database
-// NOTE: The query returns an array!
-interface PackagesQuery {
-  PackageID: number;
-  PackageName: string;
-  PackagePath: string;
-  GitHubLink: string | undefined;
-  RatedAndApproved: number;
-  VersionNumber: string;
-  NetScore: number;
-  BusFactorScore: number;
-  CorrectnessScore: number;
-  LicenseScore: number;
-  RampUpScore: number;
-  ResponsivenessScore: number;
-  GoodPinningPracticeScore: number;
-  PullRequestScore: number;
-  UploadDate: Date;
-  FK_UserID: number;
-}
-
 /* ////////////////////////////////////////////////////////////////////////
  *
  * 							PACKAGE_ID_GET
@@ -38,25 +17,17 @@ interface PackagesQuery {
  */ ///////////////////////////////////////////////////////////////////////
 export async function package_id_get(req: Request, res: Response) {
   //console.log(`GET /package/id ${JSON.stringify(req.params)}`);
-  let conn;
   try {
     // CHECK AUTH -> response code 400 if failure!
     // TODO
 
-    conn = await pool.getConnection();
-    await conn.query('USE custom_repository');
-    const query_data: PackagesQuery[] = await conn.query(
-      `SELECT * FROM packages WHERE PackageID='${req.params.id}'`
-    );
-    //console.log(query_data);
-    if (query_data.length !== 0) {
-      const content_data = await generate_base64_zip_of_dir(
-        query_data[0].PackagePath
-      );
+    const result = await packages.findOne({where: {PackageID: req.params.id}});
+    if (result) {
+      const content_data = await generate_base64_zip_of_dir(result.PackagePath);
       const metadata: PackageMetadata = {
-        Name: query_data[0].PackageName,
-        Version: query_data[0].VersionNumber,
-        ID: query_data[0].PackageID.toString(),
+        Name: result.PackageName,
+        Version: result.VersionNumber,
+        ID: result.PackageID.toString(),
       };
       const data: PackageData = {
         Content: content_data,
@@ -70,7 +41,9 @@ export async function package_id_get(req: Request, res: Response) {
     } else {
       res.contentType('application/json').status(404).send();
     }
+    //console.log(query_data);
   } catch (err: any) {
+    console.log(err);
     if (err instanceof Error) {
       const error: ModelError = {
         code: 0,
@@ -83,11 +56,6 @@ export async function package_id_get(req: Request, res: Response) {
         message: err.toString(),
       };
       res.contentType('application/json').status(500).send(error);
-    }
-  } finally {
-    if (conn) {
-      conn.release(); //release to pool
-      //conn.end();
     }
   }
 }
@@ -125,33 +93,35 @@ export function package_post(req: Request, res: Response) {
  *
  */ ///////////////////////////////////////////////////////////////////////
 export async function package_id_rate_get(req: Request, res: Response) {
-  let conn;
   try {
     // CHECK AUTH -> response code 400 if failure!
     // TODO once user creation / auth token complete
-    conn = await pool.getConnection();
-    await conn.query('USE custom_repository');
-    const query_data: PackagesQuery[] = await conn.query(
-      `SELECT * FROM packages WHERE PackageID='${req.params.id}'`
-    );
-    if (query_data.length !== 0) {
-      const link_input = query_data[0].GitHubLink;
+    const result = await packages.findOne({where: {PackageID: req.params.id}});
+    if (result) {
+      const link_input = result.GitHubLink;
       if (link_input === undefined) {
         res.status(404).send('No Github URL for Package ID!');
       } else {
         // call metric computation
         const ud: SCORE_OUT = await get_scores_from_url(link_input);
         // write metrics values back into database
-        const update_rtv = await conn.query(`UPDATE packages
-			SET NetScore = '${ud.Rating.NetScore}',
-			BusFactor = '${ud.Rating.BusFactor}',
-			Correctness = '${ud.Rating.Correctness}', 
-			RampUp = '${ud.Rating.RampUp}', 
-			ResponsiveMaintainer = '${ud.Rating.ResponsiveMaintainer}',
-			LicenseScore = '${ud.Rating.LicenseScore}',
-			GoodPinningPractice = '${ud.Rating.GoodPinningPractice}',
-			GoodEngineeringProcess = '${ud.Rating.GoodEngineeringProcess}'
-			WHERE PackageID = '${req.params.id}'`);
+        await packages.update(
+          {
+            NetScore: ud.Rating.NetScore,
+            BusFactor: ud.Rating.BusFactor,
+            Correctness: ud.Rating.Correctness,
+            RampUp: ud.Rating.RampUp,
+            ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
+            LicenseScore: ud.Rating.LicenseScore,
+            GoodPinningPractice: ud.Rating.GoodPinningPractice,
+            GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
+          },
+          {
+            where: {
+              PackageID: req.params.id,
+            },
+          }
+        );
         res.status(200).send(ud.Rating);
       }
     } else {
@@ -159,6 +129,7 @@ export async function package_id_rate_get(req: Request, res: Response) {
       res.status(404).send('Package ID not found!');
     }
   } catch (err: any) {
+    console.log(err);
     if (err instanceof Error) {
       const error: ModelError = {
         code: 0,
@@ -171,11 +142,6 @@ export async function package_id_rate_get(req: Request, res: Response) {
         message: err.toString(),
       };
       res.contentType('application/json').status(500).send(error);
-    }
-  } finally {
-    if (conn) {
-      conn.release(); //release to pool
-      //conn.end();
     }
   }
 }
