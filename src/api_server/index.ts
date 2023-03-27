@@ -10,7 +10,6 @@ import packages = require('./routes/packages');
 import authenticate = require('./routes/authenticate');
 import reset = require('./routes/reset');
 import pack = require('./routes/package');
-import {pool} from './db_connector';
 import {create_logger} from '../logging_setup';
 
 // Environment Setup
@@ -19,6 +18,12 @@ dotenv.config({
 });
 if (!process.env.EXPRESS_PORT) {
   throw new Error('Express Port not defined');
+}
+dotenv.config({
+  path: resolve(process.cwd(), '.env'),
+});
+if (!process.env.GITHUB_TOKEN) {
+  throw new Error('GITHUB_TOKEN not defined');
 }
 const port = process.env.EXPRESS_PORT;
 
@@ -66,28 +71,5 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // Start server: default to localhost
 const server = app.listen(port, () => {
-  async function pool_check() {
-    let conn;
-    try {
-      console.log('Waiting connection');
-      conn = await pool.getConnection();
-      const databases = await conn.query('SHOW DATABASES');
-      console.log(databases);
-    } finally {
-      if (conn) {
-        conn.release(); //release to pool
-        //conn.end();
-      }
-    }
-  }
-
-  (async () => {
-    await pool_check();
-  })();
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-});
-
-// Closes pool on server exit
-process.on('exit', async () => {
-  await pool.end();
 });

@@ -35,6 +35,7 @@
     "morgan": "^1.10.0",
     "node-fetch": "^2.6.9",
     "octokit": "^2.0.14",
+    "sequelize": "^6.30.0",
     "swagger-ui-express": "^4.6.2",
     "util": "^0.12.5",
     "winston": "^3.8.2",
