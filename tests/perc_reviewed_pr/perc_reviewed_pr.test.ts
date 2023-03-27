@@ -1,4 +1,4 @@
-import {fetch_score_with_graphql_data} from '../../src/perc_reviewed_pr_factor/perc_reviewed_pr_graphql'
+import {fetch_score_with_graphql_data} from '../../src/good_engineering_process_factor/good_engineering_process_graphql'
 
 describe('testing fetch_score_with_graphql_data', () => {
   jest.setTimeout(15000);

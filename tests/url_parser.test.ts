@@ -94,10 +94,10 @@ describe('testing get_github_url', () => {
 
 describe('testing _get_urls', () => {
   test('should not work', async () => {
-    expect(await url_parser._get_urls('asdf')).toBe(undefined);
+    expect(await url_parser._get_urls_internal('asdf', [])).toBe(undefined);
   });
   test('should work', async () => {
-    const val = await url_parser._get_urls('./tests/_urls/url_test1.txt');
+    const val = await url_parser._get_urls_internal('./tests/_urls/url_test1.txt', []);
     const final: url_parser.URL_PARSE[] = [];
     if (val) {
       for await (const url of val) {
@@ -144,7 +144,7 @@ describe('testing _get_urls', () => {
 });
 describe('testing get_urls', () => {
   test('should work get_urls', async () => {
-    const val = await url_parser.get_urls('./tests/_urls/url_test1.txt');
+    const val = await url_parser.get_urls_from_file('./tests/_urls/url_test1.txt');
     expect(val).toStrictEqual([
       {
         github_repo_url: 'https://github.com/jonschlinkert/get-repository-url',
@@ -183,10 +183,10 @@ describe('testing get_urls', () => {
     ]);
   });
   test('should not work', async () => {
-    expect(await url_parser.get_urls('asdf')).toStrictEqual([]);
+    expect(await url_parser.get_urls_from_file('asdf')).toStrictEqual([]);
   });
   test('should be empty work', async () => {
-    expect(await url_parser.get_urls('./tests/_urls/empty.txt')).toStrictEqual(
+    expect(await url_parser.get_urls_from_file('./tests/_urls/empty.txt')).toStrictEqual(
       []
     );
   });

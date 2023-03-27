@@ -1,13 +1,6 @@
 //import { Octokit } from "octokit";
 const fetch = require('node-fetch');
 
-const secretKey: string | undefined = process.env.GITHUB_TOKEN;
-
-if (!secretKey) {
-  globalThis.logger?.error('GITHUB Token not defined');
-  throw new Error('GITHUB_TOKEN is not defined');
-}
-
 export async function GraphQl_Data(github_repo_url: string): Promise<any> {
   try {
     const reg = new RegExp('github\\.com/(.+)/(.+)');
@@ -104,6 +97,13 @@ export async function GraphQl_Data(github_repo_url: string): Promise<any> {
           totalCount
         }
       }`;
+
+    const secretKey: string | undefined = process.env.GITHUB_TOKEN;
+
+    if (!secretKey) {
+      globalThis.logger?.error('GITHUB Token not defined');
+      throw new Error('GITHUB_TOKEN is not defined');
+    }
 
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',

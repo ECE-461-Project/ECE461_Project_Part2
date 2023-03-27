@@ -59,11 +59,17 @@ export function get_github_url(package_name: string): Promise<string | null> {
   return getPackageGithubUrl(package_name);
 }
 
-export async function _get_urls(
-  filepath: string
+export async function _get_urls_internal(
+  filepath: string,
+  urls: string[]
 ): Promise<Promise<URL_PARSE>[] | undefined> {
   try {
-    const unparsed_urls = await exports.read_file(filepath);
+    let unparsed_urls: string[];
+    if (filepath.length > 0) {
+      unparsed_urls = await exports.read_file(filepath);
+    } else {
+      unparsed_urls = urls;
+    }
     if ('map' in unparsed_urls) {
       const urls = unparsed_urls.map(async (url: string) => {
         const url_parse: URL_PARSE = {
@@ -99,10 +105,27 @@ export async function _get_urls(
   return undefined;
 }
 
-export async function get_urls(filepath: string): Promise<URL_PARSE[]> {
-  const data: Promise<URL_PARSE>[] | undefined = await exports._get_urls(
-    filepath
-  );
+export async function get_urls_from_file(
+  filepath: string
+): Promise<URL_PARSE[]> {
+  const data: Promise<URL_PARSE>[] | undefined =
+    await exports._get_urls_internal(filepath, []);
+  if (data) {
+    const final_data: URL_PARSE[] = [];
+    for await (const url_parse of data) {
+      final_data.push(url_parse);
+    }
+    return final_data;
+  } else {
+    return [];
+  }
+}
+
+export async function get_url_parse_from_input(
+  url: string
+): Promise<URL_PARSE[]> {
+  const data: Promise<URL_PARSE>[] | undefined =
+    await exports._get_urls_internal('', [url]);
   if (data) {
     const final_data: URL_PARSE[] = [];
     for await (const url_parse of data) {

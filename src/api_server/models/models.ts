@@ -165,7 +165,7 @@ export interface PackageRating {
    * @memberof PackageRating
    */
   LicenseScore: number;
-   /**
+  /**
    *
    * The fraction of project code that was introduced through pull requests with a code review)
    * @type {number}
