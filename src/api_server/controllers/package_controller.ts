@@ -43,6 +43,7 @@ export async function package_id_get(req: Request, res: Response) {
     }
     //console.log(query_data);
   } catch (err: any) {
+    console.log(err);
     if (err instanceof Error) {
       const error: ModelError = {
         code: 0,
@@ -128,6 +129,7 @@ export async function package_id_rate_get(req: Request, res: Response) {
       res.status(404).send('Package ID not found!');
     }
   } catch (err: any) {
+    console.log(err);
     if (err instanceof Error) {
       const error: ModelError = {
         code: 0,
