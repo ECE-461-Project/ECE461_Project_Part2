@@ -6,6 +6,7 @@ COPY .env ./
 COPY .env.express ./
 COPY .env.mariadb ./
 COPY src ./src
+COPY tests ./tests
 RUN npm install
 EXPOSE 3000
 CMD ["npm", "run", "runAPI"]
