@@ -26,6 +26,8 @@ describe('GET /package/{id}', () => {
       Version: '1.0.0',
       ID: '1',
     });
+    expect(result.body).toHaveProperty('data');
+    expect(result.body.data).toHaveProperty('Content');
     // data.Content base64 cannot be validated easily due to 
     //  different file permissions causing base64 to be slightly
     //  different
