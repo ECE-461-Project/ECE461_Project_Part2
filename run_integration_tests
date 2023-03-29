@@ -17,7 +17,7 @@ cd ..
 cd ..
 
 # Start test
-npx jest --silent=true --coverage
+npx jest --silent=true --coverage -c tests/integration_tests/jest.config.js
 
 # Turnoff docker containers
 cd docker
