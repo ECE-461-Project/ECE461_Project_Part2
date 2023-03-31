@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+export $(cat .env | xargs)
+npx jest --silent=true --coverage

@@ -1,4 +1,4 @@
-import {createLogger, transports, Logger} from 'winston';
+import {createLogger, transports, Logger, format} from 'winston';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -40,7 +40,10 @@ export function create_logger() {
     });
   } else {
     globalThis.logger = createLogger({
-      transports: [new transports.File({filename: get_log_file()})],
+      transports: [
+        new transports.File({filename: get_log_file()}),
+        new transports.Console({level: 'error', format: format.cli()}),
+      ],
       level: level,
     });
   }
