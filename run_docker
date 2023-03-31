@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Startup docker containers
+cd docker
+sudo docker compose down
+sudo docker compose up --build -d

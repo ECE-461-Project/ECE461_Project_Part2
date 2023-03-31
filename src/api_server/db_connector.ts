@@ -3,9 +3,15 @@ import {resolve} from 'path';
 import {Sequelize, DataTypes, Model} from 'sequelize';
 
 function create_sequelize() {
-  dotenv.config({
-    path: resolve(process.cwd(), '.env.mariadb'),
-  });
+  if (process.env.INTEGRATION) {
+    dotenv.config({
+      path: resolve(process.cwd(), 'tests/integration_tests/.env.mariadb'),
+    });
+  } else {
+    dotenv.config({
+      path: resolve(process.cwd(), '.env.mariadb'),
+    });
+  }
   if (!process.env.DB_HOST) {
     throw new Error('DB_HOST not defined');
   }
