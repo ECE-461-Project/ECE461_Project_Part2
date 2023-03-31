@@ -29,6 +29,9 @@ function create_sequelize() {
         acquire: 20000,
         idle: 10000,
       },
+      logging: (msg: any) => {
+        globalThis.logger?.debug(msg);
+      },
       //logging: (...msg: any) => console.log(msg),
       define: {
         freezeTableName: true,
@@ -186,12 +189,3 @@ packages.init(
   },
   {sequelize}
 );
-
-sequelize
-  .sync({alter: true})
-  .then(() => {
-    console.log('INITIAL Database tables have been synced');
-  })
-  .catch(() => {
-    console.log('INITIAL Database table sync failed');
-  });

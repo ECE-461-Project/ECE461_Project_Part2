@@ -18,9 +18,6 @@ import {get_scores_from_url, SCORE_OUT} from '../../score_calculations';
 export async function package_id_get(req: Request, res: Response) {
   //console.log(`GET /package/id ${JSON.stringify(req.params)}`);
   try {
-    // CHECK AUTH -> response code 400 if failure!
-    // TODO
-
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
       const content_data = await generate_base64_zip_of_dir(result.PackagePath);
@@ -94,8 +91,6 @@ export function package_post(req: Request, res: Response) {
  */ ///////////////////////////////////////////////////////////////////////
 export async function package_id_rate_get(req: Request, res: Response) {
   try {
-    // CHECK AUTH -> response code 400 if failure!
-    // TODO once user creation / auth token complete
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
       const link_input = result.GitHubLink;
