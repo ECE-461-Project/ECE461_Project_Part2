@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken';
-import {auth_secret} from '../../src/api_server/config/auth';
+import {auth_secret} from '../../../src/api_server/config/auth';
 
 export function get_auth_token() {
   const payload = {

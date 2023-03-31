@@ -1,6 +1,6 @@
 import exp = require('constants');
 import * as request from 'supertest';
-import {get_auth_token} from './get_auth_token';
+import {get_auth_token} from './helper/get_auth_token';
 
 // This checks if the INTEGRATION env variable is defined
 if (process.env.INTEGRATION === undefined) {

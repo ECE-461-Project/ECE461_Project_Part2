@@ -1,5 +1,4 @@
-import {packages, sequelize} from '../../src/api_server/db_connector';
-
+import {packages, sequelize} from '../../../src/api_server/db_connector';
 // Please seed the database in database_seed.ts
 // Please put package files in the test_packages directory
 
@@ -25,11 +24,23 @@ export class packages extends Model {
 }
 */
 module.exports = async function main() {
-
   // Delete everything from packages table
   await packages.destroy({
     truncate: true
   });
-  console.log('Database clear success');
+
+  // Seed for GET /package/{id}/
+  //const {execSync} = require('child_process');
+  //console.log('Sleeping... (database_seed.ts)');
+  //execSync('sleep 5'); // block process for 1 second.
+
+  const package_a = await packages.create({
+    PackageName: 'package_a',
+    PackagePath: './tests/integration_tests/test_packages/package_a',
+    VersionNumber: '1.0.0',
+    UploadDate: Date.now(),
+  }); 
+
+  console.log('Database seed success');
 }
 //main();
