@@ -2,23 +2,5 @@
 # Environment setup
 export $(cat .env | xargs)
 export INTEGRATION=1
-
-# Startup docker containers
-cd docker
-sudo docker compose down
-sudo docker compose up --build -d
-cd ..
-
-# Seed database
-npx tsc --project tests/integration_tests/tsconfig.json
-cd tests/integration_tests
-node build/tests/integration_tests/database_seed.js
-cd ..
-cd ..
-
 # Start test
-npx jest --silent=true --coverage -c tests/integration_tests/jest.config.js
-
-# Turnoff docker containers
-cd docker
-sudo docker compose down
+npx jest --silent=true --coverage -c tests/integration_tests/jest.config.js --detectOpenHandles

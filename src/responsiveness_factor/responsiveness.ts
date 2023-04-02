@@ -1,4 +1,4 @@
-import {get_github_url} from 'url_parser';
+import {get_github_url} from '../url_parser';
 
 const axios = require('axios');
 

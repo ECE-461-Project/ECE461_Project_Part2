@@ -42,7 +42,7 @@ export function create_logger() {
     globalThis.logger = createLogger({
       transports: [
         new transports.File({filename: get_log_file()}),
-        new transports.Console({level: 'error', format: format.cli()}),
+        new transports.Console({level: 'info', format: format.cli()}),
       ],
       level: level,
     });

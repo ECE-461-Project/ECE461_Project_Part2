@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+cd docker
+sudo docker compose down

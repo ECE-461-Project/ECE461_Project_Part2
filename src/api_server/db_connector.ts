@@ -3,9 +3,15 @@ import {resolve} from 'path';
 import {Sequelize, DataTypes, Model} from 'sequelize';
 
 function create_sequelize() {
-  dotenv.config({
-    path: resolve(process.cwd(), '.env.mariadb'),
-  });
+  if (process.env.INTEGRATION) {
+    dotenv.config({
+      path: resolve(process.cwd(), 'tests/integration_tests/.env.mariadb'),
+    });
+  } else {
+    dotenv.config({
+      path: resolve(process.cwd(), '.env.mariadb'),
+    });
+  }
   if (!process.env.DB_HOST) {
     throw new Error('DB_HOST not defined');
   }
@@ -28,6 +34,9 @@ function create_sequelize() {
         min: 0,
         acquire: 20000,
         idle: 10000,
+      },
+      logging: (msg: any) => {
+        globalThis.logger?.debug(msg);
       },
       //logging: (...msg: any) => console.log(msg),
       define: {
@@ -186,12 +195,3 @@ packages.init(
   },
   {sequelize}
 );
-
-sequelize
-  .sync({alter: true})
-  .then(() => {
-    console.log('INITIAL Database tables have been synced');
-  })
-  .catch(() => {
-    console.log('INITIAL Database table sync failed');
-  });
