@@ -11,6 +11,8 @@ import authenticate = require('./routes/authenticate');
 import reset = require('./routes/reset');
 import pack = require('./routes/package');
 import {create_logger} from '../logging_setup';
+import {verifyToken} from './middleware/authorize';
+import {sequelize, users} from './db_connector';
 
 // Environment Setup
 dotenv.config({
@@ -55,21 +57,55 @@ app.use(
 );
 
 // Routing setup
-app.use('/packages', packages.router);
+app.use('/packages', [verifyToken, packages.router]);
 app.use('/authenticate', authenticate.router);
-app.use('/reset', reset.router);
-app.use('/package', pack.router);
+app.use('/reset', [verifyToken, reset.router]);
+app.use('/package', [verifyToken, pack.router]);
 
 // Basic Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err); // dump error to console for debug
+  globalThis.logger?.error(err); // dump error to console for debug
   res.status(err.status || 500).json({
     message: err.message,
     errors: err.errors,
   });
 });
 
-// Start server: default to localhost
-const server = app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-});
+async function main() {
+  // Sync databases by using alter (does not drop)
+  try {
+    await sequelize.sync({alter: true});
+    globalThis.logger?.info('INITIAL Database tables have been synced');
+  } catch (err) {
+    globalThis.logger?.error(err);
+    globalThis.logger?.error('INITIAL Database table sync failed');
+  }
+  // Create default user
+  try {
+    const [default_user, created] = await users.findOrCreate({
+      where: {Username: 'ece30861defaultadminuser'},
+      defaults: {
+        UserPassword:
+          'correcthorsebatterystaple123(!__+@**(A’”`;DROP TABLE packages;',
+        Permissions: {isAdmin: true},
+        UserGroups: {},
+      },
+    });
+    if (created) {
+      globalThis.logger?.info('default_user created');
+    } else {
+      globalThis.logger?.info('default_user already exists');
+    }
+  } catch (err) {
+    globalThis.logger?.error(err);
+    globalThis.logger?.error('Creation of default user failed');
+  }
+  // Start server
+  const server = app.listen(port, () => {
+    globalThis.logger?.info(
+      `⚡️[server]: Server is running at http://localhost:${port}`
+    );
+  });
+}
+
+main();
