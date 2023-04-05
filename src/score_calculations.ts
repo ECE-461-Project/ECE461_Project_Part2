@@ -135,6 +135,8 @@ export async function get_scores_from_url(urlval: string): Promise<SCORE_OUT> {
   if (url === undefined) {
     throw new Error('Undefined URL input!');
   }
+  globalThis.logger?.debug(`url: ${url[0].github_repo_url} `);
+
   // Each url score computed one by one -> slow!
   const score_list: Promise<SCORE_OUT> = score_calc(url[0]);
   return score_list;

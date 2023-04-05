@@ -1,3 +1,6 @@
+FROM alpine:latest
+RUN apk update
+RUN apk add git
 FROM node:latest
 WORKDIR /usr/src/app
 COPY package*.json ./
