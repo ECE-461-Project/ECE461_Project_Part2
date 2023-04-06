@@ -8,7 +8,16 @@ import {
   ModelError,
 } from '../models/models';
 import {generate_base64_zip_of_dir} from '../zip_files';
-import {get_scores_from_url, SCORE_OUT} from '../../score_calculations';
+import {
+  package_rate_compute,
+  package_rate_compute_and_update,
+  package_rate_ingestible,
+  package_rate_update,
+} from '../package_rate_helper';
+import {SCORE_OUT} from '../../score_calculations';
+import {create_tmp, delete_dir} from '../../git_clone';
+import {join} from 'path';
+import {readFile} from 'fs/promises';
 
 /* ////////////////////////////////////////////////////////////////////////
  *
@@ -20,14 +29,14 @@ export async function package_id_get(req: Request, res: Response) {
   try {
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
-      const content_data = await generate_base64_zip_of_dir(result.PackagePath);
       const metadata: PackageMetadata = {
         Name: result.PackageName,
         Version: result.VersionNumber,
         ID: result.PackageID.toString(),
       };
       const data: PackageData = {
-        Content: content_data,
+        // change to just URL from database result
+        URL: result.GitHubLink,
       };
       const to_send: ModelPackage = {
         metadata: metadata,
@@ -77,11 +86,115 @@ export function package_id_delete(req: Request, res: Response) {
 
 /* ////////////////////////////////////////////////////////////////////////
  *
- * 							PACKAGE_ID_POST
+ * 							PACKAGE_POST
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_post(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+export async function package_post(req: Request, res: Response) {
+  try {
+    const input: PackageData = req.body;
+    const content = input.Content;
+    const url_in = input.URL;
+    console.log(content);
+    console.log(url_in);
+    // we are not implementing the JSProgram
+    // @TODO code 409 package exists already
+    if (content) {
+      // steps: content input is the b64 zip file
+      // create temp directory to store package
+      const temp_dir = await create_tmp();
+
+      // 1. un-base64 it
+      // 2. unzip it into PackagePath (neet to set)
+      // 3. look in package.json for Name, Version, URL
+      //    and set all PackageMetadata fields (for URL, parse and put the good format in database)
+      // if no package.json / no URL / no Name / No Version, return status 400 formed improperly
+      // 4.
+      // 5. Update database for Name Version ID URL and PackagePath
+      // 6. return metadata and content
+    } else if (url_in) {
+      // steps: url_in input is ingestible public
+      // create temp directory to store package
+      const temp_dir = await create_tmp();
+      // 1. run package rate on the url (make that a separate function not part of req/response)
+      const ud: SCORE_OUT = await package_rate_compute(url_in, temp_dir);
+      // 2. Check if ingestible
+      // 3. If not ingestible, return 424 status due to disqualified rating
+      if (package_rate_ingestible(ud) === 0) {
+        delete_dir(temp_dir);
+        res.status(424).send('Not uploaded due to the disqualified rating');
+      } else {
+        // 5. If ingestible: look at local clone created by rating call
+        // 6. zip it, then base64 it, then return that b64 in content
+        const b64_ingestible = await generate_base64_zip_of_dir(
+          join(temp_dir, 'package')
+        );
+        // look in package.json for Name, Version
+        //    and set all PackageMetadata fields
+        //    if no package.json / no Name / No Version, return status 400 formed improperly
+        const package_json = JSON.parse(
+          (await readFile(join(temp_dir, 'package', 'package.json'))).toString()
+        );
+        const name: string | undefined = package_json.name;
+        const version: string | undefined = package_json.version;
+        if (name === undefined || version === undefined) {
+          delete_dir(temp_dir);
+          res.status(400).send('Not uploaded due to formed improperly');
+        } else {
+          const id: string = name.toLowerCase();
+          // create database entry for Name Version ID URL RatedAndApproved and PackagePath
+          const package_uploaded = await packages.create({
+            PackageID: id,
+            PackageName: name,
+            PackagePath: temp_dir,
+            GitHubLink: ud.GitHubLink,
+            RatedAndApproved: 1,
+            VersionNumber: version,
+            UploadDate: Date.now(),
+            createdAt: Date.now(),
+            FK_UserID: 1, // @TODO proper user id
+          });
+          // update database for scores
+          await package_rate_update(id, ud);
+          // return metadata and content
+          const metadata: PackageMetadata = {
+            Name: name,
+            Version: version,
+            ID: id,
+          };
+          const data: PackageData = {
+            Content: b64_ingestible,
+          };
+          const to_send: ModelPackage = {
+            metadata: metadata,
+            data: data,
+          };
+          //console.log(to_send);
+          res.contentType('application/json').status(201).send(to_send);
+        }
+      }
+    } else {
+      res
+        .contentType('application/json')
+        .status(400)
+        .send('PackageData input does not have Content or URL');
+    }
+    //console.log(query_data);
+  } catch (err: any) {
+    console.log(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(400).send(error);
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(400).send(error);
+    }
+  }
 }
 
 /* ////////////////////////////////////////////////////////////////////////
@@ -98,24 +211,11 @@ export async function package_id_rate_get(req: Request, res: Response) {
         res.status(404).send('No Github URL for Package ID!');
       } else {
         // call metric computation
-        const ud: SCORE_OUT = await get_scores_from_url(link_input);
-        // write metrics values back into database
-        await packages.update(
-          {
-            NetScore: ud.Rating.NetScore,
-            BusFactor: ud.Rating.BusFactor,
-            Correctness: ud.Rating.Correctness,
-            RampUp: ud.Rating.RampUp,
-            ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
-            LicenseScore: ud.Rating.LicenseScore,
-            GoodPinningPractice: ud.Rating.GoodPinningPractice,
-            GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
-          },
-          {
-            where: {
-              PackageID: req.params.id,
-            },
-          }
+        delete_dir(result.PackagePath);
+        const ud: SCORE_OUT = await package_rate_compute_and_update(
+          req.params.id,
+          link_input,
+          result.PackagePath
         );
         res.status(200).send(ud.Rating);
       }

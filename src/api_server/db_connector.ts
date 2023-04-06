@@ -104,7 +104,7 @@ users.init(
   {sequelize}
 );
 export class packages extends Model {
-  declare PackageID: number;
+  declare PackageID: string;
   declare PackageName: string;
   declare PackagePath: string;
   declare GitHubLink: string;
@@ -124,10 +124,8 @@ export class packages extends Model {
 packages.init(
   {
     PackageID: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.TEXT,
       allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
     },
     PackageName: {
       type: DataTypes.TEXT('tiny'),
