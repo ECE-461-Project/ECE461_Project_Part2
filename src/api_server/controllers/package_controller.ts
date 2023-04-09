@@ -98,7 +98,6 @@ export async function package_post(req: Request, res: Response) {
     console.log(content);
     console.log(url_in);
     // we are not implementing the JSProgram
-    // @TODO code 409 package exists already
     if (content) {
       // steps: content input is the b64 zip file
       // create temp directory to store package
@@ -139,41 +138,50 @@ export async function package_post(req: Request, res: Response) {
               );
           } else {
             const id: string = name.toLowerCase();
-            delete_dir(temp_dir);
-            const ud: SCORE_OUT = await package_rate_compute(
-              repository_url,
-              temp_dir
-            );
-            // update database for scores
-            await package_rate_update(id, ud);
-            // create database entry for Name Version ID URL RatedAndApproved and PackagePath
-            const package_uploaded = await packages.create({
-              PackageID: id,
-              PackageName: name,
-              PackagePath: temp_dir, // or join(temp_dir, 'package'),
-              GitHubLink: ud.GitHubLink,
-              RatedAndApproved: 1,
-              UploadTypeURL: 0,
-              VersionNumber: version,
-              UploadDate: Date.now(),
-              createdAt: Date.now(),
-              FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+            // check if id exists already, error 409
+            const result = await packages.findOne({
+              where: {PackageID: id},
             });
+            if (result) {
+              delete_dir(temp_dir);
+              res.status(409).send('Not uploaded - package exists!');
+            } else {
+              delete_dir(temp_dir);
+              const ud: SCORE_OUT = await package_rate_compute(
+                repository_url,
+                temp_dir
+              );
+              // update database for scores
+              await package_rate_update(id, ud);
+              // create database entry for Name Version ID URL RatedAndApproved and PackagePath
+              const package_uploaded = await packages.create({
+                PackageID: id,
+                PackageName: name,
+                PackagePath: temp_dir, // or join(temp_dir, 'package'),
+                GitHubLink: ud.GitHubLink,
+                RatedAndApproved: 1,
+                UploadTypeURL: 0,
+                VersionNumber: version,
+                UploadDate: Date.now(),
+                createdAt: Date.now(),
+                FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+              });
 
-            const metadata: PackageMetadata = {
-              Name: name,
-              Version: version,
-              ID: id,
-            };
-            const data: PackageData = {
-              URL: ud.GitHubLink,
-            };
-            const to_send: ModelPackage = {
-              metadata: metadata,
-              data: data,
-            };
-            //console.log(to_send);
-            res.contentType('application/json').status(201).send(to_send);
+              const metadata: PackageMetadata = {
+                Name: name,
+                Version: version,
+                ID: id,
+              };
+              const data: PackageData = {
+                URL: ud.GitHubLink,
+              };
+              const to_send: ModelPackage = {
+                metadata: metadata,
+                data: data,
+              };
+              //console.log(to_send);
+              res.contentType('application/json').status(201).send(to_send);
+            }
           }
         }
       } else {
@@ -215,36 +223,45 @@ export async function package_post(req: Request, res: Response) {
             );
         } else {
           const id: string = name.toLowerCase();
-          // create database entry for Name Version ID URL RatedAndApproved and PackagePath
-          const package_uploaded = await packages.create({
-            PackageID: id,
-            PackageName: name,
-            PackagePath: temp_dir, // or join(temp_dir, 'package'),
-            GitHubLink: ud.GitHubLink,
-            RatedAndApproved: 1,
-            UploadTypeURL: 1,
-            VersionNumber: version,
-            UploadDate: Date.now(),
-            createdAt: Date.now(),
-            FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+          // check if id exists already, error 409
+          const result = await packages.findOne({
+            where: {PackageID: id},
           });
-          // update database for scores
-          await package_rate_update(id, ud);
-          // return metadata and content
-          const metadata: PackageMetadata = {
-            Name: name,
-            Version: version,
-            ID: id,
-          };
-          const data: PackageData = {
-            Content: b64_ingestible,
-          };
-          const to_send: ModelPackage = {
-            metadata: metadata,
-            data: data,
-          };
-          //console.log(to_send);
-          res.contentType('application/json').status(201).send(to_send);
+          if (result) {
+            delete_dir(temp_dir);
+            res.status(409).send('Not uploaded - package exists!');
+          } else {
+            // create database entry for Name Version ID URL RatedAndApproved and PackagePath
+            const package_uploaded = await packages.create({
+              PackageID: id,
+              PackageName: name,
+              PackagePath: temp_dir, // or join(temp_dir, 'package'),
+              GitHubLink: ud.GitHubLink,
+              RatedAndApproved: 1,
+              UploadTypeURL: 1,
+              VersionNumber: version,
+              UploadDate: Date.now(),
+              createdAt: Date.now(),
+              FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+            });
+            // update database for scores
+            await package_rate_update(id, ud);
+            // return metadata and content
+            const metadata: PackageMetadata = {
+              Name: name,
+              Version: version,
+              ID: id,
+            };
+            const data: PackageData = {
+              Content: b64_ingestible,
+            };
+            const to_send: ModelPackage = {
+              metadata: metadata,
+              data: data,
+            };
+            //console.log(to_send);
+            res.contentType('application/json').status(201).send(to_send);
+          }
         }
       }
     } else {
