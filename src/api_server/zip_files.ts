@@ -1,7 +1,13 @@
 import {getAllFiles} from './get_files';
 import JSZip = require('jszip');
 import {readFile} from 'fs/promises';
-import {createWriteStream} from 'fs';
+import {writeFile, writeFileSync} from 'fs';
+import {tmpdir} from 'os';
+import {mkdtemp} from 'fs/promises';
+import {join} from 'path';
+import {run_cmd} from '../sub_process_help';
+import {delete_dir} from '../git_clone';
+
 // ***************************
 // This ensures jszip compiles
 // https://stackoverflow.com/questions/66275648/aws-javascript-sdk-v3-typescript-doesnt-compile-due-to-error-ts2304-cannot-f
@@ -49,6 +55,29 @@ export async function generate_base64_zip_of_dir(
     return '';
     */
 }
+
+export async function unzip_base64_to_dir(
+  b64_data: string,
+  directory: string
+): Promise<string | undefined> {
+  const buf = Buffer.from(b64_data, 'base64');
+  const tmpDir = await mkdtemp(join(tmpdir(), 'upload-zip-'));
+  const zipfile = join(tmpDir, 'upload.zip');
+  try {
+    writeFileSync(zipfile, buf);
+    // file written successfully
+    // unzip to the directory specified
+    const unzip_out = await run_cmd('unzip', [zipfile, '-d', directory], {
+      cwd: tmpDir,
+    });
+    delete_dir(tmpDir);
+    return directory;
+  } catch (err) {
+    delete_dir(tmpDir);
+    return undefined;
+  }
+}
+
 /*
 async function main() {
   console.log(await generate_base64_zip_of_dir('./'));

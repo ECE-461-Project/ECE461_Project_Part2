@@ -87,6 +87,7 @@ export async function _get_urls_internal(
             }
           }
         } else if (exports.check_if_github(url)) {
+		  // TODO: remove git+ or ssh style urls to the https style
           url_parse.github_repo_url = url;
         }
         return url_parse;

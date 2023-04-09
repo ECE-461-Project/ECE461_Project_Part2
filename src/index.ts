@@ -13,7 +13,6 @@ async function main() {
     process.argv[2],
     temp_dir
   );
-  // TODO: have main return the score list to populate database?
   console.log(score_list_resolved);
 }
 
