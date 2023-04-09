@@ -124,7 +124,6 @@ export async function package_post(req: Request, res: Response) {
           const version: string | undefined = package_json.version;
           const repository_url: string | undefined =
             package_json.repository.url;
-          // TODO: validate repository URL (remove git+)
           if (
             name === undefined ||
             version === undefined ||
