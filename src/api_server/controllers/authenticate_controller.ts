@@ -8,6 +8,7 @@ import {auth_secret} from '../config/auth';
 
 export interface DecodedJWT {
   Username: string;
+  UserID: number;
 }
 
 export async function authenticate(req: Request, res: Response) {
@@ -17,6 +18,7 @@ export async function authenticate(req: Request, res: Response) {
     if (user.UserPassword === auth_req.Secret.password) {
       const payload = {
         Username: user.Username,
+        UserID: user.UserID,
       };
       jwt.sign(payload, auth_secret, {expiresIn: '10h'}, (err, token) => {
         if (err) {

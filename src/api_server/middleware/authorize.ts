@@ -15,6 +15,7 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
         } else {
           const payload: DecodedJWT = decoded;
           res.locals.Username = payload.Username; // Save the username to the response
+          res.locals.UserID = payload.UserID; // Save the UserID for the foreign key
           next();
         }
       });
