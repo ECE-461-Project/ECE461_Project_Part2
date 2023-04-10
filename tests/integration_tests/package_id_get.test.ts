@@ -17,16 +17,16 @@ describe('GET /package/{id}', () => {
     expect(result.statusCode).toEqual(404);
   });
   test('Auth failed 400', async () => {
-    const result = await request(app).get('/package/1');
+    const result = await request(app).get('/package/package_a');
     expect(result.statusCode).toEqual(400);
   });
   test('Valid resource 200', async () => {
-    const result = await request(app).get('/package/1').set('X-Authorization', `bearer ${token}`);
+    const result = await request(app).get('/package/package_a').set('X-Authorization', `bearer ${token}`);
     expect(result.statusCode).toEqual(200);
     expect(result.body.metadata).toEqual({
       Name: 'package_a',
       Version: '1.0.0',
-      ID: '1',
+      ID: 'package_a',
     });
     expect(result.body).toHaveProperty('data');
     expect(result.body.data).toHaveProperty('Content');

@@ -35,12 +35,13 @@ module.exports = async function main() {
   //execSync('sleep 5'); // block process for 1 second.
 
   const package_a = await packages.create({
+	PackageID: 'package_a',
     PackageName: 'package_a',
     PackagePath: './tests/integration_tests/test_packages/package_a',
     VersionNumber: '1.0.0',
     UploadDate: Date.now(),
   }); 
-
+  
   console.log('Database seed success');
 }
 //main();

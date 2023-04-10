@@ -112,12 +112,11 @@ export async function package_post(req: Request, res: Response) {
         //    if no package.json / no Name / No Version, return status 400 formed improperly
         const package_json_str = await find_and_read_package_json(temp_dir);
         if (package_json_str === undefined) {
-          //delete_dir(temp_dir);
-          res
-            .status(400)
-            .send(
-              'Not uploaded due to package.json problem - input formed improperly'
-            );
+          globalThis.logger?.info(
+            'Package upload fail due to package.json problem - input formed improperly'
+          );
+          delete_dir(temp_dir);
+          res.contentType('application/json').status(400).send();
         } else {
           const package_json = JSON.parse(package_json_str);
           const name: string | undefined = package_json.name;
@@ -129,12 +128,11 @@ export async function package_post(req: Request, res: Response) {
             version === undefined ||
             repository_url === undefined
           ) {
+            globalThis.logger?.info(
+              'Not uploaded due to package.json no name version or url! formed improperly'
+            );
             delete_dir(temp_dir);
-            res
-              .status(400)
-              .send(
-                'Not uploaded due to package.json no name version or url! formed improperly'
-              );
+            res.contentType('application/json').status(400).send();
           } else {
             const id: string = name.toLowerCase();
             // check if id exists already, error 409
@@ -142,8 +140,9 @@ export async function package_post(req: Request, res: Response) {
               where: {PackageID: id},
             });
             if (result) {
+              globalThis.logger?.info('Not uploaded - package exists!');
               delete_dir(temp_dir);
-              res.status(409).send('Not uploaded - package exists!');
+              res.contentType('application/json').status(409).send();
             } else {
               delete_dir(temp_dir);
               const ud: SCORE_OUT = await package_rate_compute(
@@ -184,8 +183,11 @@ export async function package_post(req: Request, res: Response) {
           }
         }
       } else {
+        globalThis.logger?.info(
+          'Not uploaded due to zip input formed improperly'
+        );
         delete_dir(temp_dir);
-        res.status(400).send('Not uploaded due to zip input formed improperly');
+        res.contentType('application/json').status(400).send();
       }
     } else if (url_in) {
       // steps: url_in input is ingestible public
@@ -197,8 +199,9 @@ export async function package_post(req: Request, res: Response) {
       // 2. Check if ingestible
       // 3. If not ingestible, return 424 status due to disqualified rating
       if (package_rate_ingestible(ud) === 0) {
+        globalThis.logger?.info('Not uploaded due to the disqualified rating');
         delete_dir(temp_dir);
-        res.status(424).send('Not uploaded due to the disqualified rating');
+        res.contentType('application/json').status(424).send();
       } else {
         // 5. If ingestible: look at local clone created by rating call
         // 6. zip it, then base64 it, then return that b64 in content
@@ -208,66 +211,71 @@ export async function package_post(req: Request, res: Response) {
         // look in package.json for Name, Version
         //    and set all PackageMetadata fields
         //    if no package.json / no Name / No Version, return status 400 formed improperly
-        const package_json = JSON.parse(
-          (await readFile(join(temp_dir, 'package', 'package.json'))).toString()
-        );
-        const name: string | undefined = package_json.name;
-        const version: string | undefined = package_json.version;
-        if (name === undefined || version === undefined) {
+        const package_json_str = await find_and_read_package_json(temp_dir);
+        if (package_json_str === undefined) {
+          globalThis.logger?.info(
+            'Package upload fail due to package.json problem - input formed improperly'
+          );
           delete_dir(temp_dir);
-          res
-            .status(400)
-            .send(
+          res.contentType('application/json').status(400).send();
+        } else {
+          const package_json = JSON.parse(package_json_str);
+          const name: string | undefined = package_json.name;
+          const version: string | undefined = package_json.version;
+          if (name === undefined || version === undefined) {
+            globalThis.logger?.info(
               'Not uploaded due to name or version in package.json @ url input formed improperly'
             );
-        } else {
-          const id: string = name.toLowerCase();
-          // check if id exists already, error 409
-          const result = await packages.findOne({
-            where: {PackageID: id},
-          });
-          if (result) {
             delete_dir(temp_dir);
-            res.status(409).send('Not uploaded - package exists!');
+            res.contentType('application/json').status(400).send();
           } else {
-            // create database entry for Name Version ID URL RatedAndApproved and PackagePath
-            const package_uploaded = await packages.create({
-              PackageID: id,
-              PackageName: name,
-              PackagePath: temp_dir, // or join(temp_dir, 'package'),
-              GitHubLink: ud.GitHubLink,
-              RatedAndApproved: 1,
-              UploadTypeURL: 1,
-              VersionNumber: version,
-              UploadDate: Date.now(),
-              createdAt: Date.now(),
-              FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+            const id: string = name.toLowerCase();
+            // check if id exists already, error 409
+            const result = await packages.findOne({
+              where: {PackageID: id},
             });
-            // update database for scores
-            await package_rate_update(id, ud);
-            // return metadata and content
-            const metadata: PackageMetadata = {
-              Name: name,
-              Version: version,
-              ID: id,
-            };
-            const data: PackageData = {
-              Content: b64_ingestible,
-            };
-            const to_send: ModelPackage = {
-              metadata: metadata,
-              data: data,
-            };
-            //console.log(to_send);
-            res.contentType('application/json').status(201).send(to_send);
+            if (result) {
+              globalThis.logger?.info('Not uploaded - package exists!');
+              delete_dir(temp_dir);
+              res.contentType('application/json').status(409).send();
+            } else {
+              // create database entry for Name Version ID URL RatedAndApproved and PackagePath
+              const package_uploaded = await packages.create({
+                PackageID: id,
+                PackageName: name,
+                PackagePath: temp_dir, // or join(temp_dir, 'package'),
+                GitHubLink: ud.GitHubLink,
+                RatedAndApproved: 1,
+                UploadTypeURL: 1,
+                VersionNumber: version,
+                UploadDate: Date.now(),
+                createdAt: Date.now(),
+                FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+              });
+              // update database for scores
+              await package_rate_update(id, ud);
+              // return metadata and content
+              const metadata: PackageMetadata = {
+                Name: name,
+                Version: version,
+                ID: id,
+              };
+              const data: PackageData = {
+                Content: b64_ingestible,
+              };
+              const to_send: ModelPackage = {
+                metadata: metadata,
+                data: data,
+              };
+              //console.log(to_send);
+              res.contentType('application/json').status(201).send(to_send);
+            }
           }
         }
       }
     } else {
-      res
-        .contentType('application/json')
-        .status(400)
-        .send('PackageData input does not have Content or URL');
+      globalThis.logger?.info('PackageData input does not have Content or URL');
+      res.contentType('application/json').status(400).send();
     }
     //console.log(query_data);
   } catch (err: any) {
@@ -298,8 +306,9 @@ export async function package_id_rate_get(req: Request, res: Response) {
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
       const link_input = result.GitHubLink;
-      if (link_input === undefined) {
-        res.status(404).send('No Github URL for Package ID!');
+      if (link_input === null) {
+        globalThis.logger?.info('No Github URL for Package ID!');
+        res.contentType('application/json').status(404).send();
       } else {
         // call metric computation
         delete_dir(result.PackagePath);
@@ -313,10 +322,8 @@ export async function package_id_rate_get(req: Request, res: Response) {
       }
     } else {
       //package not found
-      res
-        .contentType('application/json')
-        .status(404)
-        .send('Package ID not found!');
+      globalThis.logger?.info('Package ID not found!');
+      res.contentType('application/json').status(404).send();
     }
   } catch (err: any) {
     console.log(err);
