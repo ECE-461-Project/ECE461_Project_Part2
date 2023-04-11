@@ -100,7 +100,7 @@ export async function package_post(req: Request, res: Response) {
     if (content) {
       // steps: content input is the b64 zip file
       // create temp directory to store package
-      let temp_dir = await create_tmp();
+      const temp_dir = await create_tmp();
 
       // 1. un-base64 it
       // 2. unzip it into PackagePath (neet to set)
