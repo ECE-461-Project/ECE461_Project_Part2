@@ -27,11 +27,9 @@ export class packages extends Model {
 module.exports = async function main() {
 
   // Delete everything from packages table
-  /*
   await packages.destroy({
     truncate: true
   });
-  */
   console.log('Database clear success');
 }
 //main();
