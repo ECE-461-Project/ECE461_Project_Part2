@@ -42,14 +42,14 @@ export async function package_rate_compute(
 export function package_rate_ingestible(ud: SCORE_OUT): number {
   const ratings = ud.Rating;
   if (
-    ratings.NetScore > 0.5 &&
-    ratings.BusFactor > 0.5 &&
-    ratings.Correctness > 0.5 &&
-    ratings.RampUp > 0.5 &&
-    ratings.ResponsiveMaintainer > 0.5 &&
-    ratings.LicenseScore > 0.5 &&
-    ratings.GoodPinningPractice > 0.5 &&
-    ratings.GoodEngineeringProcess > 0.5
+    ratings.NetScore >= 0.5 &&
+    ratings.BusFactor >= 0.5 &&
+    ratings.Correctness >= 0.5 &&
+    ratings.RampUp >= 0.5 &&
+    ratings.ResponsiveMaintainer >= 0.5 &&
+    ratings.LicenseScore >= 0.5 &&
+    ratings.GoodPinningPractice >= 0.5 &&
+    ratings.GoodEngineeringProcess >= 0.5
   ) {
     return 1;
   } else {

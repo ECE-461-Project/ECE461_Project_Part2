@@ -11,7 +11,7 @@ const app = 'localhost:3000';
 // Please seed the database in database_seed.ts
 // Please put package files in the test_packages directory
 const token = get_auth_token();
-describe('GET /package/{id}/rate', () => {
+describe('GET /package/{id}/rate ONLY ERRORS', () => {
   test('Resource not found 404', async () => {
     const result = await request(app).get('/package/1/rate').set('X-Authorization', `bearer ${token}`);
     expect(result.statusCode).toEqual(404);

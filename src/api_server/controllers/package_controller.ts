@@ -17,7 +17,6 @@ import {
 import {SCORE_OUT} from '../../score_calculations';
 import {create_tmp, delete_dir, create_dir} from '../../git_clone';
 import {join} from 'path';
-import {readFile} from 'fs/promises';
 import {find_and_read_package_json} from '../get_files';
 
 /* ////////////////////////////////////////////////////////////////////////
@@ -101,7 +100,7 @@ export async function package_post(req: Request, res: Response) {
     if (content) {
       // steps: content input is the b64 zip file
       // create temp directory to store package
-      const temp_dir = await create_tmp();
+      let temp_dir = await create_tmp();
 
       // 1. un-base64 it
       // 2. unzip it into PackagePath (neet to set)
@@ -144,13 +143,13 @@ export async function package_post(req: Request, res: Response) {
               delete_dir(temp_dir);
               res.contentType('application/json').status(409).send();
             } else {
-              delete_dir(temp_dir);
+              //delete_dir(temp_dir);
+              //temp_dir = await create_tmp();
               const ud: SCORE_OUT = await package_rate_compute(
                 repository_url,
                 temp_dir
               );
-              // update database for scores
-              await package_rate_update(id, ud);
+
               // create database entry for Name Version ID URL RatedAndApproved and PackagePath
               const package_uploaded = await packages.create({
                 PackageID: id,
@@ -164,6 +163,9 @@ export async function package_post(req: Request, res: Response) {
                 createdAt: Date.now(),
                 FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
               });
+
+              // update database for scores
+              await package_rate_update(id, ud);
 
               const metadata: PackageMetadata = {
                 Name: name,

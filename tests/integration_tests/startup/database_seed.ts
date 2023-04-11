@@ -40,8 +40,19 @@ module.exports = async function main() {
     PackagePath: './tests/integration_tests/test_packages/package_a',
     VersionNumber: '1.0.0',
     UploadDate: Date.now(),
-  }); 
+  });
   
+  // for rating:
+  /*
+  const express_package = await packages.create({
+	PackageID: 'express',
+    PackageName: 'express',
+    PackagePath: './tests/integration_tests/test_packages', // not real, just required for db
+    GitHubLink: 'https://www.npmjs.com/package/express',
+    VersionNumber: '1.0.0', // not real, just required for db
+    UploadDate: Date.now(),
+  });
+  */
   console.log('Database seed success');
 }
 //main();

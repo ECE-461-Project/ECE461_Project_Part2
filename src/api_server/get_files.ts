@@ -1,5 +1,5 @@
 import {readFileSync} from 'fs';
-import {readdir, readFile} from 'fs/promises';
+import {readdir} from 'fs/promises';
 import {join} from 'path';
 import path = require('path');
 
@@ -58,7 +58,7 @@ export async function find_and_read_package_json(
     globalThis.logger?.info(`found package.json at level ${directory}`);
     return package_json;
   }
-  
+
   globalThis.logger?.info(`could not find package.json at level ${directory}`);
   const entries = await readdir(directory, {withFileTypes: true});
   for (const file of entries) {
