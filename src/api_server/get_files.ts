@@ -1,5 +1,4 @@
-import {readFileSync} from 'fs';
-import {readdir} from 'fs/promises';
+import {readdir, readFile} from 'fs/promises';
 import {join} from 'path';
 import path = require('path');
 
@@ -39,7 +38,8 @@ async function read_package_json_contents(
         `checking filenames in dir ${directory}: ${file.name}`
       );
       if (path.basename(file.name) === 'package.json') {
-        return readFileSync(join(directory, file.name)).toString();
+        const strcontent = await readFile(join(directory, file.name));
+        return strcontent.toString();
       }
     }
   }

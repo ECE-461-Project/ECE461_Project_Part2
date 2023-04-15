@@ -1,7 +1,7 @@
 import {getAllFiles} from './get_files';
 import JSZip = require('jszip');
 import {readFile} from 'fs/promises';
-import {writeFile, writeFileSync} from 'fs';
+import {writeFile} from 'fs/promises';
 import {tmpdir} from 'os';
 import {mkdtemp} from 'fs/promises';
 import {join} from 'path';
@@ -64,7 +64,7 @@ export async function unzip_base64_to_dir(
   const tmpDir = await mkdtemp(join(tmpdir(), 'upload-zip-'));
   const zipfile = join(tmpDir, 'upload.zip');
   try {
-    writeFileSync(zipfile, buf);
+    await writeFile(zipfile, buf);
     // file written successfully
     // unzip to the directory specified
     const unzip_out = await run_cmd('unzip', [zipfile, '-d', directory], {

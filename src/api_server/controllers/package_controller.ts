@@ -161,7 +161,7 @@ export async function package_post(req: Request, res: Response) {
                 VersionNumber: version,
                 UploadDate: Date.now(),
                 createdAt: Date.now(),
-                FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+                FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
               });
 
               // update database for scores
@@ -252,7 +252,7 @@ export async function package_post(req: Request, res: Response) {
                 VersionNumber: version,
                 UploadDate: Date.now(),
                 createdAt: Date.now(),
-                FK_UserID: 1, // @TODO proper user id once Justin updates it from verifyToken res object
+                FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
               });
               // update database for scores
               await package_rate_update(id, ud);

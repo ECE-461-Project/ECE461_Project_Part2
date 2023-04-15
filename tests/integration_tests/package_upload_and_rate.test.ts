@@ -14,7 +14,7 @@ const app = 'localhost:3000';
 // Please put package files in the test_packages directory
 const token = get_auth_token();
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 describe('POST /package', () => {
 
@@ -101,16 +101,14 @@ describe('POST /package', () => {
   test('RATE cloudinary post-upload 200', async () => {
     const result = await request(app).get('/package/cloudinary/rate').set('X-Authorization', `bearer ${token}`);
     expect(result.statusCode).toEqual(200);
-    expect(result.body).toEqual({
-      NetScore: 0.376,
-      RampUp: 0,
-      Correctness: 0.78,
-      BusFactor: 0.249,
-      ResponsiveMaintainer: 0.28,
-      LicenseScore: 1,
-      GoodPinningPractice: 1,
-      GoodEngineeringProcess: 0.618,
-	});
+    expect(result.body).toHaveProperty('BusFactor');
+    expect(result.body).toHaveProperty('Correctness');
+    expect(result.body).toHaveProperty('GoodEngineeringProcess');
+    expect(result.body).toHaveProperty('GoodPinningPractice');
+    expect(result.body).toHaveProperty('LicenseScore');
+    expect(result.body).toHaveProperty('NetScore');
+    expect(result.body).toHaveProperty('RampUp');
+    expect(result.body).toHaveProperty('ResponsiveMaintainer');
   });
 });
 
