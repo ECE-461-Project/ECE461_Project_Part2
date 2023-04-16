@@ -7,6 +7,8 @@ import {
   PackageData,
   ModelError,
 } from '../models/models';
+import {readFile} from 'fs';
+import {Op} from 'sequelize';
 import {generate_base64_zip_of_dir} from '../zip_files';
 import {get_scores_from_url, SCORE_OUT} from '../../score_calculations';
 
@@ -164,6 +166,58 @@ export function package_byName_name_delete(req: Request, res: Response) {
  * 							PACKAGE_BYREGEX_REGEX_POST
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_byRegEx_regex_post(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+interface PackageRegex {
+  RegEx : string;
+}
+export async function package_byRegEx_regex_post(req: Request, res: Response) {
+  const {RegEx} = req.body as PackageRegex;
+  try {
+    let result: any[] = [];
+
+    //search for packages containing README files by regex
+    const packageByName = await packages.findAll({
+      where: {
+        PackageName : {[Op.regexp]: RegEx},
+      },
+      attributes: ['VersionNumber', 'PackageName'],
+    });
+    result = result.concat(packageByName);
+
+    //search for packages constaining README files by regex
+    const packageByREADME = await packages.findAll({
+      attributes: ['VersionNumber', 'PackageName', 'PackagePath'],
+    });
+
+    for(const pkg of packageByREADME) {
+      const readmeContent = await readFile(`${pkg.PackagePath}/README.md`,'utf-8');
+      if(readmeContent.match(new RegExp(RegEx, 'i'))) {
+        result.push({
+          Version: pkg.VersionNumber,
+          Name: pkg.PackageName,
+        });
+      }
+    }
+
+    if(result.length > 0) {
+      res.status(200).json(result);
+    } else {
+      res.status(404).send('No package found under this regex');
+    }
+  }
+  catch (err: any) {
+    console.log(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(500).send(error);
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(500).send(error);
+    }
+  }
 }
