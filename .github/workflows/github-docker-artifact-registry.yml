@@ -14,8 +14,6 @@ name: Docker build and push to Artifact Registry
 on:
   push:
     branches:
-      - main
-      - github-action
       - gcp-workflow-update
 
 env:
