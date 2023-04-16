@@ -23,7 +23,7 @@ env:
   GAR_LOCATION: us-central1
   REPOSITORY: express-api-image
   IMAGE: main
-  SERVICE: express-api
+  SERVICE: main
 
 jobs:
   login-build-push:
