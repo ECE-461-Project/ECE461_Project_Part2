@@ -60,9 +60,10 @@ jobs:
     - name: 'Docker push'
       run: |-
         docker push "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
+
     - name: Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v0
+        id: 'deploy'
+        uses: 'google-github-actions/deploy-cloudrun@v0'
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
