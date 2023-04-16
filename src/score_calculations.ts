@@ -13,6 +13,7 @@ import {PackageRating} from './api_server/models/models';
 
 export interface SCORE_OUT {
   URL: string;
+  GitHubLink: string;
   Rating: PackageRating;
 }
 
@@ -37,9 +38,10 @@ function net_score_formula(subscores: SCORE_OUT): number {
   return net_score;
 }
 
-export async function score_calc(url_parse: URL_PARSE) {
+export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
   const score: SCORE_OUT = {
     URL: url_parse.original_url, // SHOULD THIS BE ORIGINAL?
+    GitHubLink: url_parse.github_repo_url,
     Rating: {
       NetScore: 0,
       RampUp: 0,
@@ -51,10 +53,10 @@ export async function score_calc(url_parse: URL_PARSE) {
       GoodEngineeringProcess: 0,
     },
   };
-  let temp_dir = '';
+  //let temp_dir = '';
   try {
     // Create Temporary Directory
-    temp_dir = await create_tmp();
+    // temp_dir = await create_tmp();
     // Clone git repository into temp dir
     const clone_successful = await git_clone(
       temp_dir,
@@ -125,17 +127,22 @@ export async function score_calc(url_parse: URL_PARSE) {
     }
   } finally {
     // Cleanup temporary directory
-    delete_dir(temp_dir);
+    // delete_dir(temp_dir);
   }
   return score;
 }
 
-export async function get_scores_from_url(urlval: string): Promise<SCORE_OUT> {
+export async function get_scores_from_url(
+  urlval: string,
+  temp_dir: string
+): Promise<SCORE_OUT> {
   const url = await get_url_parse_from_input(urlval);
   if (url === undefined) {
     throw new Error('Undefined URL input!');
   }
+  globalThis.logger?.debug(`url: ${url[0].github_repo_url} `);
+
   // Each url score computed one by one -> slow!
-  const score_list: Promise<SCORE_OUT> = score_calc(url[0]);
+  const score_list: Promise<SCORE_OUT> = score_calc(url[0], temp_dir);
   return score_list;
 }

@@ -1,9 +1,10 @@
 import {tmpdir} from 'os';
-import {rm, mkdtemp} from 'fs/promises';
+import {rm, mkdtemp, mkdir} from 'fs/promises';
 import {join} from 'path';
 import {run_cmd} from './sub_process_help';
 
 //https://blog.mastykarz.nl/create-temp-directory-app-node-js/
+// TODO: Will change to not create folder in tmp! For final storage of packages
 export async function create_tmp(): Promise<string> {
   try {
     const tmpDir = await mkdtemp(join(tmpdir(), 'npm-package-data-'));
@@ -24,6 +25,14 @@ export async function delete_dir(directory: string) {
     }
   } catch (err) {
     globalThis.logger?.error(`deleting directory ${directory} failed`);
+  }
+}
+
+export async function create_dir(directory: string) {
+  try {
+    await mkdir(directory);
+  } catch (err) {
+    globalThis.logger?.error(`creating directory ${directory} failed`);
   }
 }
 

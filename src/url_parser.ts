@@ -59,6 +59,57 @@ export function get_github_url(package_name: string): Promise<string | null> {
   return getPackageGithubUrl(package_name);
 }
 
+export interface OwnerAndRepo {
+  url: string;
+  owner: string;
+  repo: string;
+  cloning_url: string;
+}
+
+function fix_github_url(git_url: string): string {
+  const url_obj = new URL(git_url);
+  const owner_repo: OwnerAndRepo = {
+    url: git_url, // SHOULD THIS BE ORIGINAL?
+    owner: '',
+    repo: '',
+    cloning_url: '',
+  };
+  let cloning_url = git_url;
+  let pathname: string = url_obj.pathname;
+  if (pathname.startsWith('/')) {
+    pathname = pathname.slice(1);
+  }
+  const url_owner: string = pathname.slice(0, pathname.indexOf('/'));
+  let url_repo: string = pathname.slice(pathname.indexOf('/') + 1);
+
+  if (url_repo.endsWith('.git')) {
+    url_repo = url_repo.split('.git')[0];
+    cloning_url = cloning_url.split('.git')[0];
+  }
+  owner_repo.owner = url_owner;
+  owner_repo.repo = url_repo;
+
+  const protocol: string = cloning_url.slice(0, cloning_url.indexOf(':'));
+  // handle cloning url (form exactly like sample github urls)
+  if (protocol.startsWith('https')) {
+    owner_repo.cloning_url = cloning_url;
+  } else if (protocol.startsWith('git+https')) {
+    // remove git+ from beginning
+    const new_url = cloning_url.slice(cloning_url.indexOf('+') + 1);
+    owner_repo.cloning_url = new_url;
+    // remove .git from end
+  } else if (protocol.startsWith('git+ssh')) {
+    // remove until :, replace with https:
+    let new_url = 'https:' + cloning_url.slice(cloning_url.indexOf(':') + 1);
+    // remove git@
+    new_url = new_url.replace('git@', '');
+    owner_repo.cloning_url = new_url;
+  } else {
+    globalThis.logger.error(`invalid repo URL from npm registry ${git_url}`);
+  }
+  return owner_repo.cloning_url;
+}
+
 export async function _get_urls_internal(
   filepath: string,
   urls: string[]
@@ -82,12 +133,13 @@ export async function _get_urls_internal(
             const potential_repo = await exports.get_github_url(package_name);
             if (potential_repo) {
               if (exports.check_if_github(potential_repo)) {
-                url_parse.github_repo_url = potential_repo;
+                url_parse.github_repo_url = fix_github_url(potential_repo);
               }
             }
           }
         } else if (exports.check_if_github(url)) {
-          url_parse.github_repo_url = url;
+          // remove git+ or ssh style urls to the https style
+          url_parse.github_repo_url = fix_github_url(url);
         }
         return url_parse;
       });
