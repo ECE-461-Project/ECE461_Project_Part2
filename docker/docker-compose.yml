@@ -15,16 +15,14 @@ services:
       - API-Net
       - SQL-Net
   sql-database:
-    image: mariadb:latest
-    container_name: mariadb_container
+    image: postgres:15
+    container_name: postgres_container
     environment:
-      - MARIADB_ROOT_PASSWORD=secret_password
-    command: --default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql
+      POSTGRES_PASSWORD: 'secret_password'
     volumes:
-      - mariadb_volume1:/var/lib/mysql
-      - ./init.sql:/data/application/init.sql
+      - postgres_volume1:/var/lib/postgresql/data
     ports:
-      - 3306:3306
+      - 5432:5432
     networks:
       - SQL-Net
   adminer:
@@ -42,7 +40,7 @@ services:
       - SQL-Net
 
 volumes:
-  mariadb_volume1:
+  postgres_volume1:
 networks:
   SQL-Net:
   API-Net:
