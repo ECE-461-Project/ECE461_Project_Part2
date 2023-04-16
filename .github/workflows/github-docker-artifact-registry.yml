@@ -19,9 +19,9 @@ on:
       - gcp-workflow-update
 
 env:
-  PROJECT_ID: ece_461
+  PROJECT_ID: ece461-379719
   GAR_LOCATION: us-east1
-  REPOSITORY: ece461_project_part2
+  REPOSITORY: express-api-image
   IMAGE: main
 
 jobs:
