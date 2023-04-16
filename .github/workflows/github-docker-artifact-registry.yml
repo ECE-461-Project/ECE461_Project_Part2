@@ -20,7 +20,7 @@ on:
 
 env:
   PROJECT_ID: ece461-379719
-  GAR_LOCATION: us-east1
+  GAR_LOCATION: us-central1
   REPOSITORY: express-api-image
   IMAGE: main
 
