@@ -32,16 +32,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Create .env file
-      run: |-
-        echo "GITHUB_TOKEN=${{ secrets.TOKEN }}" > .env
-
     - name: 'Docker build'
       run: |-
         docker build \
           --tag "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" \
-          . \
-          -f docker/API/Dockerfile
+          .
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0.6.0'
