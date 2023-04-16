@@ -1,4 +1,3 @@
-import exp = require('constants');
 import * as request from 'supertest';
 import {get_auth_token} from './helper/get_auth_token';
 
