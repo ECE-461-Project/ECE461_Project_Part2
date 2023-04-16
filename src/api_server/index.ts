@@ -21,9 +21,13 @@ dotenv.config({
 if (!process.env.EXPRESS_PORT) {
   throw new Error('Express Port not defined');
 }
-dotenv.config({
-  path: resolve(process.cwd(), '.env'),
-});
+try {
+  dotenv.config({
+    path: resolve(process.cwd(), '.env'),
+  });
+} catch (err) {
+  console.log('.env file not found');
+}
 if (!process.env.GITHUB_TOKEN) {
   throw new Error('GITHUB_TOKEN not defined');
 }
