@@ -21,7 +21,7 @@ on:
 env:
   PROJECT_ID: ece_461
   GAR_LOCATION: us-east1
-  REPOSITORY: ECE461_Project_Part2
+  REPOSITORY: ece461_project_part2
   IMAGE: main
 
 jobs:
