@@ -15,7 +15,7 @@ services:
       - API-Net
       - SQL-Net
   sql-database:
-    image: postgres:15
+    image: postgres:14
     container_name: postgres_container
     environment:
       POSTGRES_PASSWORD: 'secret_password'
