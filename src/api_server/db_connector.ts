@@ -5,11 +5,11 @@ import {Sequelize, DataTypes, Model} from 'sequelize';
 function create_sequelize() {
   if (process.env.INTEGRATION) {
     dotenv.config({
-      path: resolve(process.cwd(), 'tests/integration_tests/.env.mariadb'),
+      path: resolve(process.cwd(), 'tests/integration_tests/.env.database'),
     });
   } else {
     dotenv.config({
-      path: resolve(process.cwd(), '.env.mariadb'),
+      path: resolve(process.cwd(), '.env.database'),
     });
   }
   if (!process.env.DB_HOST) {
@@ -23,12 +23,12 @@ function create_sequelize() {
   }
   //https://sequelize.org/api/v6/class/src/sequelize.js~sequelize#instance-constructor-constructor
   const sequelize = new Sequelize(
-    'custom_repository',
+    'postgres',
     process.env.DB_USER,
     process.env.DB_PASSWORD,
     {
       host: process.env.DB_HOST,
-      dialect: 'mariadb',
+      dialect: 'postgres',
       pool: {
         max: 5,
         min: 0,
@@ -55,13 +55,13 @@ export class usergroups extends Model {
 usergroups.init(
   {
     GroupID: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
     },
     GroupName: {
-      type: DataTypes.TEXT('tiny'),
+      type: DataTypes.TEXT,
       allowNull: false,
       unique: true,
     },
@@ -78,7 +78,7 @@ export class users extends Model {
 users.init(
   {
     UserID: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
@@ -129,7 +129,7 @@ packages.init(
       allowNull: false,
     },
     PackageName: {
-      type: DataTypes.TEXT('tiny'),
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     PackagePath: {
@@ -150,39 +150,39 @@ packages.init(
       defaultValue: false,
     },
     VersionNumber: {
-      type: DataTypes.TEXT('tiny'),
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     NetScore: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     BusFactor: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     Correctness: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     RampUp: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     ResponsiveMaintainer: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     LicenseScore: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     GoodPinningPractice: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     GoodEngineeringProcess: {
-      type: DataTypes.FLOAT.UNSIGNED,
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
     UploadDate: {
@@ -190,7 +190,7 @@ packages.init(
       allowNull: false,
     },
     FK_UserID: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       references: {
         model: users,
         key: 'UserID',
