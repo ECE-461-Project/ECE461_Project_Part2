@@ -189,13 +189,14 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
     });
 
     for(const pkg of packageByREADME) {
-      const readmeContent = await readFile(`${pkg.PackagePath}/README.md`,'utf-8');
-      if(readmeContent.match(new RegExp(RegEx, 'i'))) {
-        result.push({
-          Version: pkg.VersionNumber,
-          Name: pkg.PackageName,
-        });
-      }
+      readFile(`${pkg.PackagePath}/README.md`,'utf-8', (err, readmeContent) => {
+        if (readmeContent.match(new RegExp(RegEx, 'i'))) {
+          result.push({
+            Version: pkg.VersionNumber,
+            Name: pkg.PackageName,
+          });
+        }
+      });
     }
 
     if(result.length > 0) {
