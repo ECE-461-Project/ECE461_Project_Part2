@@ -79,7 +79,6 @@ async function main() {
   // Sync databases by using alter (does not drop)
   try {
     await sequelize.sync({alter: true});
-    await sequelize.sync({force: true});
     globalThis.logger?.info('INITIAL Database tables have been synced');
   } catch (err) {
     globalThis.logger?.error(err);
