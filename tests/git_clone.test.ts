@@ -1,5 +1,6 @@
 import {create_tmp, delete_dir, git_clone, npm_install} from '../src/git_clone';
 import * as sub_process_help from '../src/sub_process_help';
+import * as git from 'isomorphic-git';
 
 // imports to mock
 import * as os from 'os';
@@ -26,12 +27,13 @@ import {PathLike, RmOptions} from 'fs';
 //jest.mock('os');
 describe('testing git_clone', () => {
   test('clone_and_install succeeds', async () => {
-    jest.spyOn(sub_process_help, 'run_cmd').mockResolvedValue('stdout');
+    jest.spyOn(git, 'clone').mockResolvedValue();
+    //jest.spyOn(sub_process_help, 'run_cmd').mockResolvedValue('stdout');
     expect(await git_clone('directory', 'url')).toBe(true);
   });
   test('git_clone fails', async () => {
     jest
-      .spyOn(sub_process_help, 'run_cmd')
+      .spyOn(git, 'clone')
       .mockRejectedValue(new Error('First Error'));
     expect(await git_clone('directory', 'url')).toBe(false);
   });
