@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+export $(cat .env | xargs)
+export MANUAL=1
+npx jest --silent=true --coverage -c tests/manual_tests/jest.config.js

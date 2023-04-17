@@ -106,7 +106,7 @@ users.init(
 export class packages extends Model {
   declare PackageID: string;
   declare PackageName: string;
-  declare PackagePath: string;
+  declare PackageZipB64: string;
   declare GitHubLink: string;
   declare RatedAndApproved: number;
   declare UploadTypeURL: number;
@@ -132,7 +132,7 @@ packages.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    PackagePath: {
+    PackageZipB64: {
       type: DataTypes.TEXT,
       allowNull: false,
     },

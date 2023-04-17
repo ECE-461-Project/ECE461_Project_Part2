@@ -13,7 +13,6 @@ import {
   package_rate_compute_and_update,
   package_rate_fetch,
   package_rate_ingestible,
-  package_rate_update,
 } from '../package_rate_helper';
 import {SCORE_OUT} from '../../score_calculations';
 import {create_tmp, delete_dir, create_dir} from '../../git_clone';
@@ -30,7 +29,7 @@ export async function package_id_get(req: Request, res: Response) {
   try {
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
-      const content_data = await generate_base64_zip_of_dir(result.PackagePath);
+      const content_data = result.PackageZipB64;
       const metadata: PackageMetadata = {
         Name: result.PackageName,
         Version: result.VersionNumber,
@@ -149,15 +148,15 @@ async function package_post_content(
     res.contentType('application/json').status(409).send();
     return;
   }
-  //delete_dir(temp_dir);
-  //temp_dir = await create_tmp();
   const ud: SCORE_OUT = await package_rate_compute(repository_url, temp_dir);
 
-  // create database entry for Name Version ID URL RatedAndApproved and PackagePath
+  delete_dir(temp_dir);
+
+  // create database entry for Name Version ID URL RatedAndApproved and PackageData
   const package_uploaded = await packages.create({
     PackageID: id,
     PackageName: name,
-    PackagePath: temp_dir, // or join(temp_dir, 'package'),
+    PackageZipB64: content,
     GitHubLink: ud.GitHubLink,
     RatedAndApproved: 1,
     UploadTypeURL: 0,
@@ -165,10 +164,15 @@ async function package_post_content(
     UploadDate: Date.now(),
     createdAt: Date.now(),
     FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
+    NetScore: ud.Rating.NetScore,
+    BusFactor: ud.Rating.BusFactor,
+    Correctness: ud.Rating.Correctness,
+    RampUp: ud.Rating.RampUp,
+    ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
+    LicenseScore: ud.Rating.LicenseScore,
+    GoodPinningPractice: ud.Rating.GoodPinningPractice,
+    GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
   });
-
-  // update database for scores
-  await package_rate_update(id, ud);
 
   const metadata: PackageMetadata = {
     Name: name,
@@ -194,7 +198,6 @@ async function package_post_url(
 ) {
   // steps: url_in input is ingestible public
   // create temp directory to store package
-  // TODO: Will change create_tmp to create a folder NOT in tmp directory
   const temp_dir = await create_tmp();
   // 1. run package rate on the url (make that a separate function not part of req/response)
   const ud: SCORE_OUT = await package_rate_compute(url_in, temp_dir);
@@ -206,11 +209,6 @@ async function package_post_url(
     res.contentType('application/json').status(424).send();
     return;
   }
-  // 5. If ingestible: look at local clone created by rating call
-  // 6. zip it, then base64 it, then return that b64 in content
-  const b64_ingestible = await generate_base64_zip_of_dir(
-    join(temp_dir, 'package')
-  );
   // look in package.json for Name, Version
   //    and set all PackageMetadata fields
   //    if no package.json / no Name / No Version, return status 400 formed improperly
@@ -245,11 +243,18 @@ async function package_post_url(
     res.contentType('application/json').status(409).send();
     return;
   }
-  // create database entry for Name Version ID URL RatedAndApproved and PackagePath
+  // 5. If ingestible: look at local clone created by rating call
+  // 6. zip it, then base64 it, then return that b64 in content
+  const b64_ingestible = await generate_base64_zip_of_dir(
+    join(temp_dir, 'package'),
+    join(temp_dir, 'package'),
+    id
+  );
+  // create database entry for Name Version ID URL RatedAndApproved
   const package_uploaded = await packages.create({
     PackageID: id,
     PackageName: name,
-    PackagePath: temp_dir, // or join(temp_dir, 'package'),
+    PackageZipB64: b64_ingestible,
     GitHubLink: ud.GitHubLink,
     RatedAndApproved: 1,
     UploadTypeURL: 1,
@@ -257,9 +262,18 @@ async function package_post_url(
     UploadDate: Date.now(),
     createdAt: Date.now(),
     FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
+    NetScore: ud.Rating.NetScore,
+    BusFactor: ud.Rating.BusFactor,
+    Correctness: ud.Rating.Correctness,
+    RampUp: ud.Rating.RampUp,
+    ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
+    LicenseScore: ud.Rating.LicenseScore,
+    GoodPinningPractice: ud.Rating.GoodPinningPractice,
+    GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
   });
-  // update database for scores
-  await package_rate_update(id, ud);
+
+  delete_dir(temp_dir);
+  // Response
   // return metadata and content
   const metadata: PackageMetadata = {
     Name: name,
@@ -318,27 +332,28 @@ export async function package_post(req: Request, res: Response) {
  *
  */ ///////////////////////////////////////////////////////////////////////
 export async function package_id_rate_get(req: Request, res: Response) {
+  let temp_dir = '';
   try {
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
-      const link_input = result.GitHubLink;
-      if (link_input === null) {
-        globalThis.logger?.info('No Github URL for Package ID!');
-        res.contentType('application/json').status(404).send();
+      temp_dir = await create_tmp();
+      const ud = await package_rate_compute_and_update(
+        req.params.id,
+        result.GitHubLink,
+        temp_dir
+      );
+      delete_dir(temp_dir);
+      if (ud) {
+        res.contentType('application/json').status(200).send(ud.Rating);
       } else {
-        const ud = await package_rate_fetch(req.params.id);
-        if (ud) {
-          res.contentType('application/json').status(200).send(ud.Rating);
-        } else {
-          globalThis.logger?.error(
-            'Package Rating for valid package failed to fetch'
-          );
-          const error: ModelError = {
-            code: 0,
-            message: 'Package Rating Failed!',
-          };
-          res.contentType('application/json').status(500).send(error);
-        }
+        globalThis.logger?.error(
+          'Package Rating for valid package failed to fetch'
+        );
+        const error: ModelError = {
+          code: 0,
+          message: 'Package Rating Failed!',
+        };
+        res.contentType('application/json').status(500).send(error);
       }
     } else {
       //package not found
@@ -346,6 +361,7 @@ export async function package_id_rate_get(req: Request, res: Response) {
       res.contentType('application/json').status(404).send();
     }
   } catch (err: any) {
+    delete_dir(temp_dir);
     globalThis.logger?.error(err);
     if (err instanceof Error) {
       const error: ModelError = {
