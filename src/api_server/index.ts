@@ -113,3 +113,9 @@ async function main() {
 }
 
 main();
+
+process.on('SIGTERM', () => {
+  globalThis.logger?.info('received SIGTERM, exiting gracefully');
+  // eslint-disable-next-line no-process-exit
+  process.exit(0);
+});
