@@ -110,12 +110,15 @@ async function main() {
       `⚡️[server]: Server is running at http://localhost:${port}`
     );
   });
+  return server;
 }
 
-main();
+const server = main();
 
 process.on('SIGTERM', () => {
   globalThis.logger?.info('received SIGTERM, exiting gracefully');
+  // sequelize is closed on process exit
+  // server should close as well on process exit
   // eslint-disable-next-line no-process-exit
   process.exit(0);
 });
