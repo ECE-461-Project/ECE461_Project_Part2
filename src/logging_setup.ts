@@ -41,8 +41,8 @@ export function create_logger() {
   } else {
     globalThis.logger = createLogger({
       transports: [
-        new transports.File({filename: get_log_file()}),
-        new transports.Console({level: 'info', format: format.cli()}),
+        //new transports.File({filename: get_log_file()}),
+        new transports.Console({level: level, format: format.cli()}),
       ],
       level: level,
     });
