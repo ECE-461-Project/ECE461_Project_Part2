@@ -22,7 +22,8 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",
-    "runAPI": "npx concurrently \"npx tsc --watch\" \"npx nodemon -q build/src/api_server/index.js\""
+    "runAPI": "npx concurrently \"npx tsc --watch\" \"npx nodemon -q build/src/api_server/index.js\"",
+    "runAPIStatic": "node build/src/api_server/index.js"
   },
   "dependencies": {
     "@octokit/graphql": "^5.0.5",
@@ -32,6 +33,7 @@
     "express": "^4.18.2",
     "express-openapi-validator": "^5.0.3",
     "get-package-github-url": "^1.0.5",
+    "isomorphic-git": "^1.23.0",
     "jsonwebtoken": "^9.0.0",
     "jszip": "^3.10.1",
     "morgan": "^1.10.0",
@@ -40,7 +42,6 @@
     "pg": "^8.10.0",
     "sequelize": "^6.30.0",
     "swagger-ui-express": "^4.6.2",
-    "util": "^0.12.5",
     "winston": "^3.8.2",
     "yamljs": "^0.3.0"
   },

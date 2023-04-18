@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import {packages, sequelize} from '../../../src/api_server/db_connector';
 // Please seed the database in database_seed.ts
 // Please put package files in the test_packages directory
@@ -37,7 +38,7 @@ module.exports = async function main() {
   const package_a = await packages.create({
 	PackageID: 'package_a',
     PackageName: 'package_a',
-    PackagePath: './tests/integration_tests/test_packages/package_a',
+    PackageZipB64: readFileSync('tests/integration_tests/test_packages/package_a.zip.b64'),
     VersionNumber: '1.0.0',
     UploadDate: Date.now(),
   });

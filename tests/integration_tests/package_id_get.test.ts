@@ -1,5 +1,6 @@
 import * as request from 'supertest';
 import {get_auth_token} from './helper/get_auth_token';
+import { readFileSync } from 'fs';
 
 // This checks if the INTEGRATION env variable is defined
 if (process.env.INTEGRATION === undefined) {
@@ -30,8 +31,6 @@ describe('GET /package/{id}', () => {
     });
     expect(result.body).toHaveProperty('data');
     expect(result.body.data).toHaveProperty('Content');
-    // data.Content base64 cannot be validated easily due to 
-    //  different file permissions causing base64 to be slightly
-    //  different
+    expect(result.body.data.Content).toBe(readFileSync('tests/integration_tests/test_packages/package_a.zip.b64').toString());
   });
 });

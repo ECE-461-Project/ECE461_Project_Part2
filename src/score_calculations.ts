@@ -40,7 +40,7 @@ function net_score_formula(subscores: SCORE_OUT): number {
 
 export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
   const score: SCORE_OUT = {
-    URL: url_parse.original_url, // SHOULD THIS BE ORIGINAL?
+    URL: url_parse.original_url,
     GitHubLink: url_parse.github_repo_url,
     Rating: {
       NetScore: 0,
@@ -71,45 +71,23 @@ export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
     const git_repo_path = join(temp_dir, 'package');
 
     // Get promises to subscores
-    const license_sub_score = get_license_score(
-      url_parse.github_repo_url,
-      git_repo_path
-    );
-    const bus_factor_sub_score = get_bus_factor_score(
-      url_parse.github_repo_url
-    );
-    const responsiveness_sub_score = get_responsiveness_score(
-      url_parse.github_repo_url
-    );
-
-    const ramp_up_sub_score = get_ramp_up_score(git_repo_path);
-
-    const correctness_sub_score = get_correctness_score(
-      url_parse.github_repo_url
-    );
-
-    const good_pinning_practice_sub_score = get_good_pinning_practice_score(
-      url_parse.github_repo_url,
-      git_repo_path
-    );
-
-    const good_engineering_process_sub_score =
-      get_good_engineering_process_score(url_parse.github_repo_url);
-
+    const subscores = await Promise.all([
+      get_license_score(url_parse.github_repo_url, git_repo_path),
+      get_bus_factor_score(url_parse.github_repo_url),
+      get_responsiveness_score(url_parse.github_repo_url),
+      get_ramp_up_score(git_repo_path),
+      get_correctness_score(url_parse.github_repo_url),
+      get_good_pinning_practice_score(url_parse.github_repo_url, git_repo_path),
+      get_good_engineering_process_score(url_parse.github_repo_url),
+    ]);
     // Resolve subscores
-    score.Rating.LicenseScore = await license_sub_score;
-    score.Rating.BusFactor = Number((await bus_factor_sub_score).toFixed(3));
-    score.Rating.ResponsiveMaintainer = Number(
-      (await responsiveness_sub_score).toFixed(2)
-    );
-    score.Rating.RampUp = Number((await ramp_up_sub_score).toFixed(3));
-    score.Rating.Correctness = Number((await correctness_sub_score).toFixed(3));
-    score.Rating.GoodPinningPractice = Number(
-      (await good_pinning_practice_sub_score).toFixed(3)
-    );
-    score.Rating.GoodEngineeringProcess = Number(
-      (await good_engineering_process_sub_score).toFixed(3)
-    );
+    score.Rating.LicenseScore = subscores[0];
+    score.Rating.BusFactor = Number(subscores[1].toFixed(3));
+    score.Rating.ResponsiveMaintainer = Number(subscores[2].toFixed(2));
+    score.Rating.RampUp = Number(subscores[3].toFixed(3));
+    score.Rating.Correctness = Number(subscores[4].toFixed(3));
+    score.Rating.GoodPinningPractice = Number(subscores[5].toFixed(3));
+    score.Rating.GoodEngineeringProcess = Number(subscores[6].toFixed(3));
 
     // Calculate subscores
     score.Rating.NetScore = Number(net_score_formula(score).toFixed(3));
@@ -129,6 +107,9 @@ export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
     // Cleanup temporary directory
     // delete_dir(temp_dir);
   }
+  globalThis.logger?.debug(
+    `Score for ${url_parse.github_repo_url}: ${JSON.stringify(score.Rating)}`
+  );
   return score;
 }
 

@@ -2,6 +2,9 @@ import {tmpdir} from 'os';
 import {rm, mkdtemp, mkdir} from 'fs/promises';
 import {join} from 'path';
 import {run_cmd} from './sub_process_help';
+import git = require('isomorphic-git');
+import http = require('isomorphic-git/http/node');
+import fs = require('fs');
 
 //https://blog.mastykarz.nl/create-temp-directory-app-node-js/
 // TODO: Will change to not create folder in tmp! For final storage of packages
@@ -41,14 +44,20 @@ export async function git_clone(
   git_url: string
 ): Promise<boolean> {
   const git_folder_name = 'package';
+  const dir = join(tmp_dir, git_folder_name);
   try {
-    const git_out = await run_cmd('git', ['clone', git_url, git_folder_name], {
-      cwd: tmp_dir,
+    await git.clone({
+      fs,
+      http,
+      dir,
+      url: git_url,
     });
-    globalThis.logger?.debug(git_out);
+    globalThis.logger?.info(`Cloning ${git_url} at folder ${dir} succeeded`);
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger?.error(`Error while cloning: ${err.message}`);
+      globalThis.logger?.error(
+        `Error while cloning ${git_url} at folder ${dir}: ${err.message}`
+      );
     }
     return false;
   }

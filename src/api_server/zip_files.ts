@@ -2,6 +2,7 @@ import {getAllFiles} from './get_files';
 import JSZip = require('jszip');
 import {readFile} from 'fs/promises';
 import {writeFile} from 'fs/promises';
+import {mkdir} from 'fs/promises';
 import {tmpdir} from 'os';
 import {mkdtemp} from 'fs/promises';
 import {join} from 'path';
@@ -21,24 +22,44 @@ declare global {
 // ****************************
 
 // Ignores .git folder
+// Debloat: test directory
 export async function generate_base64_zip_of_dir(
-  directory: string
+  directory: string,
+  path_remove: string,
+  parent: string
 ): Promise<string> {
-  const ignore_git = RegExp('^\\.git/');
+  const ignore_git = RegExp('\\.git/');
+  const ignore_github = RegExp('\\.github/');
+  const ignore_test = RegExp('/_*tests?_*/');
   const zip = new JSZip();
   const array_of_files = await getAllFiles(directory);
   // If we want to do reading in parallel in the future:
   //  https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
   for (const file of array_of_files) {
-    if (!ignore_git.exec(file)) {
-      const fileContent = await readFile(file, 'utf-8');
-      zip.file(file, fileContent, {createFolders: true});
+    if (ignore_git.exec(file)) {
+      continue;
     }
+    if (ignore_github.exec(file)) {
+      continue;
+    }
+    if (ignore_test.exec(file)) {
+      continue;
+    }
+    const fileContent = await readFile(file, 'utf-8');
+
+    // Flatten folders
+    const filename = join(parent, file.replace(path_remove, ''));
+    zip.file(filename, fileContent, {createFolders: true});
   }
   // Should we do compression:
   //  https://stuk.github.io/jszip/documentation/api_jszip/generate_async.html#compression-and-compressionoptions-options
   //  NOTE: Default is already compressed!
-  return zip.generateAsync({type: 'base64'});
+  return zip.generateAsync({
+    type: 'base64',
+    compression: 'DEFLATE',
+    compressionOptions: {level: 6},
+  });
+
   /*
   // If you want to stream zip to filesystem
   // https://stuk.github.io/jszip/documentation/howto/write_zip.html
@@ -60,20 +81,22 @@ export async function unzip_base64_to_dir(
   b64_data: string,
   directory: string
 ): Promise<string | undefined> {
-  const buf = Buffer.from(b64_data, 'base64');
-  const tmpDir = await mkdtemp(join(tmpdir(), 'upload-zip-'));
-  const zipfile = join(tmpDir, 'upload.zip');
   try {
-    await writeFile(zipfile, buf);
-    // file written successfully
-    // unzip to the directory specified
-    const unzip_out = await run_cmd('unzip', [zipfile, '-d', directory], {
-      cwd: tmpDir,
-    });
-    delete_dir(tmpDir);
+    let zip = new JSZip();
+    zip = await zip.loadAsync(b64_data, {base64: true, createFolders: true});
+    for (const filename in zip.files) {
+      if (zip.file(filename)?.dir === false) {
+        const content = await zip.file(filename)?.async('nodebuffer');
+        if (content) {
+          await writeFile(join(directory, filename), content);
+        }
+      } else {
+        await mkdir(join(directory, filename), {recursive: true});
+      }
+    }
     return directory;
   } catch (err) {
-    delete_dir(tmpDir);
+    globalThis.logger?.error('Failed to unzip file');
     return undefined;
   }
 }

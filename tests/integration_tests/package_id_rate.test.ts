@@ -20,10 +20,7 @@ describe('GET /package/{id}/rate ONLY ERRORS', () => {
     const result = await request(app).get('/package/package_a/rate');
     expect(result.statusCode).toEqual(400);
   });
-  test('Null github link 404', async () => {
-    const result = await request(app).get('/package/package_a/rate').set('X-Authorization', `bearer ${token}`);
-    expect(result.statusCode).toEqual(404);
-  });
+  // Null github link testcase removed -> packages will be rated at upload time
 });
 
 /*
