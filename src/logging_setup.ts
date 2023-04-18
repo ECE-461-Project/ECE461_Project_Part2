@@ -39,12 +39,31 @@ export function create_logger() {
       silent: true,
     });
   } else {
-    globalThis.logger = createLogger({
-      transports: [
-        //new transports.File({filename: get_log_file()}),
-        new transports.Console({level: level, format: format.cli()}),
-      ],
-      level: level,
-    });
+    if (process.env.PRODUCTION) {
+      const useFormat = format.combine(
+        format((info, opts) => {
+          let level = info.level.toUpperCase();
+          if (level === 'VERBOSE') {
+            level = 'DEBUG';
+          }
+          info['severity'] = level;
+          return info;
+        })(),
+        format.json()
+      );
+      globalThis.logger = createLogger({
+        transports: [new transports.Console()],
+        level: level,
+        format: useFormat,
+      });
+    } else {
+      globalThis.logger = createLogger({
+        transports: [
+          //new transports.File({filename: get_log_file()}),
+          new transports.Console({level: level, format: format.cli()}),
+        ],
+        level: level,
+      });
+    }
   }
 }

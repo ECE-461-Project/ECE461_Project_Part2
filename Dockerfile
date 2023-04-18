@@ -1,5 +1,6 @@
 FROM node:latest
 WORKDIR /usr/src/app
+ENV PRODUCTION=1
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY .env.express ./
