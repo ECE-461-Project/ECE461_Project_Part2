@@ -299,7 +299,10 @@ export async function package_post(req: Request, res: Response) {
     globalThis.logger?.debug(content);
     globalThis.logger?.debug(url_in);
     // we are not implementing the JSProgram
-    if (content) {
+    if (content && url_in) {
+      globalThis.logger?.info('PackageData input has BOTH url and content!');
+      res.contentType('application/json').status(400).send();
+    } else if (content) {
       package_post_content(req, res, input, content);
     } else if (url_in) {
       package_post_url(req, res, input, url_in);

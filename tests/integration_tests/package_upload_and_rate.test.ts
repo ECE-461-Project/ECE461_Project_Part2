@@ -27,6 +27,18 @@ describe('POST /package', () => {
       .send(query);
     expect(result.statusCode).toEqual(400);
   });
+  
+  test('BOTH input, 400', async () => {
+	const query: PackageData = {
+	  URL: 'doesntmatter',
+	  Content: 'doesntmatter',
+	};
+    const result = await request(app).post('/package')
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-type', 'application/json')
+      .send(query);
+    expect(result.statusCode).toEqual(400);
+  });
 
   test('Auth failed 400', async () => {
 	const query: PackageData = {
