@@ -123,7 +123,10 @@ async function package_post_content(
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
-  const repository_url: string | undefined = package_json.repository.url;
+  let repository_url: string | undefined = package_json.homepage;
+  if (repository_url === undefined) {
+    repository_url = package_json.repository.url;
+  }
   if (
     name === undefined ||
     version === undefined ||
@@ -136,7 +139,9 @@ async function package_post_content(
     res.contentType('application/json').status(400).send();
     return;
   }
-
+  globalThis.logger?.info(
+    `Package upload Content URL found: ${repository_url}`
+  );
   const id: string = name.toLowerCase();
   // check if id exists already, error 409
   const result = await packages.findOne({
@@ -388,6 +393,7 @@ export async function package_id_rate_get(req: Request, res: Response) {
  *
  */ ///////////////////////////////////////////////////////////////////////
 export function package_byName_name_get(req: Request, res: Response) {
+  // Since dealing with traceability, we are not implementing, piazza confirmed
   res.status(200).send('This is wrong response btw');
 }
 
@@ -397,6 +403,7 @@ export function package_byName_name_get(req: Request, res: Response) {
  *
  */ ///////////////////////////////////////////////////////////////////////
 export function package_byName_name_delete(req: Request, res: Response) {
+  // since dealing with by name, unsure if need to implement, asked on piazza
   res.status(200).send('This is wrong response btw');
 }
 
