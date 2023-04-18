@@ -68,11 +68,92 @@ export async function package_id_get(req: Request, res: Response) {
 
 /* ////////////////////////////////////////////////////////////////////////
  *
- * 							PACKAGE_ID_PUT
+ * 							PACKAGE_ID_PUT (update)
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_id_put(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+async function package_id_put_content(
+  req: Request,
+  res: Response,
+  mdata: PackageMetadata,
+  pdata: PackageData,
+  content: string
+) {}
+
+async function package_id_put_url(
+  req: Request,
+  res: Response,
+  mdata: PackageMetadata,
+  pdata: PackageData,
+  url: string
+) {}
+
+export async function package_id_put(req: Request, res: Response) {
+  try {
+    const input = req.body;
+    if (input === undefined) {
+      globalThis.logger?.info('Request body null!');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    const mdata: PackageMetadata | undefined = input.metadata;
+    const pdata: PackageData | undefined = input.data;
+    if (mdata === undefined || pdata === undefined) {
+      globalThis.logger?.info('Request body missing metadata or data!');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    const id = mdata.ID;
+    if (id !== req.params.id) {
+      globalThis.logger?.info('Request param id and metadata id do not match!');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    const result = await packages.findOne({where: {PackageID: req.params.id}});
+    if (!result) {
+      // could not find package!
+      globalThis.logger?.info('Not updated since not found: 404!');
+      res.contentType('application/json').status(404).send();
+      return;
+    }
+    const content: string | undefined = input.Content;
+    const url_in: string | undefined = input.URL;
+    globalThis.logger?.debug(content);
+    globalThis.logger?.debug(url_in);
+    // we are not implementing the JSProgram
+    if (content !== undefined && url_in !== undefined) {
+      globalThis.logger?.info('PackageData input has BOTH url and content!');
+      res.contentType('application/json').status(400).send();
+      return;
+    } else if (content !== undefined) {
+      package_id_put_content(req, res, mdata, pdata, content);
+      return;
+    } else if (url_in !== undefined) {
+      package_id_put_url(req, res, mdata, pdata, url_in);
+      return;
+    } else {
+      globalThis.logger?.info('PackageData input does not have Content or URL');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    //console.log(query_data);
+  } catch (err: any) {
+    globalThis.logger?.error(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    }
+  }
 }
 
 /* ////////////////////////////////////////////////////////////////////////
@@ -90,15 +171,17 @@ export async function package_id_delete(req: Request, res: Response) {
       if (del) {
         globalThis.logger?.info('Success deleting ... 200!');
         res.contentType('application/json').status(200).send();
+        return;
       } else {
-        globalThis.logger?.info('Error deleting ... 500!');
-        res.contentType('application/json').status(500).send();
+        globalThis.logger?.info('Error deleting ... 400!');
+        res.contentType('application/json').status(400).send();
+        return;
       }
     } else {
       globalThis.logger?.info('Not deleted since not found: 404!');
       res.contentType('application/json').status(404).send();
+      return;
     }
-    //console.log(query_data);
   } catch (err: any) {
     globalThis.logger?.error(err);
     if (err instanceof Error) {
@@ -106,13 +189,15 @@ export async function package_id_delete(req: Request, res: Response) {
         code: 0,
         message: err.message,
       };
-      res.contentType('application/json').status(500).send(error);
+      res.contentType('application/json').status(400).send(error);
+      return;
     } else {
       const error: ModelError = {
         code: 0,
         message: err.toString(),
       };
-      res.contentType('application/json').status(500).send(error);
+      res.contentType('application/json').status(400).send(error);
+      return;
     }
   }
 }
@@ -332,23 +417,22 @@ async function package_post_url(
 export async function package_post(req: Request, res: Response) {
   try {
     const input: PackageData = req.body;
-    const content = input.Content;
-    const url_in = input.URL;
+    const content: string | undefined = input.Content;
+    const url_in: string | undefined = input.URL;
     globalThis.logger?.debug(content);
     globalThis.logger?.debug(url_in);
     // we are not implementing the JSProgram
-    if (content && url_in) {
+    if (content !== undefined && url_in !== undefined) {
       globalThis.logger?.info('PackageData input has BOTH url and content!');
       res.contentType('application/json').status(400).send();
-    } else if (content) {
+    } else if (content !== undefined) {
       package_post_content(req, res, input, content);
-    } else if (url_in) {
+    } else if (url_in !== undefined) {
       package_post_url(req, res, input, url_in);
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
       res.contentType('application/json').status(400).send();
     }
-    //console.log(query_data);
   } catch (err: any) {
     globalThis.logger?.error(err);
     if (err instanceof Error) {
