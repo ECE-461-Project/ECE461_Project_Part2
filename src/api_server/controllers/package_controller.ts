@@ -80,8 +80,41 @@ export function package_id_put(req: Request, res: Response) {
  * 							PACKAGE_ID_DELETE
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_id_delete(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+export async function package_id_delete(req: Request, res: Response) {
+  try {
+    const result = await packages.findOne({where: {PackageID: req.params.id}});
+    if (result) {
+      // don't need to do anything except clear database entry
+      // directory of package always deleted on upload/rate!
+      const del = await packages.destroy({where: {PackageID: req.params.id}});
+      if (del) {
+        globalThis.logger?.info('Success deleting ... 200!');
+        res.contentType('application/json').status(200).send();
+      } else {
+        globalThis.logger?.info('Error deleting ... 500!');
+        res.contentType('application/json').status(500).send();
+      }
+    } else {
+      globalThis.logger?.info('Not deleted since not found: 404!');
+      res.contentType('application/json').status(404).send();
+    }
+    //console.log(query_data);
+  } catch (err: any) {
+    globalThis.logger?.error(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(500).send(error);
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(500).send(error);
+    }
+  }
 }
 
 /* ////////////////////////////////////////////////////////////////////////
