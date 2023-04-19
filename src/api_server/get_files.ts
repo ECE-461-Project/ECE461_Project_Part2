@@ -7,13 +7,18 @@ import path = require('path');
 export async function* getFiles(path: string): AsyncGenerator<string> {
   /*
   const entries = await readdir(path, {withFileTypes: true});
+  const directories: string[] = [];
 
   for (const file of entries) {
     if (file.isDirectory()) {
-      yield* getFiles(join(path, file.name));
+      //yield* getFiles(join(path, file.name));
+      directories.push(file.name);
     } else {
       yield join(path, file.name);
     }
+  }
+  for (const directory of directories) {
+    yield* getFiles(join(path, directory));
   }
   */
   // This is so only one directory handle is openned with default 32 objects buffered

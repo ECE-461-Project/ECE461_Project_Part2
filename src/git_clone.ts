@@ -51,6 +51,9 @@ export async function git_clone(
       http,
       dir,
       url: git_url,
+      singleBranch: true,
+      noTags: true,
+      depth: 1,
     });
     globalThis.logger?.info(`Cloning ${git_url} at folder ${dir} succeeded`);
   } catch (err) {
