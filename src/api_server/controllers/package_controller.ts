@@ -733,9 +733,49 @@ export function package_byName_name_get(req: Request, res: Response) {
  * 							PACKAGE_BYNAME_NAME_DELETE
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_byName_name_delete(req: Request, res: Response) {
-  // since dealing with by name, unsure if need to implement, asked on piazza
-  res.status(200).send('This is wrong response btw');
+export async function package_byName_name_delete(req: Request, res: Response) {
+  try {
+    const result = await packages.findOne({
+      where: {PackageName: req.params.name},
+    });
+    if (result) {
+      // don't need to do anything except clear database entry
+      // directory of package always deleted on upload/rate!
+      const del = await packages.destroy({
+        where: {PackageName: req.params.name},
+      });
+      if (del) {
+        globalThis.logger?.info('Success deleting ... 200!');
+        res.contentType('application/json').status(200).send();
+        return;
+      } else {
+        globalThis.logger?.info('Error deleting ... 400!');
+        res.contentType('application/json').status(400).send();
+        return;
+      }
+    } else {
+      globalThis.logger?.info('Not deleted since not found: 404!');
+      res.contentType('application/json').status(404).send();
+      return;
+    }
+  } catch (err: any) {
+    globalThis.logger?.error(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    }
+  }
 }
 
 /* ////////////////////////////////////////////////////////////////////////
