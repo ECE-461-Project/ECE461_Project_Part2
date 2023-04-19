@@ -68,12 +68,17 @@ usergroups.init(
   },
   {sequelize}
 );
+
+export interface PermissionsObject {
+  isAdmin: boolean;
+}
+
 export class users extends Model {
   declare UserID: number;
   declare Username: string;
   declare UserPassword: string;
-  declare Permissions: string;
-  declare UserGroups: string;
+  declare Permissions: PermissionsObject;
+  declare UserGroups: any;
 }
 users.init(
   {

@@ -11,16 +11,15 @@ export async function reset(req: Request, res: Response) {
     const user = await users.findOne({where: {UserID: res.locals.UserID}});
     if (user === null) {
       globalThis.logger?.info('Not reset - could not find user ID in DB!');
-      res.contentType('application/json').status(400).send();
+      res.status(400).send();
       return;
     }
-    const permissions = JSON.parse(user.Permissions);
-    const isAdmin = permissions.isAdmin;
+    const isAdmin = user.Permissions.isAdmin;
     globalThis.logger?.debug(`isAdmin: ${isAdmin}`);
     if (isAdmin !== true) {
       // come back to this json parsing
       globalThis.logger?.info('Not reset - no admin permissions!');
-      res.contentType('application/json').status(401).send();
+      res.status(401).send();
       return;
     }
     // now actually reset the registry
@@ -50,13 +49,13 @@ export async function reset(req: Request, res: Response) {
         code: 0,
         message: err.message,
       };
-      res.contentType('application/json').status(400).send(error);
+      res.status(400).send();
     } else {
       const error: ModelError = {
         code: 0,
         message: err.toString(),
       };
-      res.contentType('application/json').status(400).send(error);
+      res.status(400).send();
     }
   }
 }
