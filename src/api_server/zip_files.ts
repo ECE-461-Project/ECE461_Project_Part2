@@ -31,6 +31,7 @@ export async function generate_base64_zip_of_dir(
   const ignore_git = RegExp('\\.git/');
   const ignore_github = RegExp('\\.github/');
   const ignore_test = RegExp('/_*tests?_*/');
+  const ignore_packages = RegExp('/packages/');
   const zip = new JSZip();
   // If we want to do reading in parallel in the future:
   //  https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
@@ -42,6 +43,9 @@ export async function generate_base64_zip_of_dir(
       continue;
     }
     if (ignore_test.exec(file)) {
+      continue;
+    }
+    if (ignore_packages.exec(file)) {
       continue;
     }
     const fileContent = await readFile(file, 'utf-8');
