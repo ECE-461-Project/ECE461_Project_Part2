@@ -274,8 +274,6 @@ async function package_id_put_url(
   }
   globalThis.logger?.info('Failure to update db on update, 400!');
   res.contentType('application/json').status(400).send();
-
-
 }
 
 export async function package_id_put(req: Request, res: Response) {
