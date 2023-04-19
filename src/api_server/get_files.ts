@@ -1,75 +1,63 @@
-import {readdir, readFile} from 'fs/promises';
+import {readdir, readFile, opendir} from 'fs/promises';
 import {join} from 'path';
 import path = require('path');
 
 // Modified from https://coderrocketfuel.com/article/recursively-list-all-the-files-in-a-directory-using-node-js
 //https://stackoverflow.com/questions/41462606/get-all-files-recursively-in-directories-nodejs
-async function* getFiles(path: string): AsyncGenerator<string> {
+export async function* getFiles(path: string): AsyncGenerator<string> {
+  /*
   const entries = await readdir(path, {withFileTypes: true});
+  const directories: string[] = [];
 
   for (const file of entries) {
     if (file.isDirectory()) {
-      yield* getFiles(join(path, file.name));
+      //yield* getFiles(join(path, file.name));
+      directories.push(file.name);
     } else {
       yield join(path, file.name);
     }
   }
-}
-
-export async function getAllFiles(dirPath: string) {
-  const array_of_files: string[] = [];
-  for await (const file of getFiles(dirPath)) {
-    array_of_files.push(file);
+  for (const directory of directories) {
+    yield* getFiles(join(path, directory));
   }
-  return array_of_files;
-}
-
-async function read_package_json_contents(
-  directory: string
-): Promise<string | undefined> {
-  globalThis.logger?.info(
-    `dir input to helper read_package_json_contents ${directory}`
-  );
-
-  const entries = await readdir(directory, {withFileTypes: true});
-  for (const file of entries) {
-    if (!file.isDirectory()) {
-      globalThis.logger?.info(
-        `checking filenames in dir ${directory}: ${file.name}`
-      );
-      if (path.basename(file.name) === 'package.json') {
-        const strcontent = await readFile(join(directory, file.name));
-        return strcontent.toString();
+  */
+  // This is so only one directory handle is openned with default 32 objects buffered
+  let dir;
+  const directories: string[] = [];
+  try {
+    dir = await opendir(path);
+    for await (const dirent of dir) {
+      if (dirent.isDirectory()) {
+        directories.push(dirent.name);
+      } else {
+        yield join(path, dirent.name);
       }
     }
+    // dir auto closed after for await completes
+  } catch (err) {
+    globalThis.logger?.error(`Error in getFiles: ${err}`);
+    dir?.close();
+    // Throw error so calling function knows getFiles failed
+    throw err;
   }
-  return undefined;
+  // Auto throw errors from recursive calls
+  for (const directory of directories) {
+    yield* getFiles(join(path, directory));
+  }
 }
 
 export async function find_and_read_package_json(
   directory: string
 ): Promise<string | undefined> {
-  globalThis.logger?.info(
+  globalThis.logger?.debug(
     `dir input to find_and_read_package_json ${directory}`
   );
-
-  const package_json = await read_package_json_contents(directory);
-  if (package_json !== undefined) {
-    globalThis.logger?.info(`found package.json at level ${directory}`);
-    return package_json;
-  }
-
-  globalThis.logger?.info(`could not find package.json at level ${directory}`);
-  const entries = await readdir(directory, {withFileTypes: true});
-  for (const file of entries) {
-    globalThis.logger?.info(`looking through level ${directory}/${file.name}`);
-    if (file.isDirectory()) {
-      const package_json = await read_package_json_contents(
-        join(directory, file.name)
-      );
-      if (package_json !== undefined) {
-        return package_json;
-      }
+  // getFiles changed so it returns files in base directory first
+  for await (const filename of getFiles(directory)) {
+    if (path.basename(filename) === 'package.json') {
+      const strcontent = await readFile(filename);
+      globalThis.logger?.debug(`found package.json: ${filename}`);
+      return strcontent.toString();
     }
   }
   return undefined;

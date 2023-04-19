@@ -4,7 +4,23 @@ import {join} from 'path';
 import {run_cmd} from './sub_process_help';
 import git = require('isomorphic-git');
 import http = require('isomorphic-git/http/node');
-import fs = require('fs');
+import fs = require('graceful-fs');
+import PQueue = require('p-queue');
+
+// DO NOT USE THE FS MODULE HERE FOR ANYTHING ELSE OTHER THAN GIT CLONE
+const write_queue = new PQueue.default({concurrency: 1});
+const orig_writeFile = fs.promises.writeFile;
+async function new_writeFile(
+  path: any,
+  data: any,
+  options: any
+): Promise<undefined> {
+  await write_queue.add(() => {
+    return orig_writeFile(path, data, options);
+  });
+  return undefined;
+}
+fs.promises.writeFile = new_writeFile;
 
 //https://blog.mastykarz.nl/create-temp-directory-app-node-js/
 // TODO: Will change to not create folder in tmp! For final storage of packages
@@ -51,12 +67,19 @@ export async function git_clone(
       http,
       dir,
       url: git_url,
+      singleBranch: true,
+      noTags: true,
+      depth: 1,
     });
     globalThis.logger?.info(`Cloning ${git_url} at folder ${dir} succeeded`);
   } catch (err) {
     if (err instanceof Error) {
       globalThis.logger?.error(
         `Error while cloning ${git_url} at folder ${dir}: ${err.message}`
+      );
+    } else {
+      globalThis.logger?.error(
+        `Error while cloning ${git_url} at folder ${dir}: ${err}`
       );
     }
     return false;

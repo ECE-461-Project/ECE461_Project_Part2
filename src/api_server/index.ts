@@ -37,7 +37,24 @@ const port = process.env.EXPRESS_PORT;
 const app: Express = express();
 
 // Set up logging using Morgan to stdout
-app.use(morgan('dev'));
+if (process.env.PRODUCTION) {
+  app.use(
+    morgan((tokens, req, res) => {
+      return JSON.stringify({
+        severity: 'DEBUG',
+        message: {
+          method: tokens['method'](req, res),
+          url: tokens['url'](req, res),
+          status: tokens['status'](req, res),
+          response_time: tokens['response-time'](req, res),
+          content_length: tokens['res'](req, res, 'content-length'),
+        },
+      });
+    })
+  );
+} else {
+  app.use(morgan('dev'));
+}
 
 // set up part 1 logging
 create_logger();

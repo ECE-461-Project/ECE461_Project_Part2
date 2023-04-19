@@ -426,7 +426,7 @@ async function package_post_content(
 ) {
   // steps: content input is the b64 zip file
   // create temp directory to store package
-  const temp_dir = await create_tmp();
+  let temp_dir = await create_tmp();
 
   // 1. un-base64 it
   // 2. unzip it into PackagePath (neet to set)
@@ -441,11 +441,11 @@ async function package_post_content(
   //    and set all PackageMetadata fields
   //    if no package.json / no Name / No Version, return status 400 formed improperly
   const package_json_str = await find_and_read_package_json(temp_dir);
+  delete_dir(temp_dir);
   if (package_json_str === undefined) {
     globalThis.logger?.info(
       'Package upload fail due to package.json problem - input formed improperly'
     );
-    delete_dir(temp_dir);
     res.contentType('application/json').status(400).send();
     return;
   }
@@ -464,7 +464,6 @@ async function package_post_content(
     globalThis.logger?.info(
       'Not uploaded due to package.json no name version or url! formed improperly'
     );
-    delete_dir(temp_dir);
     res.contentType('application/json').status(400).send();
     return;
   }
@@ -478,12 +477,13 @@ async function package_post_content(
   });
   if (result) {
     globalThis.logger?.info('Not uploaded - package exists!');
-    delete_dir(temp_dir);
     res.contentType('application/json').status(409).send();
     return;
   }
-  const ud: SCORE_OUT = await package_rate_compute(repository_url, temp_dir);
 
+  // Create new temp_dir since score calc git clones
+  temp_dir = await create_tmp();
+  const ud: SCORE_OUT = await package_rate_compute(repository_url, temp_dir);
   delete_dir(temp_dir);
 
   // create database entry for Name Version ID URL RatedAndApproved and PackageData

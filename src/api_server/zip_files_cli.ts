@@ -1,4 +1,4 @@
-import {getAllFiles} from './get_files';
+import {getFiles} from './get_files';
 import JSZip = require('jszip');
 import {readFile} from 'fs/promises';
 import {createWriteStream} from 'fs';
@@ -21,10 +21,9 @@ export async function generate_base64_zip_of_dir(
 ): Promise<string> {
   const ignore_git = RegExp('^\\.git/');
   const zip = new JSZip();
-  const array_of_files = await getAllFiles(directory);
   // If we want to do reading in parallel in the future:
   //  https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
-  for (const file of array_of_files) {
+  for await (const file of getFiles(directory)) {
     if (!ignore_git.exec(file)) {
       const fileContent = await readFile(file, 'utf-8');
       zip.file(file, fileContent, {createFolders: true});
