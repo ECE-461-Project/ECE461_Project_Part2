@@ -4,7 +4,7 @@ import {join} from 'path';
 import {run_cmd} from './sub_process_help';
 import git = require('isomorphic-git');
 import http = require('isomorphic-git/http/node');
-import fs = require('fs');
+import fs = require('graceful-fs');
 
 //https://blog.mastykarz.nl/create-temp-directory-app-node-js/
 // TODO: Will change to not create folder in tmp! For final storage of packages
@@ -60,6 +60,10 @@ export async function git_clone(
     if (err instanceof Error) {
       globalThis.logger?.error(
         `Error while cloning ${git_url} at folder ${dir}: ${err.message}`
+      );
+    } else {
+      globalThis.logger?.error(
+        `Error while cloning ${git_url} at folder ${dir}: ${err}`
       );
     }
     return false;
