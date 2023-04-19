@@ -15,7 +15,7 @@ import {
   package_rate_ingestible,
 } from '../package_rate_helper';
 import {SCORE_OUT} from '../../score_calculations';
-import {create_tmp, delete_dir, create_dir} from '../../git_clone';
+import {create_tmp, delete_dir, create_dir, git_clone} from '../../git_clone';
 import {join} from 'path';
 import {find_and_read_package_json} from '../get_files';
 import {get_url_parse_from_input} from '../../url_parser';
@@ -154,6 +154,8 @@ async function package_id_put_content(
     res.contentType('application/json').status(400).send();
     return;
   }
+  globalThis.logger?.debug(`version to be updated: ${version} `);
+
   // create database entry for Name Version ID URL RatedAndApproved and PackageData
   const package_updated = await db_entry.update({
     PackageID: id,
@@ -180,8 +182,102 @@ async function package_id_put_url(
   mdata: PackageMetadata,
   pdata: PackageData,
   db_entry: packages,
-  url: string
-) {}
+  url_in: string
+) {
+  const temp_dir = await create_tmp();
+  // parse the url
+  const real_url = await get_url_parse_from_input(url_in);
+  if (real_url === undefined) {
+    globalThis.logger?.info('Not updated due to URL parsing error!');
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  globalThis.logger?.debug(`url: ${real_url[0].github_repo_url} `);
+  const git_url = real_url[0].github_repo_url;
+  // clone the url
+  const check_clone = await git_clone(temp_dir, git_url);
+  if (check_clone === false) {
+    globalThis.logger?.info(
+      'Package update fail due to URL cloning issue - input formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+
+  // look in package.json for Name, Version
+  //    and set all PackageMetadata fields
+  //    if no package.json / no Name / No Version, return status 400 formed improperly
+  const package_json_str = await find_and_read_package_json(temp_dir);
+  if (package_json_str === undefined) {
+    globalThis.logger?.info(
+      'Package update fail due to package.json problem - input formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  const package_json = JSON.parse(package_json_str);
+  const name: string | undefined = package_json.name;
+  const version: string | undefined = package_json.version;
+  if (name === undefined || version === undefined) {
+    globalThis.logger?.info(
+      'Not uploaded due to name or version in package.json @ url input formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  const id: string = name.toLowerCase();
+  globalThis.logger?.debug(`version to be updated: ${version} `);
+
+  if (id !== db_entry.PackageID) {
+    globalThis.logger?.info(
+      'Not updated due to package.json ID not the same as old ID! formed improperly'
+    );
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  if (name !== db_entry.PackageName) {
+    globalThis.logger?.info(
+      'Not updated due to package.json name not the same as old name! formed improperly'
+    );
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+
+  // 6. zip it, then base64 it, then return that b64 in content
+  const b64_ingestible = await generate_base64_zip_of_dir(
+    join(temp_dir, 'package'),
+    join(temp_dir, 'package'),
+    id
+  );
+
+  // Update database entry
+  const package_updated = await db_entry.update({
+    PackageID: id,
+    PackageName: name,
+    PackageZipB64: b64_ingestible,
+    GitHubLink: git_url,
+    UploadTypeURL: 1,
+    VersionNumber: version,
+    updatedAt: Date.now(),
+    FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
+  });
+
+  delete_dir(temp_dir);
+
+  if (package_updated) {
+    globalThis.logger?.info('Package update success!');
+    res.contentType('application/json').status(200).send();
+    return;
+  }
+  globalThis.logger?.info('Failure to update db on update, 400!');
+  res.contentType('application/json').status(400).send();
+
+
+}
 
 export async function package_id_put(req: Request, res: Response) {
   try {
@@ -222,6 +318,9 @@ export async function package_id_put(req: Request, res: Response) {
       globalThis.logger?.info(
         'Version number does not match metadata input: 400!'
       );
+      globalThis.logger?.info(
+        `Version number does not match metadata input: ${result.VersionNumber} and ${mdata.Version}!`
+      );
       res.contentType('application/json').status(400).send();
       return;
     }
@@ -230,8 +329,8 @@ export async function package_id_put(req: Request, res: Response) {
       res.contentType('application/json').status(400).send();
       return;
     }
-    const content: string | undefined = input.Content;
-    const url_in: string | undefined = input.URL;
+    const content: string | undefined = pdata.Content;
+    const url_in: string | undefined = pdata.URL;
     globalThis.logger?.debug(content);
     globalThis.logger?.debug(url_in);
     // we are not implementing the JSProgram

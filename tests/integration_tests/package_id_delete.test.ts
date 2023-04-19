@@ -23,7 +23,7 @@ describe('DELETE /package/{id}', () => {
     expect(result.statusCode).toEqual(400);
   });
   test('Valid resource 200', async () => {
-    const result = await request(app).get('/package/package_1').set('X-Authorization', `bearer ${token}`);
+    const result = await request(app).delete('/package/package_1').set('X-Authorization', `bearer ${token}`);
     expect(result.statusCode).toEqual(200);
   });
 });
