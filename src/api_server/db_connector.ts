@@ -127,6 +127,7 @@ packages.init(
     PackageID: {
       type: DataTypes.TEXT,
       allowNull: false,
+      unique: true,
     },
     PackageName: {
       type: DataTypes.TEXT,
