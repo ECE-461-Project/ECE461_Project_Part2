@@ -135,7 +135,7 @@ async function package_id_put_content(
   globalThis.logger?.info(
     `Package update Content URL found: ${real_url[0].github_repo_url}`
   );
-  const id: string = name.toLowerCase();
+  const id: string = name.replace(/[\W]/g, '-').toLowerCase();
 
   delete_dir(temp_dir);
 
@@ -228,7 +228,7 @@ async function package_id_put_url(
     res.contentType('application/json').status(400).send();
     return;
   }
-  const id: string = name.toLowerCase();
+  const id: string = name.replace(/[\W]/g, '-').toLowerCase();
   globalThis.logger?.debug(`version to be updated: ${version} `);
 
   if (id !== db_entry.PackageID) {
@@ -470,7 +470,7 @@ async function package_post_content(
   globalThis.logger?.info(
     `Package upload Content URL found: ${repository_url}`
   );
-  const id: string = name.toLowerCase();
+  const id: string = name.replace(/[\W]/g, '-').toLowerCase();
   // check if id exists already, error 409
   const result = await packages.findOne({
     where: {PackageID: id},
@@ -566,7 +566,7 @@ async function package_post_url(
     res.contentType('application/json').status(400).send();
     return;
   }
-  const id: string = name.toLowerCase();
+  const id: string = name.replace(/[\W]/g, '-').toLowerCase();
   // check if id exists already, error 409
   const result = await packages.findOne({
     where: {PackageID: id},
