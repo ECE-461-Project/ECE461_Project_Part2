@@ -1,6 +1,6 @@
 import * as request from 'supertest';
 import {get_auth_token} from './helper/get_auth_token';
-import {PackageData} from '../../src/api_server/models/models'
+import {PackageData, PackageMetadata} from '../../src/api_server/models/models'
 import {readFileSync} from 'fs';
 
 // This checks if the INTEGRATION env variable is defined
@@ -20,6 +20,18 @@ describe('POST /package', () => {
 
   test('No input, 400', async () => {
 	const query: PackageData = {
+	};
+    const result = await request(app).post('/package')
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-type', 'application/json')
+      .send(query);
+    expect(result.statusCode).toEqual(400);
+  });
+  
+  test('BOTH input, 400', async () => {
+	const query: PackageData = {
+	  URL: 'doesntmatter',
+	  Content: 'doesntmatter',
 	};
     const result = await request(app).post('/package')
       .set('X-Authorization', `bearer ${token}`)
@@ -109,6 +121,81 @@ describe('POST /package', () => {
     expect(result.body).toHaveProperty('NetScore');
     expect(result.body).toHaveProperty('RampUp');
     expect(result.body).toHaveProperty('ResponsiveMaintainer');
+  });
+  
+  test('UPDATE package_b post-upload with URL 200', async () => {
+    const mdata: PackageMetadata = {
+	  Name: 'nodejs-file-downloader',
+	  ID: 'nodejs-file-downloader',
+	  Version: '4.11.0',
+    };
+    const pdata: PackageData = {
+	  URL: 'https://github.com/ibrod83/nodejs-file-downloader',
+    };
+    const query = {
+	  metadata: mdata,
+	  data: pdata,
+    };
+    const result = await request(app).put('/package/nodejs-file-downloader').set('X-Authorization', `bearer ${token}`).send(query);
+    expect(result.statusCode).toEqual(200);
+  });
+  
+  test('UPDATE package_b post-upload with CONTENT 200', async () => {
+	const package_b_update_b64 = readFileSync('./tests/integration_tests/test_packages/package_b_update.zip.b64').toString()
+
+    const mdata: PackageMetadata = {
+	  Name: 'nodejs-file-downloader',
+	  ID: 'nodejs-file-downloader',
+	  Version: '4.11.1', // whatever the current one in npm registry is (WILL NEED TO CHANGE!)
+    };
+    const pdata: PackageData = {
+	  Content: package_b_update_b64,
+    };
+    const query = {
+	  metadata: mdata,
+	  data: pdata,
+    };
+    const result = await request(app).put('/package/nodejs-file-downloader').set('X-Authorization', `bearer ${token}`).send(query);
+    expect(result.statusCode).toEqual(200);
+  });
+  
+  
+  test('UPDATE package_b post-upload with MISMATCH VERSION 400', async () => {
+	const package_b_update_b64 = readFileSync('./tests/integration_tests/test_packages/package_b_update.zip.b64').toString()
+
+    const mdata: PackageMetadata = {
+	  Name: 'nodejs-file-downloader',
+	  ID: 'nodejs-file-downloader',
+	  Version: '4.11.23',
+    };
+    const pdata: PackageData = {
+	  Content: package_b_update_b64,
+    };
+    const query = {
+	  metadata: mdata,
+	  data: pdata,
+    };
+    const result = await request(app).put('/package/nodejs-file-downloader').set('X-Authorization', `bearer ${token}`).send(query);
+    expect(result.statusCode).toEqual(400);
+  });
+  
+  test('UPDATE package_b post-upload with MISMATCH NAME 400', async () => {
+	const package_b_update_b64 = readFileSync('./tests/integration_tests/test_packages/package_b_update.zip.b64').toString()
+
+    const mdata: PackageMetadata = {
+	  Name: 'nodejs-file-downloadER', // only diff
+	  ID: 'nodejs-file-downloader',
+	  Version: '4.11.1',
+    };
+    const pdata: PackageData = {
+	  Content: package_b_update_b64,
+    };
+    const query = {
+	  metadata: mdata,
+	  data: pdata,
+    };
+    const result = await request(app).put('/package/nodejs-file-downloader').set('X-Authorization', `bearer ${token}`).send(query);
+    expect(result.statusCode).toEqual(400);
   });
 });
 

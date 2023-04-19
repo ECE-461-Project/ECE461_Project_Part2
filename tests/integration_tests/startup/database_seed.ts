@@ -54,6 +54,23 @@ module.exports = async function main() {
     UploadDate: Date.now(),
   });
   */
+  // seeding for DELETE ONLY! just IDs
+  const package_1 = await packages.create({
+	PackageID: 'package_1',
+    PackageName: 'package_1',
+    PackageZipB64: 'notreal',
+    VersionNumber: '1.0.0',
+    UploadDate: Date.now(),
+  });
+  
+  // seeding for DELETE BY NAME ONLY!
+  const package_2 = await packages.create({
+	PackageID: 'package_2',
+    PackageName: 'package_2',
+    PackageZipB64: 'notreal',
+    VersionNumber: '1.0.0',
+    UploadDate: Date.now(),
+  });
   console.log('Database seed success');
 }
 //main();

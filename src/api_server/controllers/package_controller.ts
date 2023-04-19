@@ -11,13 +11,13 @@ import {generate_base64_zip_of_dir, unzip_base64_to_dir} from '../zip_files';
 import {
   package_rate_compute,
   package_rate_compute_and_update,
-  package_rate_fetch,
   package_rate_ingestible,
 } from '../package_rate_helper';
 import {SCORE_OUT} from '../../score_calculations';
-import {create_tmp, delete_dir, create_dir} from '../../git_clone';
+import {create_tmp, delete_dir, create_dir, git_clone} from '../../git_clone';
 import {join} from 'path';
 import {find_and_read_package_json} from '../get_files';
+import {get_url_parse_from_input} from '../../url_parser';
 
 /* ////////////////////////////////////////////////////////////////////////
  *
@@ -68,11 +68,303 @@ export async function package_id_get(req: Request, res: Response) {
 
 /* ////////////////////////////////////////////////////////////////////////
  *
- * 							PACKAGE_ID_PUT
+ * 							PACKAGE_ID_PUT (update)
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_id_put(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+async function package_id_put_content(
+  req: Request,
+  res: Response,
+  mdata: PackageMetadata,
+  pdata: PackageData,
+  db_entry: packages,
+  content: string
+) {
+  // steps: content input is the b64 zip file
+  // create temp directory to store package
+  const temp_dir = await create_tmp();
+
+  // 1. un-base64 it
+  // 2. unzip it into PackagePath (neet to set)
+  const zip_check = await unzip_base64_to_dir(content, temp_dir);
+  if (zip_check === undefined) {
+    globalThis.logger?.info('Not updated due to zip input formed improperly');
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  // look in package.json for Name, Version
+  //    and set all PackageMetadata fields
+  //    if no package.json / no Name / No Version, return status 400 formed improperly
+  const package_json_str = await find_and_read_package_json(temp_dir);
+  if (package_json_str === undefined) {
+    globalThis.logger?.info(
+      'Package update fail due to package.json problem - input formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  const package_json = JSON.parse(package_json_str);
+  const name: string | undefined = package_json.name;
+  const version: string | undefined = package_json.version;
+  let repository_url: string | undefined = package_json.homepage;
+  if (repository_url === undefined) {
+    repository_url = package_json.repository.url;
+  }
+  if (
+    name === undefined ||
+    version === undefined ||
+    repository_url === undefined
+  ) {
+    globalThis.logger?.info(
+      'Not updated due to package.json no name version or url! formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  // Parse URL
+  const real_url = await get_url_parse_from_input(repository_url);
+  if (real_url === undefined) {
+    globalThis.logger?.info('Not updated due to URL parsing error!');
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  globalThis.logger?.debug(`url: ${real_url[0].github_repo_url} `);
+  globalThis.logger?.info(
+    `Package update Content URL found: ${real_url[0].github_repo_url}`
+  );
+  const id: string = name.toLowerCase();
+
+  delete_dir(temp_dir);
+
+  if (id !== db_entry.PackageID) {
+    globalThis.logger?.info(
+      'Not updated due to package.json ID not the same as old ID! formed improperly'
+    );
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  if (name !== db_entry.PackageName) {
+    globalThis.logger?.info(
+      'Not updated due to package.json name not the same as old name! formed improperly'
+    );
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  globalThis.logger?.debug(`version to be updated: ${version} `);
+
+  // create database entry for Name Version ID URL RatedAndApproved and PackageData
+  const package_updated = await db_entry.update({
+    PackageID: id,
+    PackageName: name,
+    PackageZipB64: content,
+    GitHubLink: real_url[0].github_repo_url,
+    UploadTypeURL: 0,
+    VersionNumber: version,
+    updatedAt: Date.now(),
+    FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
+  });
+  if (package_updated) {
+    globalThis.logger?.info('Package update success!');
+    res.contentType('application/json').status(200).send();
+    return;
+  }
+  globalThis.logger?.info('Failure to update db on update, 400!');
+  res.contentType('application/json').status(400).send();
+}
+
+async function package_id_put_url(
+  req: Request,
+  res: Response,
+  mdata: PackageMetadata,
+  pdata: PackageData,
+  db_entry: packages,
+  url_in: string
+) {
+  const temp_dir = await create_tmp();
+  // parse the url
+  const real_url = await get_url_parse_from_input(url_in);
+  if (real_url === undefined) {
+    globalThis.logger?.info('Not updated due to URL parsing error!');
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  globalThis.logger?.debug(`url: ${real_url[0].github_repo_url} `);
+  const git_url = real_url[0].github_repo_url;
+  // clone the url
+  const check_clone = await git_clone(temp_dir, git_url);
+  if (check_clone === false) {
+    globalThis.logger?.info(
+      'Package update fail due to URL cloning issue - input formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+
+  // look in package.json for Name, Version
+  //    and set all PackageMetadata fields
+  //    if no package.json / no Name / No Version, return status 400 formed improperly
+  const package_json_str = await find_and_read_package_json(temp_dir);
+  if (package_json_str === undefined) {
+    globalThis.logger?.info(
+      'Package update fail due to package.json problem - input formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  const package_json = JSON.parse(package_json_str);
+  const name: string | undefined = package_json.name;
+  const version: string | undefined = package_json.version;
+  if (name === undefined || version === undefined) {
+    globalThis.logger?.info(
+      'Not uploaded due to name or version in package.json @ url input formed improperly'
+    );
+    delete_dir(temp_dir);
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  const id: string = name.toLowerCase();
+  globalThis.logger?.debug(`version to be updated: ${version} `);
+
+  if (id !== db_entry.PackageID) {
+    globalThis.logger?.info(
+      'Not updated due to package.json ID not the same as old ID! formed improperly'
+    );
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+  if (name !== db_entry.PackageName) {
+    globalThis.logger?.info(
+      'Not updated due to package.json name not the same as old name! formed improperly'
+    );
+    res.contentType('application/json').status(400).send();
+    return;
+  }
+
+  // 6. zip it, then base64 it, then return that b64 in content
+  const b64_ingestible = await generate_base64_zip_of_dir(
+    join(temp_dir, 'package'),
+    join(temp_dir, 'package'),
+    id
+  );
+
+  // Update database entry
+  const package_updated = await db_entry.update({
+    PackageID: id,
+    PackageName: name,
+    PackageZipB64: b64_ingestible,
+    GitHubLink: git_url,
+    UploadTypeURL: 1,
+    VersionNumber: version,
+    updatedAt: Date.now(),
+    FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
+  });
+
+  delete_dir(temp_dir);
+
+  if (package_updated) {
+    globalThis.logger?.info('Package update success!');
+    res.contentType('application/json').status(200).send();
+    return;
+  }
+  globalThis.logger?.info('Failure to update db on update, 400!');
+  res.contentType('application/json').status(400).send();
+}
+
+export async function package_id_put(req: Request, res: Response) {
+  try {
+    const input = req.body;
+    if (input === undefined) {
+      globalThis.logger?.info('Request body null!');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    const mdata: PackageMetadata | undefined = input.metadata;
+    const pdata: PackageData | undefined = input.data;
+    if (mdata === undefined || pdata === undefined) {
+      globalThis.logger?.info('Request body missing metadata or data!');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    const id = mdata.ID;
+    if (id !== req.params.id) {
+      globalThis.logger?.info('Request param id and metadata id do not match!');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    const result = await packages.findOne({where: {PackageID: req.params.id}});
+    if (!result) {
+      // could not find package!
+      globalThis.logger?.info('Not updated since not found: 404!');
+      res.contentType('application/json').status(404).send();
+      return;
+    }
+    if (result.PackageName !== mdata.Name) {
+      globalThis.logger?.info(
+        'PackageName does not match metadata input: 400!'
+      );
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    if (result.VersionNumber !== mdata.Version) {
+      globalThis.logger?.info(
+        'Version number does not match metadata input: 400!'
+      );
+      globalThis.logger?.info(
+        `Version number does not match metadata input: ${result.VersionNumber} and ${mdata.Version}!`
+      );
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    if (result.PackageID !== mdata.ID) {
+      globalThis.logger?.info('PackageID does not match metadata input: 400!');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    const content: string | undefined = pdata.Content;
+    const url_in: string | undefined = pdata.URL;
+    globalThis.logger?.debug(content);
+    globalThis.logger?.debug(url_in);
+    // we are not implementing the JSProgram
+    if (content !== undefined && url_in !== undefined) {
+      globalThis.logger?.info('PackageData input has BOTH url and content!');
+      res.contentType('application/json').status(400).send();
+      return;
+    } else if (content !== undefined) {
+      package_id_put_content(req, res, mdata, pdata, result, content);
+      return;
+    } else if (url_in !== undefined) {
+      package_id_put_url(req, res, mdata, pdata, result, url_in);
+      return;
+    } else {
+      globalThis.logger?.info('PackageData input does not have Content or URL');
+      res.contentType('application/json').status(400).send();
+      return;
+    }
+    //console.log(query_data);
+  } catch (err: any) {
+    globalThis.logger?.error(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    }
+  }
 }
 
 /* ////////////////////////////////////////////////////////////////////////
@@ -80,8 +372,45 @@ export function package_id_put(req: Request, res: Response) {
  * 							PACKAGE_ID_DELETE
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_id_delete(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+export async function package_id_delete(req: Request, res: Response) {
+  try {
+    const result = await packages.findOne({where: {PackageID: req.params.id}});
+    if (result) {
+      // don't need to do anything except clear database entry
+      // directory of package always deleted on upload/rate!
+      const del = await packages.destroy({where: {PackageID: req.params.id}});
+      if (del) {
+        globalThis.logger?.info('Success deleting ... 200!');
+        res.contentType('application/json').status(200).send();
+        return;
+      } else {
+        globalThis.logger?.info('Error deleting ... 400!');
+        res.contentType('application/json').status(400).send();
+        return;
+      }
+    } else {
+      globalThis.logger?.info('Not deleted since not found: 404!');
+      res.contentType('application/json').status(404).send();
+      return;
+    }
+  } catch (err: any) {
+    globalThis.logger?.error(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    }
+  }
 }
 
 /* ////////////////////////////////////////////////////////////////////////
@@ -123,7 +452,10 @@ async function package_post_content(
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
-  const repository_url: string | undefined = package_json.repository.url;
+  let repository_url: string | undefined = package_json.homepage;
+  if (repository_url === undefined) {
+    repository_url = package_json.repository.url;
+  }
   if (
     name === undefined ||
     version === undefined ||
@@ -136,7 +468,9 @@ async function package_post_content(
     res.contentType('application/json').status(400).send();
     return;
   }
-
+  globalThis.logger?.info(
+    `Package upload Content URL found: ${repository_url}`
+  );
   const id: string = name.toLowerCase();
   // check if id exists already, error 409
   const result = await packages.findOne({
@@ -294,20 +628,22 @@ async function package_post_url(
 export async function package_post(req: Request, res: Response) {
   try {
     const input: PackageData = req.body;
-    const content = input.Content;
-    const url_in = input.URL;
+    const content: string | undefined = input.Content;
+    const url_in: string | undefined = input.URL;
     globalThis.logger?.debug(content);
     globalThis.logger?.debug(url_in);
     // we are not implementing the JSProgram
-    if (content) {
+    if (content !== undefined && url_in !== undefined) {
+      globalThis.logger?.info('PackageData input has BOTH url and content!');
+      res.contentType('application/json').status(400).send();
+    } else if (content !== undefined) {
       package_post_content(req, res, input, content);
-    } else if (url_in) {
+    } else if (url_in !== undefined) {
       package_post_url(req, res, input, url_in);
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
       res.contentType('application/json').status(400).send();
     }
-    //console.log(query_data);
   } catch (err: any) {
     globalThis.logger?.error(err);
     if (err instanceof Error) {
@@ -385,6 +721,7 @@ export async function package_id_rate_get(req: Request, res: Response) {
  *
  */ ///////////////////////////////////////////////////////////////////////
 export function package_byName_name_get(req: Request, res: Response) {
+  // Since dealing with traceability, we are not implementing, piazza confirmed
   res.status(200).send('This is wrong response btw');
 }
 
@@ -393,8 +730,49 @@ export function package_byName_name_get(req: Request, res: Response) {
  * 							PACKAGE_BYNAME_NAME_DELETE
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_byName_name_delete(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+export async function package_byName_name_delete(req: Request, res: Response) {
+  try {
+    const result = await packages.findOne({
+      where: {PackageName: req.params.name},
+    });
+    if (result) {
+      // don't need to do anything except clear database entry
+      // directory of package always deleted on upload/rate!
+      const del = await packages.destroy({
+        where: {PackageName: req.params.name},
+      });
+      if (del) {
+        globalThis.logger?.info('Success deleting ... 200!');
+        res.contentType('application/json').status(200).send();
+        return;
+      } else {
+        globalThis.logger?.info('Error deleting ... 400!');
+        res.contentType('application/json').status(400).send();
+        return;
+      }
+    } else {
+      globalThis.logger?.info('Not deleted since not found: 404!');
+      res.contentType('application/json').status(404).send();
+      return;
+    }
+  } catch (err: any) {
+    globalThis.logger?.error(err);
+    if (err instanceof Error) {
+      const error: ModelError = {
+        code: 0,
+        message: err.message,
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    } else {
+      const error: ModelError = {
+        code: 0,
+        message: err.toString(),
+      };
+      res.contentType('application/json').status(400).send(error);
+      return;
+    }
+  }
 }
 
 /* ////////////////////////////////////////////////////////////////////////
