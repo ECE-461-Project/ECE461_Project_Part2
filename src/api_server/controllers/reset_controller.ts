@@ -42,6 +42,7 @@ export async function reset(req: Request, res: Response) {
         },
       },
     });
+    res.status(200).send();
   } catch (err: any) {
     globalThis.logger?.error(err);
     if (err instanceof Error) {
