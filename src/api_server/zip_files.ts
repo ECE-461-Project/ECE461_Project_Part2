@@ -1,4 +1,4 @@
-import {getAllFiles} from './get_files';
+import {getFiles} from './get_files';
 import JSZip = require('jszip');
 import {readFile} from 'fs/promises';
 import {writeFile} from 'fs/promises';
@@ -32,10 +32,9 @@ export async function generate_base64_zip_of_dir(
   const ignore_github = RegExp('\\.github/');
   const ignore_test = RegExp('/_*tests?_*/');
   const zip = new JSZip();
-  const array_of_files = await getAllFiles(directory);
   // If we want to do reading in parallel in the future:
   //  https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
-  for (const file of array_of_files) {
+  for await (const file of getFiles(directory)) {
     if (ignore_git.exec(file)) {
       continue;
     }
@@ -51,30 +50,12 @@ export async function generate_base64_zip_of_dir(
     const filename = join(parent, file.replace(path_remove, ''));
     zip.file(filename, fileContent, {createFolders: true});
   }
-  // Should we do compression:
-  //  https://stuk.github.io/jszip/documentation/api_jszip/generate_async.html#compression-and-compressionoptions-options
-  //  NOTE: Default is already compressed!
   return zip.generateAsync({
     type: 'base64',
     compression: 'DEFLATE',
     compressionOptions: {level: 6},
+    streamFiles: true,
   });
-
-  /*
-  // If you want to stream zip to filesystem
-  // https://stuk.github.io/jszip/documentation/howto/write_zip.html
-  // From jszip doc
-  // For manually validation
-  zip
-    .generateNodeStream({type: 'nodebuffer', streamFiles: true})
-    .pipe(createWriteStream('out.zip'))
-    .on('finish', () => {
-      // JSZip generates a readable stream with a "end" event,
-      // but is piped here in a writable stream which emits a "finish" event.
-      console.log('out.zip written.');
-    });
-    return '';
-    */
 }
 
 export async function unzip_base64_to_dir(
