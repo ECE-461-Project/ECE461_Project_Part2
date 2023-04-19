@@ -185,7 +185,7 @@ describe('POST /package', () => {
     const mdata: PackageMetadata = {
 	  Name: 'nodejs-file-downloadER', // only diff
 	  ID: 'nodejs-file-downloader',
-	  Version: '4.11.23',
+	  Version: '4.11.1',
     };
     const pdata: PackageData = {
 	  Content: package_b_update_b64,

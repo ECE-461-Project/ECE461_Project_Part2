@@ -11,7 +11,6 @@ import {generate_base64_zip_of_dir, unzip_base64_to_dir} from '../zip_files';
 import {
   package_rate_compute,
   package_rate_compute_and_update,
-  package_rate_fetch,
   package_rate_ingestible,
 } from '../package_rate_helper';
 import {SCORE_OUT} from '../../score_calculations';
