@@ -123,7 +123,7 @@ export class packages extends Model {
   declare ResponsiveMaintainer: number;
   declare LicenseScore: number;
   declare GoodPinningPractice: number;
-  declare GoodEngineeringProcess: number;
+  declare PullRequest: number;
   declare UploadDate: Date;
   declare FK_UserID: number;
 }
@@ -187,7 +187,7 @@ packages.init(
       type: DataTypes.FLOAT,
       defaultValue: 0,
     },
-    GoodEngineeringProcess: {
+    PullRequest: {
       type: DataTypes.FLOAT,
       defaultValue: 0,
     },

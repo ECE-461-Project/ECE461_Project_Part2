@@ -1,25 +1,6 @@
 /**
  *
  * @export
- * @interface ModelError
- */
-export interface ModelError {
-  /**
-   *
-   * @type {number}
-   * @memberof ModelError
-   */
-  code: number;
-  /**
-   *
-   * @type {string}
-   * @memberof ModelError
-   */
-  message: string;
-}
-/**
- *
- * @export
  * @interface ModelPackage
  */
 export interface ModelPackage {
@@ -171,7 +152,7 @@ export interface PackageRating {
    * @type {number}
    * @memberof PackageRating
    */
-  GoodEngineeringProcess: number;
+  PullRequest: number;
   /**
    * The fraction of its dependencies that are pinned to at least a specific major+minor version, e.g. version 2.3.X of a package. (If there are zero dependencies, they should receive a 1.0 rating. If there are two dependencies, one pinned to this degree, then they should receive a Â½ = 0.5 rating).
    * @type {number}

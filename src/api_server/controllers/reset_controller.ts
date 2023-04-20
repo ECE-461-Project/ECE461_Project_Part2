@@ -1,5 +1,4 @@
 // You should use models for return
-import {ModelError} from '../../api_server/models/models';
 import {Request, Response} from 'express';
 import {packages, users, usergroups} from '../db_connector';
 import {Op} from 'sequelize';
@@ -43,18 +42,10 @@ export async function reset(req: Request, res: Response) {
     });
     res.status(200).send();
   } catch (err: any) {
-    globalThis.logger?.error(err);
+    globalThis.logger?.error(`Error in reset: ${err}`);
     if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
       res.status(400).send();
     } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
       res.status(400).send();
     }
   }

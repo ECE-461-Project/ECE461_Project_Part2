@@ -33,7 +33,7 @@ function net_score_formula(subscores: SCORE_OUT): number {
     (subscores.Rating.ResponsiveMaintainer * 0.05) +
     (subscores.Rating.Correctness * 0.2) +
     (subscores.Rating.GoodPinningPractice * 0.1) +
-    (subscores.Rating.GoodEngineeringProcess * 0.05)
+    (subscores.Rating.PullRequest * 0.05)
   );
   return net_score;
 }
@@ -50,7 +50,7 @@ export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
       ResponsiveMaintainer: 0,
       LicenseScore: 0,
       GoodPinningPractice: 0,
-      GoodEngineeringProcess: 0,
+      PullRequest: 0,
     },
   };
   //let temp_dir = '';
@@ -87,7 +87,7 @@ export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
     score.Rating.RampUp = Number(subscores[3].toFixed(3));
     score.Rating.Correctness = Number(subscores[4].toFixed(3));
     score.Rating.GoodPinningPractice = Number(subscores[5].toFixed(3));
-    score.Rating.GoodEngineeringProcess = Number(subscores[6].toFixed(3));
+    score.Rating.PullRequest = Number(subscores[6].toFixed(3));
 
     // Calculate subscores
     score.Rating.NetScore = Number(net_score_formula(score).toFixed(3));

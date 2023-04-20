@@ -1,7 +1,7 @@
 // You should use models for return
 import {Request, Response} from 'express';
 import {users} from '../db_connector';
-import {AuthenticationRequest, ModelError} from '../models/models';
+import {AuthenticationRequest} from '../models/models';
 import * as jwt from 'jsonwebtoken';
 
 import {auth_secret} from '../config/auth';
@@ -22,13 +22,9 @@ export async function authenticate(req: Request, res: Response) {
       };
       jwt.sign(payload, auth_secret, {expiresIn: '10h'}, (err, token) => {
         if (err) {
-          const error: ModelError = {
-            code: 1,
-            message: err.message,
-          };
           // Error 501 is auth not supported -> but we do support authorization
           // Error 500 is internal server error and is not documented
-          res.contentType('application/json').status(500).send(error);
+          res.status(400).send();
         }
         res.status(200).json(token);
       });
