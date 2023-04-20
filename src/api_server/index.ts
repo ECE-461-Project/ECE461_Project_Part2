@@ -15,6 +15,7 @@ import {create_logger} from '../logging_setup';
 import {verifyToken} from './middleware/authorize';
 import {sequelize, users} from './db_connector';
 
+
 // Environment Setup
 dotenv.config({
   path: resolve(process.cwd(), '.env.express'),
