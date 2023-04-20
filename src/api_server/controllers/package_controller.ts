@@ -1,12 +1,7 @@
 // You should use models for return
 import {Request, Response} from 'express';
 import {sequelize, packages} from '../db_connector';
-import {
-  ModelPackage,
-  PackageMetadata,
-  PackageData,
-  ModelError,
-} from '../models/models';
+import {ModelPackage, PackageMetadata, PackageData} from '../models/models';
 import {generate_base64_zip_of_dir, unzip_base64_to_dir} from '../zip_files';
 import {
   package_rate_compute,
@@ -49,20 +44,8 @@ export async function package_id_get(req: Request, res: Response) {
     }
     //console.log(query_data);
   } catch (err: any) {
-    globalThis.logger?.error(err);
-    if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
-      res.contentType('application/json').status(500).send(error);
-    } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
-      res.contentType('application/json').status(500).send(error);
-    }
+    globalThis.logger?.error(`Error in package_id_get: ${err}`);
+    res.status(400).send();
   }
 }
 
@@ -348,22 +331,8 @@ export async function package_id_put(req: Request, res: Response) {
     }
     //console.log(query_data);
   } catch (err: any) {
-    globalThis.logger?.error(err);
-    if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
-      res.contentType('application/json').status(400).send(error);
-      return;
-    } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
-      res.contentType('application/json').status(400).send(error);
-      return;
-    }
+    globalThis.logger?.error(`Error in package_id_put: ${err}`);
+    res.status(400).send();
   }
 }
 
@@ -394,22 +363,9 @@ export async function package_id_delete(req: Request, res: Response) {
       return;
     }
   } catch (err: any) {
-    globalThis.logger?.error(err);
-    if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
-      res.contentType('application/json').status(400).send(error);
-      return;
-    } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
-      res.contentType('application/json').status(400).send(error);
-      return;
-    }
+    globalThis.logger?.error(`Error in package_id_delete: ${err}`);
+    res.status(400).send();
+    return;
   }
 }
 
@@ -505,7 +461,7 @@ async function package_post_content(
     ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
     LicenseScore: ud.Rating.LicenseScore,
     GoodPinningPractice: ud.Rating.GoodPinningPractice,
-    GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
+    PullRequest: ud.Rating.PullRequest,
   });
 
   const metadata: PackageMetadata = {
@@ -603,7 +559,7 @@ async function package_post_url(
     ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
     LicenseScore: ud.Rating.LicenseScore,
     GoodPinningPractice: ud.Rating.GoodPinningPractice,
-    GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
+    PullRequest: ud.Rating.PullRequest,
   });
 
   delete_dir(temp_dir);
@@ -645,20 +601,8 @@ export async function package_post(req: Request, res: Response) {
       res.contentType('application/json').status(400).send();
     }
   } catch (err: any) {
-    globalThis.logger?.error(err);
-    if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
-      res.contentType('application/json').status(400).send(error);
-    } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
-      res.contentType('application/json').status(400).send(error);
-    }
+    globalThis.logger?.error(`Error in package_post: ${err}`);
+    res.status(400).send();
   }
 }
 
@@ -685,11 +629,7 @@ export async function package_id_rate_get(req: Request, res: Response) {
         globalThis.logger?.error(
           'Package Rating for valid package failed to fetch'
         );
-        const error: ModelError = {
-          code: 0,
-          message: 'Package Rating Failed!',
-        };
-        res.contentType('application/json').status(500).send(error);
+        res.status(400).send();
       }
     } else {
       //package not found
@@ -698,20 +638,7 @@ export async function package_id_rate_get(req: Request, res: Response) {
     }
   } catch (err: any) {
     delete_dir(temp_dir);
-    globalThis.logger?.error(err);
-    if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
-      res.contentType('application/json').status(500).send(error);
-    } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
-      res.contentType('application/json').status(500).send(error);
-    }
+    globalThis.logger?.error(`Error in package_id_rate_get: ${err}`);
   }
 }
 
@@ -756,22 +683,8 @@ export async function package_byName_name_delete(req: Request, res: Response) {
       return;
     }
   } catch (err: any) {
-    globalThis.logger?.error(err);
-    if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
-      res.contentType('application/json').status(400).send(error);
-      return;
-    } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
-      res.contentType('application/json').status(400).send(error);
-      return;
-    }
+    globalThis.logger?.error(`Error in package_byName_name_delete: ${err}`);
+    res.status(400).send();
   }
 }
 

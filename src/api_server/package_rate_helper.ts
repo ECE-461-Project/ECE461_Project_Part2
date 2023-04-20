@@ -19,7 +19,7 @@ export async function package_rate_compute_and_update(
       ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
       LicenseScore: ud.Rating.LicenseScore,
       GoodPinningPractice: ud.Rating.GoodPinningPractice,
-      GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
+      PullRequest: ud.Rating.PullRequest,
     },
     {
       where: {
@@ -49,7 +49,7 @@ export function package_rate_ingestible(ud: SCORE_OUT): number {
     ratings.ResponsiveMaintainer >= 0.5 &&
     ratings.LicenseScore >= 0.5 &&
     ratings.GoodPinningPractice >= 0.5 &&
-    ratings.GoodEngineeringProcess >= 0.5
+    ratings.PullRequest >= 0.5
   ) {
     return 1;
   } else {
@@ -69,7 +69,7 @@ export async function package_rate_update(id: PackageID, ud: SCORE_OUT) {
       ResponsiveMaintainer: ud.Rating.ResponsiveMaintainer,
       LicenseScore: ud.Rating.LicenseScore,
       GoodPinningPractice: ud.Rating.GoodPinningPractice,
-      GoodEngineeringProcess: ud.Rating.GoodEngineeringProcess,
+      PullRequest: ud.Rating.PullRequest,
     },
     {
       where: {
@@ -96,7 +96,7 @@ export async function package_rate_fetch(
           ResponsiveMaintainer: result.ResponsiveMaintainer,
           LicenseScore: result.LicenseScore,
           GoodPinningPractice: result.GoodPinningPractice,
-          GoodEngineeringProcess: result.GoodEngineeringProcess,
+          PullRequest: result.PullRequest,
         },
       };
       return ud;
