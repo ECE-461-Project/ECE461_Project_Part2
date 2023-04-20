@@ -115,7 +115,7 @@ describe('POST /package', () => {
     expect(result.statusCode).toEqual(200);
     expect(result.body).toHaveProperty('BusFactor');
     expect(result.body).toHaveProperty('Correctness');
-    expect(result.body).toHaveProperty('GoodEngineeringProcess');
+    expect(result.body).toHaveProperty('PullRequest');
     expect(result.body).toHaveProperty('GoodPinningPractice');
     expect(result.body).toHaveProperty('LicenseScore');
     expect(result.body).toHaveProperty('NetScore');

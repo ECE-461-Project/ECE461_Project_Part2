@@ -42,7 +42,7 @@ export async function reset(req: Request, res: Response) {
     });
     res.status(200).send();
   } catch (err: any) {
-    globalThis.logger?.error(err);
+    globalThis.logger?.error(`Error in reset: ${err}`);
     if (err instanceof Error) {
       res.status(400).send();
     } else {
