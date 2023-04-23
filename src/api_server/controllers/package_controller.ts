@@ -1,7 +1,12 @@
 // You should use models for return
 import {Request, Response} from 'express';
 import {sequelize, packages} from '../db_connector';
-import {ModelPackage, PackageMetadata, PackageData} from '../models/models';
+import {
+  ModelPackage,
+  PackageMetadata,
+  PackageData,
+  Debloat,
+} from '../models/models';
 import {generate_base64_zip_of_dir, unzip_base64_to_dir} from '../zip_files';
 import {
   package_rate_compute,
@@ -60,7 +65,8 @@ async function package_id_put_content(
   mdata: PackageMetadata,
   pdata: PackageData,
   db_entry: packages,
-  content: string
+  content: string,
+  debloat: Debloat
 ) {
   // steps: content input is the b64 zip file
   // create temp directory to store package
@@ -120,6 +126,15 @@ async function package_id_put_content(
   );
   const id: string = name.replace(/[\W]/g, '-').toLowerCase();
 
+  if (debloat === 1) {
+    content = await generate_base64_zip_of_dir(
+      join(temp_dir, 'package'),
+      join(temp_dir, 'package'),
+      id,
+      debloat
+    );
+  }
+
   delete_dir(temp_dir);
 
   if (id !== db_entry.PackageID) {
@@ -164,7 +179,8 @@ async function package_id_put_url(
   mdata: PackageMetadata,
   pdata: PackageData,
   db_entry: packages,
-  url_in: string
+  url_in: string,
+  debloat: Debloat
 ) {
   const temp_dir = await create_tmp();
   // parse the url
@@ -233,7 +249,8 @@ async function package_id_put_url(
   const b64_ingestible = await generate_base64_zip_of_dir(
     join(temp_dir, 'package'),
     join(temp_dir, 'package'),
-    id
+    id,
+    debloat
   );
 
   // Update database entry
@@ -261,6 +278,11 @@ async function package_id_put_url(
 
 export async function package_id_put(req: Request, res: Response) {
   try {
+    const debloat_in = req.get('debloat');
+    let debloat_arg: Debloat = 0;
+    if (debloat_in !== undefined) {
+      debloat_arg = Number(debloat_in);
+    }
     const input = req.body;
     if (input === undefined) {
       globalThis.logger?.info('Request body null!');
@@ -319,10 +341,18 @@ export async function package_id_put(req: Request, res: Response) {
       res.contentType('application/json').status(400).send();
       return;
     } else if (content !== undefined) {
-      package_id_put_content(req, res, mdata, pdata, result, content);
+      package_id_put_content(
+        req,
+        res,
+        mdata,
+        pdata,
+        result,
+        content,
+        debloat_arg
+      );
       return;
     } else if (url_in !== undefined) {
-      package_id_put_url(req, res, mdata, pdata, result, url_in);
+      package_id_put_url(req, res, mdata, pdata, result, url_in, debloat_arg);
       return;
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
@@ -378,7 +408,8 @@ async function package_post_content(
   req: Request,
   res: Response,
   input: PackageData,
-  content: string
+  content: string,
+  debloat: Debloat
 ) {
   // steps: content input is the b64 zip file
   // create temp directory to store package
@@ -440,6 +471,14 @@ async function package_post_content(
   // Create new temp_dir since score calc git clones
   temp_dir = await create_tmp();
   const ud: SCORE_OUT = await package_rate_compute(repository_url, temp_dir);
+  if (debloat === 1) {
+    content = await generate_base64_zip_of_dir(
+      join(temp_dir, 'package'),
+      join(temp_dir, 'package'),
+      id,
+      debloat
+    );
+  }
   delete_dir(temp_dir);
 
   // create database entry for Name Version ID URL RatedAndApproved and PackageData
@@ -484,7 +523,8 @@ async function package_post_url(
   req: Request,
   res: Response,
   input: PackageData,
-  url_in: string
+  url_in: string,
+  debloat: Debloat
 ) {
   // steps: url_in input is ingestible public
   // create temp directory to store package
@@ -538,7 +578,8 @@ async function package_post_url(
   const b64_ingestible = await generate_base64_zip_of_dir(
     join(temp_dir, 'package'),
     join(temp_dir, 'package'),
-    id
+    id,
+    debloat
   );
   // create database entry for Name Version ID URL RatedAndApproved
   const package_uploaded = await packages.create({
@@ -583,6 +624,11 @@ async function package_post_url(
 
 export async function package_post(req: Request, res: Response) {
   try {
+    const debloat_in = req.get('debloat');
+    let debloat_arg: Debloat = 0;
+    if (debloat_in !== undefined) {
+      debloat_arg = Number(debloat_in);
+    }
     const input: PackageData = req.body;
     const content: string | undefined = input.Content;
     const url_in: string | undefined = input.URL;
@@ -593,9 +639,9 @@ export async function package_post(req: Request, res: Response) {
       globalThis.logger?.info('PackageData input has BOTH url and content!');
       res.contentType('application/json').status(400).send();
     } else if (content !== undefined) {
-      package_post_content(req, res, input, content);
+      package_post_content(req, res, input, content, debloat_arg);
     } else if (url_in !== undefined) {
-      package_post_url(req, res, input, url_in);
+      package_post_url(req, res, input, url_in, debloat_arg);
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
       res.contentType('application/json').status(400).send();
