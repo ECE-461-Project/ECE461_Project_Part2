@@ -28,7 +28,7 @@ export async function generate_base64_zip_of_dir(
   directory: string,
   path_remove: string,
   parent: string,
-  debloat: Debloat,
+  debloat: Debloat
 ): Promise<string> {
   const ignore_git = RegExp('\\.git/');
   const ignore_github = RegExp('\\.github/');
