@@ -205,3 +205,23 @@ packages.init(
   },
   {sequelize}
 );
+
+export class dependentPackageSize extends Model {
+  declare PackageName: string;
+  declare PackageSize: number;
+}
+dependentPackageSize.init(
+  {
+    PackageName: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      unique: true,
+      primaryKey: true,
+    },
+    PackageSize: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+  },
+  {sequelize}
+);

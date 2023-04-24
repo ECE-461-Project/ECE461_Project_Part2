@@ -13,6 +13,42 @@ info:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
 paths:
+  /sizecost:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PackageName'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PackageSizeReturn'
+              examples:
+                ExampleResponse:
+                  value:
+                  - Name: Underscore
+                    Size: 128
+                  - Name: Lodash
+                    Size: 5000
+          description: List of package sizes
+        "400":
+          description: "There is missing field(s) in the SizeCost Query of package names/AuthenticationToken
+            \ or it is formed improperly, or the AuthenticationToken is invalid."        
+    parameters:
+    - name: X-Authorization
+      description: ""
+      schema:
+        $ref: '#/components/schemas/AuthenticationToken'
+      in: header
+      required: true
   /packages:
     post:
       requestBody:
@@ -533,6 +569,22 @@ paths:
       required: true
 components:
   schemas:
+    PackageSize:
+      type: number
+    PackageSizeReturn:
+      required:
+      - name
+      - size
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/PackageName'
+          description: Package name
+          example: my-package
+        size:
+          $ref: '#/components/schemas/PackageSize'
+          description: Package size cost
+          example: 50000
     Package:
       required:
       - metadata
