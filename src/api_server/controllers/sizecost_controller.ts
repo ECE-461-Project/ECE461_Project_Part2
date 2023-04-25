@@ -10,24 +10,28 @@ import {PackageName, PackageSizeReturn} from '../models/models';
 import {create_tmp, delete_dir} from '../../git_clone';
 import {run_cmd} from '../../sub_process_help';
 import {join} from 'path';
+import {stringify} from 'querystring';
 
 export async function npm_compute_optional_update_package_name(
   names: PackageName[],
   update_db: boolean,
-  delete_db: boolean
+  delete_db: boolean,
+  update_refcount: boolean
 ): Promise<number> {
   return npm_compute_optional_update_internal(
     names,
     update_db,
     delete_db,
-    null
+    null,
+    update_refcount
   );
 }
 
 export async function npm_compute_optional_update_directory(
   dirname: string,
   update_db: boolean,
-  delete_db: boolean
+  delete_db: boolean,
+  update_refcount: boolean
 ): Promise<number> {
   globalThis.logger?.debug(
     `npm update dir: ${dirname} ${update_db} ${delete_db}`
@@ -36,7 +40,8 @@ export async function npm_compute_optional_update_directory(
     null,
     update_db,
     delete_db,
-    dirname
+    dirname,
+    update_refcount
   );
 }
 
@@ -44,7 +49,8 @@ async function npm_compute_optional_update_internal(
   names: PackageName[] | null,
   update_db: boolean,
   delete_db: boolean,
-  dirname: string | null
+  dirname: string | null,
+  update_refcount: boolean
 ): Promise<number> {
   // give full list without -g to not "double install"
   let args = ['install', '--omit=dev'];
@@ -96,12 +102,19 @@ async function npm_compute_optional_update_internal(
       // if update boolean true, update the database for the actually added packages (on upload)
       if (update_db === true) {
         if (found) {
-          // update
-          await found.update({
-            PackageName: new_indiv_arr_entry[1],
-            PackageSize: new_indiv_arr_entry[0],
-            RefCount: found.RefCount + 1,
-          });
+          // update based on upload/update (update_refcount arg)
+          if (update_refcount) {
+            await found.update({
+              PackageName: new_indiv_arr_entry[1],
+              PackageSize: new_indiv_arr_entry[0],
+              RefCount: found.RefCount + 1,
+            });
+          } else {
+            await found.update({
+              PackageName: new_indiv_arr_entry[1],
+              PackageSize: new_indiv_arr_entry[0],
+            });
+          }
         } else {
           //create
           const dependent_uploaded = await dependentPackageSize.create({
@@ -151,23 +164,27 @@ export async function get_size_cost(req: Request, res: Response) {
   try {
     const input = req.body;
     if (input === undefined) {
-      globalThis.logger?.error(`Error in size cost request body`);
+      globalThis.logger?.error('Error in size cost request body');
       res.status(400).send();
       return;
     }
-    globalThis.logger?.debug(input);
-
+    globalThis.logger?.debug(input[0]);
+    //@TODO check if already in packages db and remove from input if so
     const size_cost = await npm_compute_optional_update_package_name(
-      ['cloudinary', 'lodash'],
-      true,
+      input,
+      false,
+      false,
       false
     );
-    const sample: PackageSizeReturn = {
-      name: 'cloudinary, lodash',
+    const ret: PackageSizeReturn = {
+      names: input.join(),
       size: size_cost,
     };
-    const arr: PackageSizeReturn[] = [sample];
-    res.contentType('application/json').status(200).send(arr);
+    if (size_cost === -1) {
+      res.status(400).send();
+      return;
+    }
+    res.contentType('application/json').status(200).send(ret);
   } catch (err: any) {
     globalThis.logger?.error(`Error in size cost: ${err}`);
     if (err instanceof Error) {

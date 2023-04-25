@@ -14,7 +14,7 @@ export interface PackageSizeReturn {
    * @type {PackageName}
    * @memberof PackageSizeReturn
    */
-  name: PackageName;
+  names: PackageName;
   /**
    *
    * @type {PackageSize}

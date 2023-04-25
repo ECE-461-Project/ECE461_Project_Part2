@@ -171,6 +171,7 @@ async function package_id_put_content(
     const size_cost = await npm_compute_optional_update_directory(
       join(zip_check, ''),
       true,
+      false,
       false
     );
     if (size_cost === -1) {
@@ -282,6 +283,7 @@ async function package_id_put_url(
   const size_cost = await npm_compute_optional_update_package_name(
     [name],
     true,
+    false,
     false
   );
   if (size_cost === -1) {
@@ -410,7 +412,8 @@ export async function package_id_delete(req: Request, res: Response) {
           const size_cost = await npm_compute_optional_update_directory(
             join(zip_check, ''),
             false,
-            true
+            true,
+            false //doesnt matter
           );
           if (size_cost === -1) {
             globalThis.logger?.error(
@@ -424,7 +427,8 @@ export async function package_id_delete(req: Request, res: Response) {
         const size_cost = await npm_compute_optional_update_package_name(
           [result.PackageName],
           false,
-          true
+          true,
+          false //doesnt matter
         );
         if (size_cost === -1) {
           globalThis.logger?.error(
@@ -564,7 +568,8 @@ async function package_post_content(
   const size_cost = await npm_compute_optional_update_directory(
     join(temp_dir, ''),
     true,
-    false
+    false,
+    true
   );
   if (size_cost === -1) {
     globalThis.logger?.info('Error on size cost update in upload content');
@@ -645,7 +650,8 @@ async function package_post_url(
   const size_cost = await npm_compute_optional_update_package_name(
     [name],
     true,
-    false
+    false,
+    true
   );
   if (size_cost === -1) {
     globalThis.logger?.info('On upload, size cost update failed');
@@ -799,7 +805,8 @@ export async function package_byName_name_delete(req: Request, res: Response) {
           const size_cost = await npm_compute_optional_update_directory(
             join(zip_check, ''),
             false,
-            true
+            true,
+            false //doesnt matter
           );
           if (size_cost === -1) {
             globalThis.logger?.error(
@@ -813,7 +820,8 @@ export async function package_byName_name_delete(req: Request, res: Response) {
         const size_cost = await npm_compute_optional_update_package_name(
           [result.PackageName],
           false,
-          true
+          true,
+          false //doesnt matter
         );
         if (size_cost === -1) {
           globalThis.logger?.error(

@@ -28,17 +28,13 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
                   $ref: '#/components/schemas/PackageSizeReturn'
               examples:
                 ExampleResponse:
                   value:
-                  - Name: underscore
-                    Size: 128
-                  - Name: lodash
-                    Size: 5000
-          description: List of package sizes
+                  - names: underscore, lodash
+                    size: 12800
+          description: Net size cost of all input packages
         "400":
           description: "There is missing field(s) in the SizeCost Query of package names/AuthenticationToken
             \ or it is formed improperly, or the AuthenticationToken is invalid."  
@@ -578,17 +574,17 @@ components:
       type: number
     PackageSizeReturn:
       required:
-      - name
+      - names
       - size
       type: object
       properties:
-        name:
+        names:
           $ref: '#/components/schemas/PackageName'
-          description: Package name
-          example: my-package
+          description: Package names
+          example: my-package,package_2
         size:
           $ref: '#/components/schemas/PackageSize'
-          description: Package size cost
+          description: Package net size cost
           example: 50000
     Package:
       required:

@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import {packages, sequelize} from '../../../src/api_server/db_connector';
+import {packages, sequelize, dependentPackageSize} from '../../../src/api_server/db_connector';
 // Please seed the database in database_seed.ts
 // Please put package files in the test_packages directory
 
@@ -29,7 +29,9 @@ module.exports = async function main() {
   await packages.destroy({
     truncate: true
   });
-
+  await dependentPackageSize.destroy({
+    truncate: true
+  });
   // Seed for GET /package/{id}/
   //const {execSync} = require('child_process');
   //console.log('Sleeping... (database_seed.ts)');
