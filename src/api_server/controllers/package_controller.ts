@@ -886,13 +886,15 @@ export async function package_byName_name_delete(req: Request, res: Response) {
  * 							PACKAGE_BYREGEX_REGEX_POST
  *
  */ ///////////////////////////////////////////////////////////////////////
-interface PackageRegex {
+interface ReqRegEx {
   RegEx : string;
 }
 export async function package_byRegEx_regex_post(req: Request, res: Response) {
-  const {RegEx} = req.body as PackageRegex;
+  const {RegEx} = req.body as ReqRegEx;
+  
   try {
     let result: any[] = [];
+    let temp_dir = '';
 
     //search for packages containing README files by regex
     const packageByName = await packages.findAll({
@@ -905,40 +907,40 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
 
     //search for packages constaining README files by regex
     const packageByREADME = await packages.findAll({
-      attributes: ['VersionNumber', 'PackageName', 'PackagePath'],
+      attributes: ['VersionNumber', 'PackageName', 'PackageZipB64'],
     });
 
     for(const pkg of packageByREADME) {
-      readFile(`${pkg.PackagePath}/README.md`,'utf-8', (err, readmeContent) => {
-        if (readmeContent.match(new RegExp(RegEx, 'i'))) {
+      temp_dir = await create_tmp();
+      const zip_check = await unzip_base64_to_dir(pkg.PackageZipB64, temp_dir);
+      const readmeContent = await find_and_read_readme(temp_dir);
+      if (readmeContent != undefined && readmeContent.match(new RegExp(RegEx, 'i'))) {
+        
+        let exists = false;
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].PackageName === pkg.PackageName) {
+            exists = true;
+            break;
+          }
+        }
+
+        if(!exists) {
           result.push({
             Version: pkg.VersionNumber,
             Name: pkg.PackageName,
           });
         }
-      });
+        delete_dir(temp_dir);
+      }
     }
-
+    
     if(result.length > 0) {
       res.status(200).json(result);
     } else {
       res.status(404).send('No package found under this regex');
     }
-  }
-  catch (err: any) {
-    console.log(err);
-    if (err instanceof Error) {
-      const error: ModelError = {
-        code: 0,
-        message: err.message,
-      };
-      res.contentType('application/json').status(500).send(error);
-    } else {
-      const error: ModelError = {
-        code: 0,
-        message: err.toString(),
-      };
-      res.contentType('application/json').status(500).send(error);
-    }
+  } catch(err : any) {
+    globalThis.logger?.error(`Error in package_byRegEx_regex_post: ${err}`);
+    res.status(400).send();
   }
 }
