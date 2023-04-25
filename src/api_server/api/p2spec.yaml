@@ -172,6 +172,12 @@ paths:
           $ref: '#/components/schemas/PackageID'
         in: path
         required: true
+      - name: debloat
+        description: "Debloat the package by removing github/test directories"
+        schema:
+          $ref: '#/components/schemas/Debloat'
+        in: header
+        required: false
       responses:
         "200":
           description: Version is updated.
@@ -295,6 +301,12 @@ paths:
         $ref: '#/components/schemas/AuthenticationToken'
       in: header
       required: true
+    - name: debloat
+      description: "Debloat the package by removing github/test directories (0 false, 1 true)"
+      schema:
+        $ref: '#/components/schemas/Debloat'
+      in: header
+      required: false
   /package/{id}/rate:
     get:
       responses:
@@ -693,6 +705,9 @@ components:
         - Names should only use typical "keyboard" characters.
         - The name "*" is reserved. See the `/packages` API for its meaning.
       type: string
+    Debloat:
+      description: "input argument to upload to return a debloated version of the package (1 true, 0 false)"
+      type: number
     AuthenticationToken:
       description: "The spec permits you to use any token format you like. You could,
         \ for example, look into JSON Web Tokens (\"JWT\", pronounced \"jots\"): https://jwt.io."
