@@ -11,23 +11,55 @@ import {create_tmp, delete_dir} from '../../git_clone';
 import {run_cmd} from '../../sub_process_help';
 import {join} from 'path';
 
-async function update_with_sizes(names: PackageName[]) {
-  // database update
+export async function npm_compute_optional_update_package_name(
+  names: PackageName[],
+  update_db: boolean,
+  delete_db: boolean
+): Promise<number> {
+  return npm_compute_optional_update_internal(
+    names,
+    update_db,
+    delete_db,
+    null
+  );
 }
 
-async function npm_compute_optional_update(
-  names: PackageName[],
-  update_db: boolean
+export async function npm_compute_optional_update_directory(
+  dirname: string,
+  update_db: boolean,
+  delete_db: boolean
+): Promise<number> {
+  globalThis.logger?.debug(
+    `npm update dir: ${dirname} ${update_db} ${delete_db}`
+  );
+  return npm_compute_optional_update_internal(
+    null,
+    update_db,
+    delete_db,
+    dirname
+  );
+}
+
+async function npm_compute_optional_update_internal(
+  names: PackageName[] | null,
+  update_db: boolean,
+  delete_db: boolean,
+  dirname: string | null
 ): Promise<number> {
   // give full list without -g to not "double install"
-  const npm_folder_name = 'npm_install';
   let args = ['install', '--omit=dev'];
-  args = args.concat(names);
+  if (dirname === null && names !== null) {
+    args = args.concat(names);
+  }
   globalThis.logger?.debug(`Args: ${args}`);
   let size_cost = 0;
-
+  let temp_dir = '';
+  if (dirname !== null && names === null) {
+    temp_dir = dirname;
+  } else {
+    temp_dir = await create_tmp();
+  }
   try {
-    const temp_dir = await create_tmp();
     const npm_out = await run_cmd('/usr/local/bin/npm', args, {
       cwd: join(temp_dir),
     });
@@ -38,11 +70,13 @@ async function npm_compute_optional_update(
     globalThis.logger?.debug(du_out);
 
     if (typeof du_out !== 'string') {
-      return 0;
+      globalThis.logger?.error('Error with du command in size cost!');
+      if (dirname === null && names !== null) {
+        delete_dir(temp_dir);
+      }
+      return -1;
     }
     const du_arr = du_out.split('\n');
-    globalThis.logger?.debug(du_arr);
-    globalThis.logger?.debug(du_arr[0]);
     for (const entry of du_arr) {
       // eslint-disable-next-line prefer-const
       let new_indiv_arr_entry = entry.split(/\s+/);
@@ -66,13 +100,30 @@ async function npm_compute_optional_update(
           await found.update({
             PackageName: new_indiv_arr_entry[1],
             PackageSize: new_indiv_arr_entry[0],
+            RefCount: found.RefCount + 1,
           });
         } else {
           //create
           const dependent_uploaded = await dependentPackageSize.create({
             PackageName: new_indiv_arr_entry[1],
             PackageSize: new_indiv_arr_entry[0],
+            RefCount: 1,
           });
+        }
+      }
+      if (delete_db === true) {
+        if (found) {
+          //delete
+          if (found.RefCount === 1) {
+            await found.destroy();
+          } else {
+            //decrement reference counter
+            await found.update({
+              PackageName: new_indiv_arr_entry[1],
+              PackageSize: new_indiv_arr_entry[0],
+              RefCount: found.RefCount - 1,
+            });
+          }
         }
       }
       if (found) {
@@ -81,19 +132,34 @@ async function npm_compute_optional_update(
       // otherwise keep adding size to the total size cost
       size_cost += Number(new_indiv_arr_entry[0]);
     }
+    if (dirname === null && names !== null) {
+      delete_dir(temp_dir);
+    }
   } catch (err) {
     if (err instanceof Error) {
+      if (dirname === null && names !== null) {
+        delete_dir(temp_dir);
+      }
       globalThis.logger?.error(`Error while npm install or du: ${err.message}`);
     }
-    return 0;
+    return -1;
   }
   return size_cost;
 }
 
 export async function get_size_cost(req: Request, res: Response) {
   try {
-    const size_cost = await npm_compute_optional_update(
+    const input = req.body;
+    if (input === undefined) {
+      globalThis.logger?.error(`Error in size cost request body`);
+      res.status(400).send();
+      return;
+    }
+    globalThis.logger?.debug(input);
+
+    const size_cost = await npm_compute_optional_update_package_name(
       ['cloudinary', 'lodash'],
+      true,
       false
     );
     const sample: PackageSizeReturn = {

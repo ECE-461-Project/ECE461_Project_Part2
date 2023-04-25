@@ -59,8 +59,8 @@ export async function git_clone(
   tmp_dir: string,
   git_url: string
 ): Promise<boolean> {
-  const git_folder_name = 'package';
-  const dir = join(tmp_dir, git_folder_name);
+  //const git_folder_name = 'package';
+  const dir = tmp_dir;
   try {
     await git.clone({
       fs,
@@ -88,10 +88,10 @@ export async function git_clone(
 }
 
 export async function npm_install(tmp_dir: string): Promise<boolean> {
-  const git_folder_name = 'package';
+  //const git_folder_name = 'package';
   try {
     const npm_out = await run_cmd('npm', ['install', '--omit=dev'], {
-      cwd: join(tmp_dir, git_folder_name),
+      cwd: tmp_dir,
     });
     globalThis.logger?.debug(npm_out);
   } catch (err) {

@@ -65,6 +65,7 @@ export async function unzip_base64_to_dir(
   directory: string
 ): Promise<string | undefined> {
   try {
+    let top_dir = '';
     let zip = new JSZip();
     zip = await zip.loadAsync(b64_data, {base64: true, createFolders: true});
     for (const filename in zip.files) {
@@ -74,10 +75,16 @@ export async function unzip_base64_to_dir(
           await writeFile(join(directory, filename), content);
         }
       } else {
+        if (top_dir === '') {
+          top_dir = filename;
+          globalThis.logger?.debug(
+            `*******************************Top level found: ${top_dir}`
+          );
+        }
         await mkdir(join(directory, filename), {recursive: true});
       }
     }
-    return directory;
+    return join(directory, top_dir);
   } catch (err) {
     globalThis.logger?.error('Failed to unzip file');
     return undefined;

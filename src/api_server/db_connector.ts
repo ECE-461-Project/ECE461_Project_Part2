@@ -209,6 +209,7 @@ packages.init(
 export class dependentPackageSize extends Model {
   declare PackageName: string;
   declare PackageSize: number;
+  declare RefCount: number;
 }
 dependentPackageSize.init(
   {
@@ -219,6 +220,10 @@ dependentPackageSize.init(
       primaryKey: true,
     },
     PackageSize: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    RefCount: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

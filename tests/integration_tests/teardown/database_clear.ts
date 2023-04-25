@@ -1,4 +1,4 @@
-import {packages, sequelize} from '../../../src/api_server/db_connector';
+import {packages, dependentPackageSize, sequelize} from '../../../src/api_server/db_connector';
 
 // Please seed the database in database_seed.ts
 // Please put package files in the test_packages directory
@@ -29,6 +29,9 @@ module.exports = async function main() {
   // Delete everything from packages table
   await packages.destroy({
     truncate: true
+  });
+  await dependentPackageSize.destroy({
+	  truncate: true
   });
   console.log('Database clear success');
 }
