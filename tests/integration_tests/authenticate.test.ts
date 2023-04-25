@@ -8,6 +8,7 @@ if (process.env.INTEGRATION === undefined) {
 const app = 'localhost:3000';
 
 // ece30861defaultadminuser	correcthorsebatterystaple123(!__+@**(A’”`;DROP TABLE packages;
+const password = 'correcthorsebatterystaple123(!__+@**(A'+"'"+'"`;DROP TABLE packages;';
 
 const request_body = {
     User: {
@@ -15,7 +16,7 @@ const request_body = {
         isAdmin: true,
     },
     Secret: {
-        password: 'correcthorsebatterystaple123(!__+@**(A’”`;DROP TABLE packages;',
+        password: password, 
     },
 }
 const request_body_wrong_user = {
@@ -24,7 +25,7 @@ const request_body_wrong_user = {
         isAdmin: true,
     },
     Secret: {
-        password: 'correcthorsebatterystaple123(!__+@**(A’”`;DROP TABLE packages;',
+        password: password,
     },
 }
 const request_body_wrong_password = {
@@ -40,8 +41,8 @@ describe('PUT authenticate', () => {
   test('Success 200', async () => {
     const result = (await request(app).put('/authenticate').send(request_body));
     expect(result.statusCode).toEqual(200);
-    const token = result.body;
-    const result2 = await request(app).get('/package/0').set('X-Authorization', `bearer ${token}`);
+    const token = result.text;
+    const result2 = await request(app).get('/package/0').set('X-Authorization', token);
     expect(result2.statusCode).toEqual(404);
   });
   test('Missing fields 400', async () => {

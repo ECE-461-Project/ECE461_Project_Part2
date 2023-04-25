@@ -10,7 +10,10 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
       const auth_token: string = token.split(' ')[1];
       jwt.verify(auth_token, auth_secret, {}, (err, decoded: any) => {
         if (err) {
-          globalThis.logger?.info(err);
+          globalThis.logger?.error(err);
+          globalThis.logger?.error(
+            `Authorize middleware failed to authenticate token: ${token}`
+          );
           res.status(400).send();
         } else {
           const payload: DecodedJWT = decoded;

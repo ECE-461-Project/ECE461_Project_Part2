@@ -14,6 +14,7 @@ export interface DecodedJWT {
 export async function authenticate(req: Request, res: Response) {
   const auth_req: AuthenticationRequest = req.body;
   const user = await users.findOne({where: {Username: auth_req.User.name}});
+  globalThis.logger?.debug(JSON.stringify(req.body));
   if (user) {
     if (user.UserPassword === auth_req.Secret.password) {
       const payload = {
@@ -26,7 +27,7 @@ export async function authenticate(req: Request, res: Response) {
           // Error 500 is internal server error and is not documented
           res.status(400).send();
         }
-        res.status(200).json(token);
+        res.status(200).send(`bearer ${token}`);
       });
     } else {
       res.status(401).send();
