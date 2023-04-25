@@ -1,6 +1,11 @@
 // You should use models for return
 import {Request, Response} from 'express';
-import {packages, users, usergroups} from '../db_connector';
+import {
+  packages,
+  users,
+  usergroups,
+  dependentPackageSize,
+} from '../db_connector';
 import {Op} from 'sequelize';
 
 export async function reset(req: Request, res: Response) {
@@ -29,6 +34,11 @@ export async function reset(req: Request, res: Response) {
 
     // delete everything from usergroups
     await usergroups.destroy({
+      truncate: true,
+    });
+
+    // delete everything from usergroups
+    await dependentPackageSize.destroy({
       truncate: true,
     });
 

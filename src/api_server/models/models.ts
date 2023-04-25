@@ -1,4 +1,28 @@
 /**
+ * Package size cost introduce in KB
+ * @export
+ */
+export type PackageSize = number;
+/**
+ *
+ * @export
+ * @interface PackageSizeReturn
+ */
+export interface PackageSizeReturn {
+  /**
+   *
+   * @type {PackageName}
+   * @memberof PackageSizeReturn
+   */
+  names: PackageName;
+  /**
+   *
+   * @type {PackageSize}
+   * @memberof PackageSizeReturn
+   */
+  size: PackageSize;
+}
+/**
  *
  * @export
  * @interface ModelPackage

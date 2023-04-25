@@ -18,6 +18,10 @@ import {create_tmp, delete_dir, create_dir, git_clone} from '../../git_clone';
 import {join} from 'path';
 import {find_and_read_package_json} from '../get_files';
 import {get_url_parse_from_input} from '../../url_parser';
+import {
+  npm_compute_optional_update_package_name,
+  npm_compute_optional_update_directory,
+} from './sizecost_controller';
 
 /* ////////////////////////////////////////////////////////////////////////
  *
@@ -128,14 +132,12 @@ async function package_id_put_content(
 
   if (debloat === 1) {
     content = await generate_base64_zip_of_dir(
-      join(temp_dir, 'package'),
-      join(temp_dir, 'package'),
+      join(temp_dir, ''),
+      join(temp_dir, ''),
       id,
       debloat
     );
   }
-
-  delete_dir(temp_dir);
 
   if (id !== db_entry.PackageID) {
     globalThis.logger?.info(
@@ -165,10 +167,24 @@ async function package_id_put_content(
     FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
   });
   if (package_updated) {
+    // update dependencies for size cost
+    const size_cost = await npm_compute_optional_update_directory(
+      join(zip_check, ''),
+      true,
+      false,
+      false
+    );
+    if (size_cost === -1) {
+      globalThis.logger?.info('Error on size cost update in UPDATE content');
+    }
+
+    delete_dir(temp_dir);
     globalThis.logger?.info('Package update success!');
     res.contentType('application/json').status(200).send();
     return;
   }
+  delete_dir(temp_dir);
+
   globalThis.logger?.info('Failure to update db on update, 400!');
   res.contentType('application/json').status(400).send();
 }
@@ -247,8 +263,8 @@ async function package_id_put_url(
 
   // 6. zip it, then base64 it, then return that b64 in content
   const b64_ingestible = await generate_base64_zip_of_dir(
-    join(temp_dir, 'package'),
-    join(temp_dir, 'package'),
+    join(temp_dir, ''),
+    join(temp_dir, ''),
     id,
     debloat
   );
@@ -264,7 +280,15 @@ async function package_id_put_url(
     updatedAt: Date.now(),
     FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
   });
-
+  const size_cost = await npm_compute_optional_update_package_name(
+    [name],
+    true,
+    false,
+    false
+  );
+  if (size_cost === -1) {
+    globalThis.logger?.info('On UPDATE, size cost update failed');
+  }
   delete_dir(temp_dir);
 
   if (package_updated) {
@@ -375,6 +399,43 @@ export async function package_id_delete(req: Request, res: Response) {
   try {
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
+      if (result.UploadTypeURL === 0) {
+        const temp_dir = await create_tmp();
+
+        // 1. un-base64 it
+        // 2. unzip it into PackagePath (neet to set)
+        const zip_check = await unzip_base64_to_dir(
+          result.PackageZipB64,
+          temp_dir
+        );
+        if (zip_check !== undefined) {
+          const size_cost = await npm_compute_optional_update_directory(
+            join(zip_check, ''),
+            false,
+            true,
+            false //doesnt matter
+          );
+          if (size_cost === -1) {
+            globalThis.logger?.error(
+              'Error deleting dependencies in package ID delete Content'
+            );
+          }
+        }
+        delete_dir(temp_dir);
+      } else {
+        // url public type
+        const size_cost = await npm_compute_optional_update_package_name(
+          [result.PackageName],
+          false,
+          true,
+          false //doesnt matter
+        );
+        if (size_cost === -1) {
+          globalThis.logger?.error(
+            'Error deleting dependencies in package ID delete URL'
+          );
+        }
+      }
       // don't need to do anything except clear database entry
       // directory of package always deleted on upload/rate!
       const del = await packages.destroy({where: {PackageID: req.params.id}});
@@ -424,6 +485,7 @@ async function package_post_content(
     res.contentType('application/json').status(400).send();
     return;
   }
+
   // look in package.json for Name, Version
   //    and set all PackageMetadata fields
   //    if no package.json / no Name / No Version, return status 400 formed improperly
@@ -473,13 +535,12 @@ async function package_post_content(
   const ud: SCORE_OUT = await package_rate_compute(repository_url, temp_dir);
   if (debloat === 1) {
     content = await generate_base64_zip_of_dir(
-      join(temp_dir, 'package'),
-      join(temp_dir, 'package'),
+      join(temp_dir, ''),
+      join(temp_dir, ''),
       id,
       debloat
     );
   }
-  delete_dir(temp_dir);
 
   // create database entry for Name Version ID URL RatedAndApproved and PackageData
   const package_uploaded = await packages.create({
@@ -502,6 +563,18 @@ async function package_post_content(
     GoodPinningPractice: ud.Rating.GoodPinningPractice,
     PullRequest: ud.Rating.PullRequest,
   });
+
+  // update dependencies for size cost
+  const size_cost = await npm_compute_optional_update_directory(
+    join(temp_dir, ''),
+    true,
+    false,
+    true
+  );
+  if (size_cost === -1) {
+    globalThis.logger?.info('Error on size cost update in upload content');
+  }
+  delete_dir(temp_dir);
 
   const metadata: PackageMetadata = {
     Name: name,
@@ -573,11 +646,21 @@ async function package_post_url(
     res.contentType('application/json').status(409).send();
     return;
   }
+  // size cost calculation on package/update dependencies table with sizes
+  const size_cost = await npm_compute_optional_update_package_name(
+    [name],
+    true,
+    false,
+    true
+  );
+  if (size_cost === -1) {
+    globalThis.logger?.info('On upload, size cost update failed');
+  }
   // 5. If ingestible: look at local clone created by rating call
   // 6. zip it, then base64 it, then return that b64 in content
   const b64_ingestible = await generate_base64_zip_of_dir(
-    join(temp_dir, 'package'),
-    join(temp_dir, 'package'),
+    join(temp_dir, ''),
+    join(temp_dir, ''),
     id,
     debloat
   );
@@ -709,6 +792,43 @@ export async function package_byName_name_delete(req: Request, res: Response) {
       where: {PackageName: req.params.name},
     });
     if (result) {
+      if (result.UploadTypeURL === 0) {
+        const temp_dir = await create_tmp();
+
+        // 1. un-base64 it
+        // 2. unzip it into PackagePath (neet to set)
+        const zip_check = await unzip_base64_to_dir(
+          result.PackageZipB64,
+          temp_dir
+        );
+        if (zip_check !== undefined) {
+          const size_cost = await npm_compute_optional_update_directory(
+            join(zip_check, ''),
+            false,
+            true,
+            false //doesnt matter
+          );
+          if (size_cost === -1) {
+            globalThis.logger?.error(
+              'Error deleting dependencies in package ID delete Content'
+            );
+          }
+        }
+        delete_dir(temp_dir);
+      } else {
+        // url public type
+        const size_cost = await npm_compute_optional_update_package_name(
+          [result.PackageName],
+          false,
+          true,
+          false //doesnt matter
+        );
+        if (size_cost === -1) {
+          globalThis.logger?.error(
+            'Error deleting dependencies in package ID delete URL'
+          );
+        }
+      }
       // don't need to do anything except clear database entry
       // directory of package always deleted on upload/rate!
       const del = await packages.destroy({
