@@ -57,7 +57,7 @@ class DefaultUser(FastHttpUser):
     @task(10)
     def package_get(self):
         if uploaded_urls:
-            url = random.choice(uploaded_urls)
+            url = random.choice(list(uploaded_urls))
             package_id = url  # it is package id now
             response = self.client.get(
                 f'/package/{package_id}', headers=self.headers)
