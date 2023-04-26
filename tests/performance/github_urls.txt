@@ -980,3 +980,4 @@ https://github.com/typescript-eslint/typescript-eslint
 https://github.com/npm/cli
 https://github.com/firebase/firebase-js-sdk
 https://github.com/typescript-eslint/typescript-eslint
+https://github.com/jashkenas/underscore

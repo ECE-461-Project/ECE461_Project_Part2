@@ -74,6 +74,7 @@ class DefaultUser(FastHttpUser):
                     d = response.json()
                     uploaded_urls.add(d['metadata']['ID'])
                     not_uploaded_urls.remove(url)
+                    print(f'Success: {url}')
                 elif response.status_code == 503:
                     print(f'{url}: {response.status_code}')
                 elif response.status_code == 400:
@@ -82,4 +83,4 @@ class DefaultUser(FastHttpUser):
                     not_uploaded_urls.remove(url)
                     print(f'Rating too low: {url}')
         except Exception as e:
-            print(e)
+            print(f'Exception: {e}')
