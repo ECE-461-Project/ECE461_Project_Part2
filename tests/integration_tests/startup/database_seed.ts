@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import {packages, sequelize} from '../../../src/api_server/db_connector';
+import {packages, sequelize, dependentPackageSize, users} from '../../../src/api_server/db_connector';
 // Please seed the database in database_seed.ts
 // Please put package files in the test_packages directory
 
@@ -29,7 +29,9 @@ module.exports = async function main() {
   await packages.destroy({
     truncate: true
   });
-
+  await dependentPackageSize.destroy({
+    truncate: true
+  });
   // Seed for GET /package/{id}/
   //const {execSync} = require('child_process');
   //console.log('Sleeping... (database_seed.ts)');
@@ -70,6 +72,14 @@ module.exports = async function main() {
     PackageZipB64: 'notreal',
     VersionNumber: '1.0.0',
     UploadDate: Date.now(),
+  });
+
+  // seeding for user with no admin priviledge
+  const non_admin_user = await users.create({
+    Username: 'non_admin',
+    UserPassword: '1234',
+    Permissions: {isAdmin: false},
+    UserGroups: {},
   });
   console.log('Database seed success');
 }

@@ -1,7 +1,12 @@
 // You should use models for return
 import {Request, Response} from 'express';
 import {sequelize, packages} from '../db_connector';
-import {ModelPackage, PackageMetadata, PackageData} from '../models/models';
+import {
+  ModelPackage,
+  PackageMetadata,
+  PackageData,
+  Debloat,
+} from '../models/models';
 import {generate_base64_zip_of_dir, unzip_base64_to_dir} from '../zip_files';
 import {
   package_rate_compute,
@@ -11,8 +16,12 @@ import {
 import {SCORE_OUT} from '../../score_calculations';
 import {create_tmp, delete_dir, create_dir, git_clone} from '../../git_clone';
 import {join} from 'path';
-import {find_and_read_package_json} from '../get_files';
+import {find_and_read_package_json, find_and_read_readme} from '../get_files';
 import {get_url_parse_from_input} from '../../url_parser';
+import {
+  npm_compute_optional_update_package_name,
+  npm_compute_optional_update_directory,
+} from './sizecost_controller';
 
 /* ////////////////////////////////////////////////////////////////////////
  *
@@ -60,7 +69,8 @@ async function package_id_put_content(
   mdata: PackageMetadata,
   pdata: PackageData,
   db_entry: packages,
-  content: string
+  content: string,
+  debloat: Debloat
 ) {
   // steps: content input is the b64 zip file
   // create temp directory to store package
@@ -86,6 +96,10 @@ async function package_id_put_content(
     delete_dir(temp_dir);
     res.contentType('application/json').status(400).send();
     return;
+  }
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package update! Null');
   }
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
@@ -120,7 +134,14 @@ async function package_id_put_content(
   );
   const id: string = name.replace(/[\W]/g, '-').toLowerCase();
 
-  delete_dir(temp_dir);
+  if (debloat === 1) {
+    content = await generate_base64_zip_of_dir(
+      join(temp_dir, ''),
+      join(temp_dir, ''),
+      id,
+      debloat
+    );
+  }
 
   if (id !== db_entry.PackageID) {
     globalThis.logger?.info(
@@ -144,16 +165,31 @@ async function package_id_put_content(
     PackageName: name,
     PackageZipB64: content,
     GitHubLink: real_url[0].github_repo_url,
+    ReadmeContent: readme_str,
     UploadTypeURL: 0,
     VersionNumber: version,
     updatedAt: Date.now(),
     FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
   });
   if (package_updated) {
+    // update dependencies for size cost
+    const size_cost = await npm_compute_optional_update_directory(
+      join(zip_check, ''),
+      true,
+      false,
+      false
+    );
+    if (size_cost === -1) {
+      globalThis.logger?.info('Error on size cost update in UPDATE content');
+    }
+
+    delete_dir(temp_dir);
     globalThis.logger?.info('Package update success!');
     res.contentType('application/json').status(200).send();
     return;
   }
+  delete_dir(temp_dir);
+
   globalThis.logger?.info('Failure to update db on update, 400!');
   res.contentType('application/json').status(400).send();
 }
@@ -164,7 +200,8 @@ async function package_id_put_url(
   mdata: PackageMetadata,
   pdata: PackageData,
   db_entry: packages,
-  url_in: string
+  url_in: string,
+  debloat: Debloat
 ) {
   const temp_dir = await create_tmp();
   // parse the url
@@ -200,6 +237,11 @@ async function package_id_put_url(
     res.contentType('application/json').status(400).send();
     return;
   }
+  // find readme, nulll if not
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package update! Null');
+  }
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
@@ -231,9 +273,10 @@ async function package_id_put_url(
 
   // 6. zip it, then base64 it, then return that b64 in content
   const b64_ingestible = await generate_base64_zip_of_dir(
-    join(temp_dir, 'package'),
-    join(temp_dir, 'package'),
-    id
+    join(temp_dir, ''),
+    join(temp_dir, ''),
+    id,
+    debloat
   );
 
   // Update database entry
@@ -242,12 +285,21 @@ async function package_id_put_url(
     PackageName: name,
     PackageZipB64: b64_ingestible,
     GitHubLink: git_url,
+    ReadmeContent: readme_str,
     UploadTypeURL: 1,
     VersionNumber: version,
     updatedAt: Date.now(),
     FK_UserID: res.locals.UserID, // from authenticate, response locals object field set
   });
-
+  const size_cost = await npm_compute_optional_update_package_name(
+    [name],
+    true,
+    false,
+    false
+  );
+  if (size_cost === -1) {
+    globalThis.logger?.info('On UPDATE, size cost update failed');
+  }
   delete_dir(temp_dir);
 
   if (package_updated) {
@@ -261,6 +313,11 @@ async function package_id_put_url(
 
 export async function package_id_put(req: Request, res: Response) {
   try {
+    const debloat_in = req.get('debloat');
+    let debloat_arg: Debloat = 0;
+    if (debloat_in !== undefined) {
+      debloat_arg = Number(debloat_in);
+    }
     const input = req.body;
     if (input === undefined) {
       globalThis.logger?.info('Request body null!');
@@ -319,10 +376,18 @@ export async function package_id_put(req: Request, res: Response) {
       res.contentType('application/json').status(400).send();
       return;
     } else if (content !== undefined) {
-      package_id_put_content(req, res, mdata, pdata, result, content);
+      package_id_put_content(
+        req,
+        res,
+        mdata,
+        pdata,
+        result,
+        content,
+        debloat_arg
+      );
       return;
     } else if (url_in !== undefined) {
-      package_id_put_url(req, res, mdata, pdata, result, url_in);
+      package_id_put_url(req, res, mdata, pdata, result, url_in, debloat_arg);
       return;
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
@@ -345,6 +410,43 @@ export async function package_id_delete(req: Request, res: Response) {
   try {
     const result = await packages.findOne({where: {PackageID: req.params.id}});
     if (result) {
+      if (result.UploadTypeURL === 0) {
+        const temp_dir = await create_tmp();
+
+        // 1. un-base64 it
+        // 2. unzip it into PackagePath (neet to set)
+        const zip_check = await unzip_base64_to_dir(
+          result.PackageZipB64,
+          temp_dir
+        );
+        if (zip_check !== undefined) {
+          const size_cost = await npm_compute_optional_update_directory(
+            join(zip_check, ''),
+            false,
+            true,
+            false //doesnt matter
+          );
+          if (size_cost === -1) {
+            globalThis.logger?.error(
+              'Error deleting dependencies in package ID delete Content'
+            );
+          }
+        }
+        delete_dir(temp_dir);
+      } else {
+        // url public type
+        const size_cost = await npm_compute_optional_update_package_name(
+          [result.PackageName],
+          false,
+          true,
+          false //doesnt matter
+        );
+        if (size_cost === -1) {
+          globalThis.logger?.error(
+            'Error deleting dependencies in package ID delete URL'
+          );
+        }
+      }
       // don't need to do anything except clear database entry
       // directory of package always deleted on upload/rate!
       const del = await packages.destroy({where: {PackageID: req.params.id}});
@@ -378,7 +480,8 @@ async function package_post_content(
   req: Request,
   res: Response,
   input: PackageData,
-  content: string
+  content: string,
+  debloat: Debloat
 ) {
   // steps: content input is the b64 zip file
   // create temp directory to store package
@@ -393,18 +496,26 @@ async function package_post_content(
     res.contentType('application/json').status(400).send();
     return;
   }
+
   // look in package.json for Name, Version
   //    and set all PackageMetadata fields
   //    if no package.json / no Name / No Version, return status 400 formed improperly
   const package_json_str = await find_and_read_package_json(temp_dir);
-  delete_dir(temp_dir);
   if (package_json_str === undefined) {
     globalThis.logger?.info(
       'Package upload fail due to package.json problem - input formed improperly'
     );
+    delete_dir(temp_dir);
     res.contentType('application/json').status(400).send();
     return;
   }
+  // find readme, nulll if not
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package upload! Null');
+  }
+  delete_dir(temp_dir);
+
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
@@ -440,7 +551,14 @@ async function package_post_content(
   // Create new temp_dir since score calc git clones
   temp_dir = await create_tmp();
   const ud: SCORE_OUT = await package_rate_compute(repository_url, temp_dir);
-  delete_dir(temp_dir);
+  if (debloat === 1) {
+    content = await generate_base64_zip_of_dir(
+      join(temp_dir, ''),
+      join(temp_dir, ''),
+      id,
+      debloat
+    );
+  }
 
   // create database entry for Name Version ID URL RatedAndApproved and PackageData
   const package_uploaded = await packages.create({
@@ -448,6 +566,7 @@ async function package_post_content(
     PackageName: name,
     PackageZipB64: content,
     GitHubLink: ud.GitHubLink,
+    ReadmeContent: readme_str,
     RatedAndApproved: 1,
     UploadTypeURL: 0,
     VersionNumber: version,
@@ -464,13 +583,25 @@ async function package_post_content(
     PullRequest: ud.Rating.PullRequest,
   });
 
+  // update dependencies for size cost
+  const size_cost = await npm_compute_optional_update_directory(
+    join(temp_dir, ''),
+    true,
+    false,
+    true
+  );
+  if (size_cost === -1) {
+    globalThis.logger?.info('Error on size cost update in upload content');
+  }
+  delete_dir(temp_dir);
+
   const metadata: PackageMetadata = {
     Name: name,
     Version: version,
     ID: id,
   };
   const data: PackageData = {
-    URL: ud.GitHubLink,
+    Content: content,
   };
   const to_send: ModelPackage = {
     metadata: metadata,
@@ -484,7 +615,8 @@ async function package_post_url(
   req: Request,
   res: Response,
   input: PackageData,
-  url_in: string
+  url_in: string,
+  debloat: Debloat
 ) {
   // steps: url_in input is ingestible public
   // create temp directory to store package
@@ -511,6 +643,11 @@ async function package_post_url(
     res.contentType('application/json').status(400).send();
     return;
   }
+  // find readme, nulll if not
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package upload! Null');
+  }
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
@@ -533,12 +670,23 @@ async function package_post_url(
     res.contentType('application/json').status(409).send();
     return;
   }
+  // size cost calculation on package/update dependencies table with sizes
+  const size_cost = await npm_compute_optional_update_package_name(
+    [name],
+    true,
+    false,
+    true
+  );
+  if (size_cost === -1) {
+    globalThis.logger?.info('On upload, size cost update failed');
+  }
   // 5. If ingestible: look at local clone created by rating call
   // 6. zip it, then base64 it, then return that b64 in content
   const b64_ingestible = await generate_base64_zip_of_dir(
-    join(temp_dir, 'package'),
-    join(temp_dir, 'package'),
-    id
+    join(temp_dir, ''),
+    join(temp_dir, ''),
+    id,
+    debloat
   );
   // create database entry for Name Version ID URL RatedAndApproved
   const package_uploaded = await packages.create({
@@ -546,6 +694,7 @@ async function package_post_url(
     PackageName: name,
     PackageZipB64: b64_ingestible,
     GitHubLink: ud.GitHubLink,
+    ReadmeContent: readme_str,
     RatedAndApproved: 1,
     UploadTypeURL: 1,
     VersionNumber: version,
@@ -583,6 +732,11 @@ async function package_post_url(
 
 export async function package_post(req: Request, res: Response) {
   try {
+    const debloat_in = req.get('debloat');
+    let debloat_arg: Debloat = 0;
+    if (debloat_in !== undefined) {
+      debloat_arg = Number(debloat_in);
+    }
     const input: PackageData = req.body;
     const content: string | undefined = input.Content;
     const url_in: string | undefined = input.URL;
@@ -593,9 +747,9 @@ export async function package_post(req: Request, res: Response) {
       globalThis.logger?.info('PackageData input has BOTH url and content!');
       res.contentType('application/json').status(400).send();
     } else if (content !== undefined) {
-      package_post_content(req, res, input, content);
+      package_post_content(req, res, input, content, debloat_arg);
     } else if (url_in !== undefined) {
-      package_post_url(req, res, input, url_in);
+      package_post_url(req, res, input, url_in, debloat_arg);
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
       res.contentType('application/json').status(400).send();
@@ -663,6 +817,43 @@ export async function package_byName_name_delete(req: Request, res: Response) {
       where: {PackageName: req.params.name},
     });
     if (result) {
+      if (result.UploadTypeURL === 0) {
+        const temp_dir = await create_tmp();
+
+        // 1. un-base64 it
+        // 2. unzip it into PackagePath (neet to set)
+        const zip_check = await unzip_base64_to_dir(
+          result.PackageZipB64,
+          temp_dir
+        );
+        if (zip_check !== undefined) {
+          const size_cost = await npm_compute_optional_update_directory(
+            join(zip_check, ''),
+            false,
+            true,
+            false //doesnt matter
+          );
+          if (size_cost === -1) {
+            globalThis.logger?.error(
+              'Error deleting dependencies in package ID delete Content'
+            );
+          }
+        }
+        delete_dir(temp_dir);
+      } else {
+        // url public type
+        const size_cost = await npm_compute_optional_update_package_name(
+          [result.PackageName],
+          false,
+          true,
+          false //doesnt matter
+        );
+        if (size_cost === -1) {
+          globalThis.logger?.error(
+            'Error deleting dependencies in package ID delete URL'
+          );
+        }
+      }
       // don't need to do anything except clear database entry
       // directory of package always deleted on upload/rate!
       const del = await packages.destroy({

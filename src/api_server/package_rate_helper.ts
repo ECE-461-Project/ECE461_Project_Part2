@@ -54,7 +54,7 @@ export function package_rate_ingestible(ud: SCORE_OUT): number {
     return 1;
   } else {
     // TODO: come back once ingestibility and rating works
-    return 1;
+    return 0;
   }
 }
 

@@ -145,6 +145,10 @@ packages.init(
     GitHubLink: {
       type: DataTypes.TEXT,
     },
+    ReadmeContent: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     RatedAndApproved: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -201,6 +205,31 @@ packages.init(
         model: users,
         key: 'UserID',
       },
+    },
+  },
+  {sequelize}
+);
+
+export class dependentPackageSize extends Model {
+  declare PackageName: string;
+  declare PackageSize: number;
+  declare RefCount: number;
+}
+dependentPackageSize.init(
+  {
+    PackageName: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      unique: true,
+      primaryKey: true,
+    },
+    PackageSize: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    RefCount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
   },
   {sequelize}

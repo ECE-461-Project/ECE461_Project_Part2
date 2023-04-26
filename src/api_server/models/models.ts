@@ -1,4 +1,28 @@
 /**
+ * Package size cost introduce in KB
+ * @export
+ */
+export type PackageSize = number;
+/**
+ *
+ * @export
+ * @interface PackageSizeReturn
+ */
+export interface PackageSizeReturn {
+  /**
+   *
+   * @type {PackageName}
+   * @memberof PackageSizeReturn
+   */
+  names: PackageName;
+  /**
+   *
+   * @type {PackageSize}
+   * @memberof PackageSizeReturn
+   */
+  size: PackageSize;
+}
+/**
  *
  * @export
  * @interface ModelPackage
@@ -203,6 +227,11 @@ export enum ActionEnum {
  * @export
  */
 export type PackageName = string;
+/**
+ * input argument to upload to return a debloated version of the package
+ * @export
+ */
+export type Debloat = number;
 /**
  * The spec permits you to use any token format you like. You could, for example, look into JSON Web Tokens (\"JWT\", pronounced \"jots\"): https://jwt.io.
  * @export

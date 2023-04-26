@@ -8,6 +8,7 @@ import {mkdtemp} from 'fs/promises';
 import {join} from 'path';
 import {run_cmd} from '../sub_process_help';
 import {delete_dir} from '../git_clone';
+import {Debloat} from './models/models';
 
 // ***************************
 // This ensures jszip compiles
@@ -26,7 +27,8 @@ declare global {
 export async function generate_base64_zip_of_dir(
   directory: string,
   path_remove: string,
-  parent: string
+  parent: string,
+  debloat: Debloat
 ): Promise<string> {
   const ignore_git = RegExp('\\.git/');
   const ignore_github = RegExp('\\.github/');
@@ -38,10 +40,10 @@ export async function generate_base64_zip_of_dir(
     if (ignore_git.exec(file)) {
       continue;
     }
-    if (ignore_github.exec(file)) {
+    if (ignore_github.exec(file) && debloat === 1) {
       continue;
     }
-    if (ignore_test.exec(file)) {
+    if (ignore_test.exec(file) && debloat === 1) {
       continue;
     }
     const fileContent = await readFile(file, 'utf-8');
@@ -63,6 +65,7 @@ export async function unzip_base64_to_dir(
   directory: string
 ): Promise<string | undefined> {
   try {
+    let top_dir = '';
     let zip = new JSZip();
     zip = await zip.loadAsync(b64_data, {base64: true, createFolders: true});
     for (const filename in zip.files) {
@@ -72,10 +75,16 @@ export async function unzip_base64_to_dir(
           await writeFile(join(directory, filename), content);
         }
       } else {
+        if (top_dir === '') {
+          top_dir = filename;
+          globalThis.logger?.debug(
+            `*******************************Top level found: ${top_dir}`
+          );
+        }
         await mkdir(join(directory, filename), {recursive: true});
       }
     }
-    return directory;
+    return join(directory, top_dir);
   } catch (err) {
     globalThis.logger?.error('Failed to unzip file');
     return undefined;

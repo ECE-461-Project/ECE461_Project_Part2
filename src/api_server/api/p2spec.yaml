@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: ECE 461 - Spring 2023 - Project 2
-  version: 2.3.2
+  version: 2.3.5
   description: "API for ECE 461/Spring 2023/Project 2: A Trustworthy Module Registry"
   termsOfService: http://swagger.io/terms/
   contact:
@@ -13,6 +13,43 @@ info:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
 paths:
+  /sizecost:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PackageName'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/PackageSizeReturn'
+              examples:
+                ExampleResponse:
+                  value:
+                  - names: underscore, lodash
+                    size: 12800
+          description: Net size cost of all input packages
+        "400":
+          description: "There is missing field(s) in the SizeCost Query of package names/AuthenticationToken
+            \ or it is formed improperly, or the AuthenticationToken is invalid."  
+      summary: Get the "what if" size cost of introducing the package to the registry.
+      description: |-
+        Get the size cost (in bytes) of introducing the package to the registry.
+        Accepts array input of PackageNames (must be npm, public, lowercase, not internal)
+        Includes the size cost of transitive dependencies, if already in registry, not double counted.      
+    parameters:
+    - name: X-Authorization
+      description: ""
+      schema:
+        $ref: '#/components/schemas/AuthenticationToken'
+      in: header
+      required: true
   /packages:
     post:
       requestBody:
@@ -172,6 +209,12 @@ paths:
           $ref: '#/components/schemas/PackageID'
         in: path
         required: true
+      - name: debloat
+        description: "Debloat the package by removing github/test directories"
+        schema:
+          $ref: '#/components/schemas/Debloat'
+        in: header
+        required: false
       responses:
         "200":
           description: Version is updated.
@@ -295,6 +338,12 @@ paths:
         $ref: '#/components/schemas/AuthenticationToken'
       in: header
       required: true
+    - name: debloat
+      description: "Debloat the package by removing github/test directories (0 false, 1 true)"
+      schema:
+        $ref: '#/components/schemas/Debloat'
+      in: header
+      required: false
   /package/{id}/rate:
     get:
       responses:
@@ -347,7 +396,7 @@ paths:
                     name: ece30861defaultadminuser
                     isAdmin: true
                   Secret:
-                    password: correcthorsebatterystaple123(!__+@**(A’”`;DROP TABLE packages;
+                    password: correcthorsebatterystaple123(!__+@**(A'"`;DROP TABLE packages;
         required: true
       responses:
         "200":
@@ -521,6 +570,22 @@ paths:
       required: true
 components:
   schemas:
+    PackageSize:
+      type: number
+    PackageSizeReturn:
+      required:
+      - names
+      - size
+      type: object
+      properties:
+        names:
+          $ref: '#/components/schemas/PackageName'
+          description: Package names
+          example: my-package,package_2
+        size:
+          $ref: '#/components/schemas/PackageSize'
+          description: Package net size cost
+          example: 50000
     Package:
       required:
       - metadata
@@ -656,7 +721,7 @@ components:
           type: number
         NetScore:
           format: double
-          description: From Part 1
+          description: Scores calculated from other seven metrics. 
           type: number
     PackageHistoryEntry:
       description: One entry of the history of this package.
@@ -693,6 +758,9 @@ components:
         - Names should only use typical "keyboard" characters.
         - The name "*" is reserved. See the `/packages` API for its meaning.
       type: string
+    Debloat:
+      description: "input argument to upload to return a debloated version of the package (1 true, 0 false)"
+      type: number
     AuthenticationToken:
       description: "The spec permits you to use any token format you like. You could,
         \ for example, look into JSON Web Tokens (\"JWT\", pronounced \"jots\"): https://jwt.io."

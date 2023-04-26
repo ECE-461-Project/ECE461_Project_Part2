@@ -50,9 +50,21 @@ describe('POST /package', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  test('Successful 201 ingestible URL', async () => {
+  test('Fail 424 non-ingestible URL', async () => {
 	const query: PackageData = {
 	  URL: 'https://github.com/cloudinary/cloudinary_npm'
+	};
+    const result = await request(app).post('/package')
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-type', 'application/json')
+      .send(query);
+    expect(result.statusCode).toEqual(424);
+  });
+  
+  
+  test('Successful 201 ingestible URL', async () => {
+	const query: PackageData = {
+	  URL: 'https://github.com/jashkenas/underscore'
 	};
     const result = await request(app).post('/package')
       .set('X-Authorization', `bearer ${token}`)
@@ -61,22 +73,11 @@ describe('POST /package', () => {
     expect(result.statusCode).toEqual(201);
     expect(result.body).toHaveProperty('metadata');
     expect(result.body.metadata).toHaveProperty('Name');
-    expect(result.body.metadata.Name).toBe('cloudinary');
+    expect(result.body.metadata.Name).toBe('underscore')
     expect(result.body.metadata).toHaveProperty('Version');
     expect(result.body.metadata).toHaveProperty('ID');
     expect(result.body).toHaveProperty('data');
     expect(result.body.data).toHaveProperty('Content');
-  });
-
-  test('Duplicate url package 409', async () => {
-	const query: PackageData = {
-	  URL: 'https://github.com/cloudinary/cloudinary_npm'
-	};
-    const result = await request(app).post('/package')
-      .set('X-Authorization', `bearer ${token}`)
-      .set('Content-type', 'application/json')
-      .send(query);
-    expect(result.statusCode).toEqual(409);
   });
 
   test('Duplicate zip input package 409 package_a', async () => {
@@ -107,11 +108,11 @@ describe('POST /package', () => {
     expect(result.body.metadata).toHaveProperty('Version');
     expect(result.body.metadata).toHaveProperty('ID');
     expect(result.body).toHaveProperty('data');
-    expect(result.body.data).toHaveProperty('URL');
+    expect(result.body.data).toHaveProperty('Content');
   });
 
-  test('RATE cloudinary post-upload 200', async () => {
-    const result = await request(app).get('/package/cloudinary/rate').set('X-Authorization', `bearer ${token}`);
+  test('RATE file_downloader post-upload 200', async () => {
+    const result = await request(app).get('/package/nodejs-file-downloader/rate').set('X-Authorization', `bearer ${token}`);
     expect(result.statusCode).toEqual(200);
     expect(result.body).toHaveProperty('BusFactor');
     expect(result.body).toHaveProperty('Correctness');

@@ -68,7 +68,7 @@ export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
       throw new Error('Cloning git repo failed');
     }
     // Path to git repository in temp directory
-    const git_repo_path = join(temp_dir, 'package');
+    const git_repo_path = join(temp_dir, '');
 
     // Get promises to subscores
     const subscores = await Promise.all([

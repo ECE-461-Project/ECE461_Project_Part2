@@ -6,6 +6,7 @@ import OpenApiValidator = require('express-openapi-validator');
 import morgan = require('morgan');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+import sizecost = require('./routes/sizecost');
 import packages = require('./routes/packages');
 import authenticate = require('./routes/authenticate');
 import reset = require('./routes/reset');
@@ -82,6 +83,7 @@ app.use('/packages', [verifyToken, packages.router]);
 app.use('/authenticate', authenticate.router);
 app.use('/reset', [verifyToken, reset.router]);
 app.use('/package', [verifyToken, pack.router]);
+app.use('/sizecost', [verifyToken, sizecost.router]);
 
 // Basic Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -107,7 +109,8 @@ async function main() {
       where: {Username: 'ece30861defaultadminuser'},
       defaults: {
         UserPassword:
-          'correcthorsebatterystaple123(!__+@**(A’”`;DROP TABLE packages;',
+          // They changed password so it uses ' and " instead of their UTF-8 versions
+          'correcthorsebatterystaple123(!__+@**(A\'"`;DROP TABLE packages;',
         Permissions: {isAdmin: true},
         UserGroups: {},
       },

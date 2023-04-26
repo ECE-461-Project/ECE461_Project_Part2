@@ -227,6 +227,9 @@ export async function fetch_score_with_graphql_data(
 
     // DONE PAGINATING AND FETCHING ALL COMMITS MERGED WITH AN APPROVING REVIEW.
     // NOW CALCULATE / return METRIC
+    globalThis.logger?.debug(
+      `%PR CALC: ${tot_commit_with_reviewed_pr} / ${tot_commit_count}`
+    );
     return tot_commit_with_reviewed_pr / tot_commit_count;
   } catch (error) {
     if (error instanceof GraphqlResponseError) {
