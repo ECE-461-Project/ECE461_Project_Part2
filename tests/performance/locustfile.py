@@ -50,7 +50,10 @@ class DefaultUser(FastHttpUser):
 
     def on_start(self):
         self.headers = {'Content-Type': 'application/json'}
-        response = self.client.put('/authenticate', json=auth_body)
+        for i in range(10):
+            response = self.client.put('/authenticate', json=auth_body)
+            if response.status_code == 200:
+                break
         self.headers['X-Authorization'] = f'{response.text}'
         # run_once(self)
 
