@@ -601,7 +601,7 @@ async function package_post_content(
     ID: id,
   };
   const data: PackageData = {
-    URL: ud.GitHubLink,
+    Content: content,
   };
   const to_send: ModelPackage = {
     metadata: metadata,
