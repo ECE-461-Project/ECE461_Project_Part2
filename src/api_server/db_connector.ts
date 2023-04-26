@@ -145,6 +145,10 @@ packages.init(
     GitHubLink: {
       type: DataTypes.TEXT,
     },
+    ReadmeContent: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     RatedAndApproved: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
