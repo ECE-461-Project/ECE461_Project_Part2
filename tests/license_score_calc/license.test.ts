@@ -13,6 +13,12 @@ describe('testing get_license_score', () => {
     ).toBe(1);
     //console.log(process.cwd());
   });
+  test('get_license_score valid from url', async () => {
+    expect(
+      await get_license_score('https://github.com/jashkenas/underscore', './tests/_license_checks/underscore_no_license_field')
+    ).toBe(1);
+    //console.log(process.cwd());
+  });
   test('get_license_score unhandled', async () => {
     expect(
       await get_license_score('url', './tests/_license_checks/tweetnacl')
