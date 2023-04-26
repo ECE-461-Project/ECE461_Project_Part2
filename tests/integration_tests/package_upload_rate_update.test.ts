@@ -200,4 +200,27 @@ describe('POST /package', () => {
   });
 });
 
+describe('POST /package/byRegEx', () => {
+  test('Invalid regular expression 400', async () => {
+    const result = await request(app).post('/package/byRegEx').send({ RegEx: '[' }).set('X-Authorization', `bearer ${token}`).set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(400);
+  });
+  test('No packages found 404', async () => {
+    const result = await request(app).post('/package/byRegEx').send({ RegEx: 'nonexistent' }).set('X-Authorization', `bearer ${token}`).set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(404);
+  });
+  test('Packages found 200', async () => {
+    const result = await request(app).post('/package/byRegEx').send({ RegEx: 'package_a' }).set('X-Authorization', `bearer ${token}`).set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          VersionNumber: expect.any(String),
+          PackageName: expect.any(String),
+        }),
+      ]),
+    );
+  });
+});
+
 	
