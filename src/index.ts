@@ -6,10 +6,19 @@ async function main() {
   create_logger();
   const args = process.argv.slice(2);
   globalThis.logger?.debug(`main args: ${args}`);
-  let temp_dir = await create_tmp();
 
+  let temp_dir = await create_tmp();
   // All scores out at same time
   let score_list_resolved = await get_scores_from_url(
+    'https://github.com/jashkenas/underscore',
+    temp_dir
+  );
+  delete_dir(temp_dir);
+  console.log(score_list_resolved);
+
+  temp_dir = await create_tmp();
+  // All scores out at same time
+  score_list_resolved = await get_scores_from_url(
     'https://github.com/cloudinary/cloudinary_npm',
     temp_dir
   );
