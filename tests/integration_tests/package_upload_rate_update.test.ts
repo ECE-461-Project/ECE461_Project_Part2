@@ -60,6 +60,25 @@ describe('POST /package', () => {
       .send(query);
     expect(result.statusCode).toEqual(424);
   });
+  
+  
+  test('Successful 201 ingestible URL', async () => {
+	const query: PackageData = {
+	  URL: 'https://github.com/jashkenas/underscore'
+	};
+    const result = await request(app).post('/package')
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-type', 'application/json')
+      .send(query);
+    expect(result.statusCode).toEqual(201);
+    expect(result.body).toHaveProperty('metadata');
+    expect(result.body.metadata).toHaveProperty('Name');
+    expect(result.body.metadata.Name).toBe('underscore')
+    expect(result.body.metadata).toHaveProperty('Version');
+    expect(result.body.metadata).toHaveProperty('ID');
+    expect(result.body).toHaveProperty('data');
+    expect(result.body.data).toHaveProperty('Content');
+  });
 
   test('Duplicate zip input package 409 package_a', async () => {
 	const package_a_b64 = readFileSync('./tests/integration_tests/test_packages/package_a.zip.b64').toString()
@@ -89,7 +108,7 @@ describe('POST /package', () => {
     expect(result.body.metadata).toHaveProperty('Version');
     expect(result.body.metadata).toHaveProperty('ID');
     expect(result.body).toHaveProperty('data');
-    expect(result.body.data).toHaveProperty('URL');
+    expect(result.body.data).toHaveProperty('Content');
   });
 
   test('RATE file_downloader post-upload 200', async () => {
