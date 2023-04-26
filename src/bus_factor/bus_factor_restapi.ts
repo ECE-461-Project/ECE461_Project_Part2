@@ -49,6 +49,9 @@ export async function get_percent_owner(
         otherCommits += 1;
       }
     }
+    globalThis.logger?.debug(
+      `bus_factor: get_percent_owner: ${ownerCommits} other: ${otherCommits}`
+    );
     const percentOwner = ownerCommits / (ownerCommits + otherCommits);
     return percentOwner;
   } catch (err) {
