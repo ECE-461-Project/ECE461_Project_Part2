@@ -16,7 +16,7 @@ import {
 import {SCORE_OUT} from '../../score_calculations';
 import {create_tmp, delete_dir, create_dir, git_clone} from '../../git_clone';
 import {join} from 'path';
-import {find_and_read_package_json} from '../get_files';
+import {find_and_read_package_json, find_and_read_readme} from '../get_files';
 import {get_url_parse_from_input} from '../../url_parser';
 import {
   npm_compute_optional_update_package_name,
@@ -97,6 +97,10 @@ async function package_id_put_content(
     res.contentType('application/json').status(400).send();
     return;
   }
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package update! Null');
+  }
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
@@ -161,6 +165,7 @@ async function package_id_put_content(
     PackageName: name,
     PackageZipB64: content,
     GitHubLink: real_url[0].github_repo_url,
+    ReadmeContent: readme_str,
     UploadTypeURL: 0,
     VersionNumber: version,
     updatedAt: Date.now(),
@@ -232,6 +237,11 @@ async function package_id_put_url(
     res.contentType('application/json').status(400).send();
     return;
   }
+  // find readme, nulll if not
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package update! Null');
+  }
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
@@ -275,6 +285,7 @@ async function package_id_put_url(
     PackageName: name,
     PackageZipB64: b64_ingestible,
     GitHubLink: git_url,
+    ReadmeContent: readme_str,
     UploadTypeURL: 1,
     VersionNumber: version,
     updatedAt: Date.now(),
@@ -490,14 +501,21 @@ async function package_post_content(
   //    and set all PackageMetadata fields
   //    if no package.json / no Name / No Version, return status 400 formed improperly
   const package_json_str = await find_and_read_package_json(temp_dir);
-  delete_dir(temp_dir);
   if (package_json_str === undefined) {
     globalThis.logger?.info(
       'Package upload fail due to package.json problem - input formed improperly'
     );
+    delete_dir(temp_dir);
     res.contentType('application/json').status(400).send();
     return;
   }
+  // find readme, nulll if not
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package upload! Null');
+  }
+  delete_dir(temp_dir);
+
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
@@ -548,6 +566,7 @@ async function package_post_content(
     PackageName: name,
     PackageZipB64: content,
     GitHubLink: ud.GitHubLink,
+    ReadmeContent: readme_str,
     RatedAndApproved: 1,
     UploadTypeURL: 0,
     VersionNumber: version,
@@ -624,6 +643,11 @@ async function package_post_url(
     res.contentType('application/json').status(400).send();
     return;
   }
+  // find readme, nulll if not
+  const readme_str = await find_and_read_readme(temp_dir);
+  if (readme_str === null) {
+    globalThis.logger?.info('Could not find README in package upload! Null');
+  }
   const package_json = JSON.parse(package_json_str);
   const name: string | undefined = package_json.name;
   const version: string | undefined = package_json.version;
@@ -670,6 +694,7 @@ async function package_post_url(
     PackageName: name,
     PackageZipB64: b64_ingestible,
     GitHubLink: ud.GitHubLink,
+    ReadmeContent: readme_str,
     RatedAndApproved: 1,
     UploadTypeURL: 1,
     VersionNumber: version,
