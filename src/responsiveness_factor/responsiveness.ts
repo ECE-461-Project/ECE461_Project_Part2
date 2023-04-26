@@ -46,8 +46,6 @@ export async function get_responsiveness_score(
         break;
       }
       const last_commit_date = new Date(commitsData[i].commit.author.date);
-      globalThis.logger?.debug(`${i}: ${last_commit_date}`);
-      globalThis.logger?.debug(`${i}: ${today}`);
       const utc2 = Date.UTC(
         last_commit_date.getFullYear(),
         last_commit_date.getMonth(),
@@ -57,12 +55,11 @@ export async function get_responsiveness_score(
         Math.round((utc2 - utc1) / (1000 * 60 * 60 * 24))
       );
       sum = sum + diff_in_days;
-      globalThis.logger?.debug(`${i}: sum ${sum} diff ${diff_in_days}`);
     }
     const average = sum / (i - 1);
-    globalThis.logger?.debug(`done: avg ${average}`);
+    globalThis.logger?.debug(`Responsiveness: avg ${average}`);
     if (average <= 90) {
-      globalThis.logger?.info('Responsiveness score 1');
+      globalThis.logger?.debug('Responsiveness score 1');
       return 1;
     } else if (average <= 180) {
       return 0.9;
