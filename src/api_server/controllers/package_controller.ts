@@ -891,10 +891,13 @@ interface ReqRegEx {
 }
 export async function package_byRegEx_regex_post(req: Request, res: Response) {
   const {RegEx} = req.body as ReqRegEx;
-  
+
   try {
     let result: any[] = [];
     let temp_dir = '';
+
+    //Check if the regular expression is valid
+    new RegExp(RegEx);
 
     //search for packages containing README files by regex
     const packageByName = await packages.findAll({
@@ -933,12 +936,13 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
         delete_dir(temp_dir);
       }
     }
-    
+
     if(result.length > 0) {
       res.status(200).json(result);
     } else {
       res.status(404).send('No package found under this regex');
     }
+    
   } catch(err : any) {
     globalThis.logger?.error(`Error in package_byRegEx_regex_post: ${err}`);
     res.status(400).send();
