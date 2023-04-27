@@ -929,7 +929,9 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
       }
       res.contentType('application/json').status(200).send(updatedResult);
     } else {
-      res.status(404).send('No package found under this regex');
+      globalThis?.logger.info('No package found under this regex');
+      res.status(404).send();
+
     }
   } catch (err: any) {
     globalThis.logger?.error(`Error in package_byus
