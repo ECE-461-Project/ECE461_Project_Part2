@@ -6,6 +6,7 @@ import {
   PackageMetadata,
   PackageData,
   Debloat,
+  PackageRegEx,
 } from '../models/models';
 import {readFile} from 'fs';
 import {Op} from 'sequelize';
@@ -906,7 +907,7 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
           { ReadmeContent: { [Op.regexp]: RegEx } }
         ]
       },
-      attributes: ['PackageID','VersionNumber', 'PackageName']
+      attributes: ['VersionNumber', 'PackageName']
     });
 
     result = result.concat(packageByRegEx);
@@ -914,7 +915,16 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
     globalThis.logger?.debug(`regex result length: ${result.length}`);
 
     if(result.length > 0) {
-      res.contentType('application/json').status(200).send(result);
+      const updatedResult: PackageRegEx[] = [];
+      for(let i = 0; i < result.length; i++) {
+        const content: PackageRegEx = {
+          Name: `${result[i].PackageName}`,
+          Version: `${result[i].VersionNumber}`,
+        };
+      globalThis.logger?.debug(`regex result: ${content}`);
+      updatedResult.push(content);
+    }
+      res.contentType('application/json').status(200).send(updatedResult);
     } else {
       res.status(404).send('No package found under this regex');
     }
