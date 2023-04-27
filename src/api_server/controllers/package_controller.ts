@@ -6,7 +6,10 @@ import {
   PackageMetadata,
   PackageData,
   Debloat,
+  PackageRegEx,
 } from '../models/models';
+import {readFile} from 'fs';
+import {Op} from 'sequelize';
 import {generate_base64_zip_of_dir, unzip_base64_to_dir} from '../zip_files';
 import {
   package_rate_compute,
@@ -884,6 +887,53 @@ export async function package_byName_name_delete(req: Request, res: Response) {
  * 							PACKAGE_BYREGEX_REGEX_POST
  *
  */ ///////////////////////////////////////////////////////////////////////
-export function package_byRegEx_regex_post(req: Request, res: Response) {
-  res.status(200).send('This is wrong response btw');
+interface ReqRegEx {
+  RegEx: string;
+}
+export async function package_byRegEx_regex_post(req: Request, res: Response) {
+  const {RegEx} = req.body as ReqRegEx;
+  globalThis.logger?.debug(`Regex: ${RegEx}`);
+  try {
+    let result: any[] = [];
+
+    //Check if the regular expression is valid
+    new RegExp(RegEx);
+
+    //search for packages containing README files by regex
+    const packageByRegEx = await packages.findAll({
+      where: {
+        [Op.or]: [
+          {PackageName: {[Op.regexp]: RegEx}},
+          {ReadmeContent: {[Op.regexp]: RegEx}},
+        ],
+      },
+      attributes: ['VersionNumber', 'PackageName', 'PackageID'],
+    });
+
+    if (packageByRegEx) {
+      result = result.concat(packageByRegEx);
+    }
+    //globalThis.logger?.debug(`regex result: ${result[0].PackageName}`);
+    //globalThis.logger?.debug(`regex result length: ${result.length}`);
+
+    if (result.length !== 0) {
+      const updatedResult: PackageMetadata[] = [];
+      for (let i = 0; i < result.length; i++) {
+        const content: PackageMetadata = {
+          Name: result[i].PackageName,
+          Version: result[i].VersionNumber,
+          ID: result[i].PackageID.toString(),
+        };
+        globalThis.logger?.debug(`regex result: ${content}`);
+        updatedResult.push(content);
+      }
+      res.contentType('application/json').status(200).send(updatedResult);
+    } else {
+      globalThis?.logger.info('No package found under this regex');
+      res.status(404).send();
+    }
+  } catch (err: any) {
+    globalThis.logger?.error(`Error in package_byRegEx_regex_post: ${err}`);
+    res.status(400).send();
+  }
 }
