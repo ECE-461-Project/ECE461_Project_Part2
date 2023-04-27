@@ -907,19 +907,22 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
           { ReadmeContent: { [Op.regexp]: RegEx } }
         ]
       },
-      attributes: ['VersionNumber', 'PackageName']
+      attributes: ['VersionNumber', 'PackageName', 'PackageID']
     });
 
-    result = result.concat(packageByRegEx);
-    globalThis.logger?.debug(`regex result: ${result[0].PackageName}`);
-    globalThis.logger?.debug(`regex result length: ${result.length}`);
+    if(packageByRegEx) {
+      result = result.concat(packageByRegEx);
+    }
+    //globalThis.logger?.debug(`regex result: ${result[0].PackageName}`);
+    //globalThis.logger?.debug(`regex result length: ${result.length}`);
 
-    if(result.length > 0) {
-      const updatedResult: PackageRegEx[] = [];
+    if(result.length !== 0) {
+      let updatedResult: PackageMetadata[] = [];
       for(let i = 0; i < result.length; i++) {
-        const content: PackageRegEx = {
-          Name: `${result[i].PackageName}`,
-          Version: `${result[i].VersionNumber}`,
+        const content: PackageMetadata = {
+          Name: result[i].PackageName,
+          Version: result[i].VersionNumber,
+          ID: result[i].PackageID.toString(),
         };
       globalThis.logger?.debug(`regex result: ${content}`);
       updatedResult.push(content);
@@ -930,7 +933,8 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
     }
     
   } catch(err : any) {
-    globalThis.logger?.error(`Error in package_byRegEx_regex_post: ${err}`);
+    globalThis.logger?.error(`Error in package_byus
+    Ex_regex_post: ${err}`);
     res.status(400).send();
   }
 }
