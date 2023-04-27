@@ -1,126 +1,4 @@
-//import { Octokit } from "octokit";
-const fetch = require('node-fetch');
-
-export async function GraphQl_Data(github_repo_url: string): Promise<any> {
-  try {
-    const reg = new RegExp('github\\.com/(.+)/(.+)');
-    const matches = github_repo_url.match(reg);
-
-    if (matches === null) {
-      return undefined;
-    }
-
-    const query = `{
-        repository(owner: "${matches[1]}", name: "${matches[2]}") {
-          name
-          stargazers {
-            totalCount
-          }
-          issues(last: 100) {
-            totalCount
-            edges {
-              node {
-                createdAt
-                updatedAt
-                closedAt
-              }
-            }
-          }
-          pullRequests(last: 100) {
-            totalCount
-            edges {
-              node {
-                createdAt
-                updatedAt
-                closedAt
-              }
-            }
-          }
-          openPullRequest: pullRequests(states: OPEN) {
-            totalCount
-          }
-          closedPullRequest: pullRequests(states: OPEN) {
-            totalCount
-          }
-          openIssues: issues(states: OPEN) {
-            totalCount
-          }
-          closedIssues: issues(states: CLOSED) {
-            totalCount
-          }
-          mergedPullRequests: pullRequests(states: MERGED) {
-            totalCount
-          }
-          defaultBranchRef {
-            target {
-              ... on Commit {
-                history {
-                  totalCount
-                }
-                repository {
-                  milestones {
-                    totalCount
-                  }
-                  pullRequests(states: CLOSED) {
-                    totalCount
-                  }
-                }
-              }
-            }
-          }
-          forks {
-            totalCount
-          }
-          hasIssuesEnabled
-          hasVulnerabilityAlertsEnabled
-          watchers {
-            totalCount
-          }
-          discussions {
-            totalCount
-          }
-          releases {
-            totalCount
-          }
-          updatedAt
-          vulnerabilityAlerts {
-            totalCount
-          }
-          watchers {
-            totalCount
-          }
-        }
-        securityAdvisories {
-          totalCount
-        }
-        securityVulnerabilities(severities: HIGH) {
-          totalCount
-        }
-      }`;
-
-    const secretKey: string | undefined = process.env.GITHUB_TOKEN;
-
-    if (!secretKey) {
-      globalThis.logger?.error('GITHUB Token not defined');
-      throw new Error('GITHUB_TOKEN is not defined');
-    }
-
-    const response = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: {
-        Authorization: `Token ${secretKey}`,
-      },
-      body: JSON.stringify({query: query}),
-    });
-
-    const result = (await response.json()).data;
-    //const repository = result.repository;
-    return result;
-  } catch (error) {
-    globalThis.logger?.error(`Correctness Score calc got error: ${error}`);
-  }
-  return null;
-}
+import {parse_aggregate_promise} from '../aggregate_request';
 
 export function compute_correctness_score(data: any): number {
   const totalIssues =
@@ -171,14 +49,11 @@ export function compute_correctness_score(data: any): number {
   return correctnessScore;
 }
 
-export async function get_correctness_score(
-  local_repo_path: string
-): Promise<number> {
-  try {
-    const data: any = await GraphQl_Data(local_repo_path);
-    return compute_correctness_score(data);
-  } catch (err) {
-    globalThis.logger?.error(`RampUp Score calc got error: ${err}`);
+export async function get_correctness_score(aggregate: any): Promise<number> {
+  const aggregate_data = await parse_aggregate_promise(aggregate);
+  if (aggregate_data) {
+    return compute_correctness_score(aggregate_data.correctness_data);
+  } else {
+    return 0;
   }
-  return 0;
 }

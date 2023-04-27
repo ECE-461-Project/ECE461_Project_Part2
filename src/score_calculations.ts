@@ -10,6 +10,7 @@ import {get_good_engineering_process_score} from './good_engineering_process_fac
 import {GitHubUrl_Info, get_url_parse_from_input} from './url_parser';
 
 import {PackageRating} from './api_server/models/models';
+import {request_aggregate} from './aggregate_request';
 
 export interface SCORE_OUT {
   URL: string;
@@ -55,29 +56,16 @@ export async function score_calc(url_parse: GitHubUrl_Info, temp_dir: string) {
   };
   //let temp_dir = '';
   try {
-    // Create Temporary Directory
-    // temp_dir = await create_tmp();
-    // Clone git repository into temp dir
-    const clone_successful = await git_clone(
-      temp_dir,
-      url_parse.github_repo_url
-    );
-    // Throw if cloning fails
-    if (!clone_successful) {
-      globalThis.logger?.error('Cloning repo failed!');
-      throw new Error('Cloning git repo failed');
-    }
-    // Path to git repository in temp directory
-    const git_repo_path = join(temp_dir, '');
+    const aggregate = request_aggregate(temp_dir, url_parse);
 
     // Get promises to subscores
     const subscores = await Promise.all([
-      get_license_score(url_parse.github_repo_url, git_repo_path),
-      get_bus_factor_score(url_parse.github_repo_url),
-      get_responsiveness_score(url_parse.github_repo_url),
-      get_ramp_up_score(git_repo_path),
-      get_correctness_score(url_parse.github_repo_url),
-      get_good_pinning_practice_score(url_parse.github_repo_url, git_repo_path),
+      get_license_score(url_parse, aggregate),
+      get_bus_factor_score(aggregate),
+      get_responsiveness_score(aggregate),
+      get_ramp_up_score(aggregate),
+      get_correctness_score(aggregate),
+      get_good_pinning_practice_score(url_parse.github_repo_url, aggregate),
       get_good_engineering_process_score(url_parse.github_repo_url),
     ]);
     // Resolve subscores

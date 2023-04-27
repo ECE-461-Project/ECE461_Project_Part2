@@ -1,12 +1,10 @@
 import {get_percent_owner} from './bus_factor_restapi';
 import {get_number_forks} from './bus_factor_graphql';
 
-export async function get_bus_factor_score(
-  github_repo_url: string
-): Promise<number> {
+export async function get_bus_factor_score(aggregate: any): Promise<number> {
   const [percent_owner, number_forks] = await Promise.all([
-    get_percent_owner(github_repo_url),
-    get_number_forks(github_repo_url),
+    get_percent_owner(aggregate),
+    get_number_forks(aggregate),
   ]);
   let score = 0;
   if (typeof percent_owner === 'number') {

@@ -1,63 +1,33 @@
-const axios = require('axios');
+import {parse_aggregate_promise} from '../aggregate_request';
 
 export async function get_percent_owner(
-  github_repo_url: string
+  aggregate: any
 ): Promise<number | undefined> {
-  const reg = new RegExp('github\\.com/(.+)/(.+)');
-  const matches = github_repo_url.match(reg);
-  if (matches === null) {
-    return undefined;
-  }
-  if (process.env.GITHUB_TOKEN === undefined) {
-    throw new Error('GITHUB_TOKEN is not defined');
-  }
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'bearer ' + process.env.GITHUB_TOKEN,
-      'User-Agent': 'Node',
-    },
-  };
-  const repoAdr: string =
-    'https://api.github.com/repos/' + matches[1] + '/' + matches[2];
-  const commitsAdr: string =
-    'https://api.github.com/repos/' +
-    matches[1] +
-    '/' +
-    matches[2] +
-    '/commits';
+  const aggregate_data = await parse_aggregate_promise(aggregate);
   try {
-    let repoData: any = 0;
-    await axios.get(repoAdr, config).then((response: any) => {
-      repoData = response.data;
-    });
-
-    let commitsData: any = 0;
-    await axios.get(commitsAdr, config).then((response: any) => {
-      commitsData = response.data;
-    });
-    const owner = repoData.owner.id;
-    let ownerCommits = 0;
-    let otherCommits = 0;
-    for (let i = 0; i < 30; i++) {
-      if (commitsData[i] === undefined) {
-        break;
+    if (aggregate_data) {
+      const owner = aggregate_data.repo_data.owner.id;
+      const commitsData: any = aggregate_data.commits_list;
+      let ownerCommits = 0;
+      let otherCommits = 0;
+      for (let i = 0; i < 30; i++) {
+        if (commitsData[i] === undefined) {
+          break;
+        }
+        if (commitsData[i].commit.author.id === owner) {
+          ownerCommits += 1;
+        } else {
+          otherCommits += 1;
+        }
       }
-      if (commitsData[i].author.id === owner) {
-        ownerCommits += 1;
-      } else {
-        otherCommits += 1;
-      }
+      globalThis.logger?.debug(
+        `bus_factor: get_percent_owner: ${ownerCommits} other: ${otherCommits}`
+      );
+      const percentOwner = ownerCommits / (ownerCommits + otherCommits);
+      return percentOwner;
     }
-    globalThis.logger?.debug(
-      `bus_factor: get_percent_owner: ${ownerCommits} other: ${otherCommits}`
-    );
-    const percentOwner = ownerCommits / (ownerCommits + otherCommits);
-    return percentOwner;
   } catch (err) {
-    if (err instanceof Error) {
-      globalThis.logger?.error('Error in get_percent_owner ' + err.message);
-    }
+    globalThis.logger?.error(`Error in get_percent_owner: ${err}`);
   }
   return undefined;
 }

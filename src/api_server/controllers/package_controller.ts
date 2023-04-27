@@ -629,7 +629,7 @@ async function package_post_url(
   // 2. Check if ingestible
   // 3. If not ingestible, return 424 status due to disqualified rating
   if (package_rate_ingestible(ud) === 0) {
-    globalThis.logger?.info('Not uploaded due to the disqualified rating');
+    globalThis.logger?.warn('Not uploaded due to the disqualified rating');
     delete_dir(temp_dir);
     res.contentType('application/json').status(424).send();
     return;
