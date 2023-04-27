@@ -113,6 +113,7 @@ export class packages extends Model {
   declare PackageName: string;
   declare PackageZipB64: string;
   declare GitHubLink: string;
+  declare ReadmeContent: string;
   declare RatedAndApproved: number;
   declare UploadTypeURL: number;
   declare VersionNumber: string;
