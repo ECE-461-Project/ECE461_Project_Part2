@@ -931,11 +931,9 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
     } else {
       globalThis?.logger.info('No package found under this regex');
       res.status(404).send();
-
     }
   } catch (err: any) {
-    globalThis.logger?.error(`Error in package_byus
-    Ex_regex_post: ${err}`);
+    globalThis.logger?.error(`Error in package_byRegEx_regex_post: ${err}`);
     res.status(400).send();
   }
 }
