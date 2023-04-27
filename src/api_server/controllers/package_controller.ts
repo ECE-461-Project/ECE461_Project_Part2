@@ -894,49 +894,22 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
 
   try {
     let result: any[] = [];
-    let temp_dir = '';
 
     //Check if the regular expression is valid
     new RegExp(RegEx);
 
     //search for packages containing README files by regex
-    const packageByName = await packages.findAll({
+    const packageByRegEx = await packages.findAll({
       where: {
-        PackageName : {[Op.regexp]: RegEx},
+        [Op.or]: [
+          { PackageName: { [Op.regexp]: RegEx } },
+          { ReadmeContent: { [Op.regexp]: RegEx } }
+        ]
       },
-      attributes: ['VersionNumber', 'PackageName'],
+      attributes: ['VersionNumber', 'PackageName']
     });
-    result = result.concat(packageByName);
-
-    //search for packages constaining README files by regex
-    const packageByREADME = await packages.findAll({
-      attributes: ['VersionNumber', 'PackageName', 'PackageZipB64'],
-    });
-
-    for(const pkg of packageByREADME) {
-      temp_dir = await create_tmp();
-      const zip_check = await unzip_base64_to_dir(pkg.PackageZipB64, temp_dir);
-      const readmeContent = await find_and_read_readme(temp_dir);
-      if (readmeContent != undefined && readmeContent.match(new RegExp(RegEx, 'i'))) {
-        
-        let exists = false;
-        for (let i = 0; i < result.length; i++) {
-          if (result[i].PackageName === pkg.PackageName) {
-            exists = true;
-            break;
-          }
-        }
-
-        if(!exists) {
-          result.push({
-            Version: pkg.VersionNumber,
-            Name: pkg.PackageName,
-          });
-        }
-        delete_dir(temp_dir);
-      }
-    }
-
+    
+    result = result.concat(packageByRegEx);
     if(result.length > 0) {
       res.status(200).json(result);
     } else {
