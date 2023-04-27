@@ -40,8 +40,21 @@
                 padding: 15px 20px;
             }
             .body_sec {
-            text-align: center;
-            margin-top: 50px;
+                text-align: center;
+                margin-top: 50px;
+            }
+            .Content{
+                display: flex;
+                justify-content: space-between;
+            }
+            #username{
+                padding: 15px 25px;
+            }
+            #password{
+                padding: 15px 25px;
+            }
+            p{
+                justify-content: center;
             }
         </style>
     </head>
@@ -65,12 +78,19 @@
         </nav>
         <main class="body_sec">
             <section id="Content">
-                <input id="searchbar" type ="text" placeholder ="Enter the package to search for...">
-                <button id="button" onclick="packageSearch()">Search</button>
+                <div class="Content">
+                    <input id="searchbar" type ="text" placeholder ="Enter the package to search for...">
+                    <button id="button" onclick="packageSearch()">Search</button>
+                    <div class="Login">
+                        <input id="username" type="text" placeholder="Enter your username:">
+                        <input id="password" type="text" placeholder="Enter your password:">
+                    </div>
+                </div>
             </section>
+            <div class="returns">
+                <p id = "return"></p>
+            </div>
         </main>
-        
-
-        <script src="search.js"></script>
+        <script src="webfuncs.js"></script>
 </body>
 </html>
