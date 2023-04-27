@@ -64,18 +64,17 @@ export async function find_and_read_package_json(
 }
 
 export async function find_and_read_readme(
-  directory : string
-): Promise<string | undefined> {
-  globalThis.logger?.debug(
-    `dir input to find_and_read_readme ${directory}`
-  );
-
-  for await(const filename of getFiles(directory))  {
-    if(path.basename(filename) === 'README.md' || path.basename(filename) === 'README') {
+  directory: string
+): Promise<string | null> {
+  globalThis.logger?.debug(`dir input to find_and_read_readme ${directory}`);
+  const readme_regex = RegExp('^[Rr][Ee][Aa][Dd][Mm][Ee]');
+  // getFiles changed so it returns files in base directory first
+  for await (const filename of getFiles(directory)) {
+    if (readme_regex.exec(path.basename(filename))) {
       const strcontent = await readFile(filename);
-      globalThis.logger?.debug(`found package.json: ${filename}`);
-      return strcontent.toString()
+      globalThis.logger?.info(`found readme: ${filename}`);
+      return strcontent.toString();
     }
   }
-  return undefined;
-} 
+  return null;
+}
