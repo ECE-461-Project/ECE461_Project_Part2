@@ -1,7 +1,8 @@
 import * as request from 'supertest';
 import {get_auth_token} from './helper/get_auth_token';
 import { readFileSync } from 'fs';
-import { PackageData } from '../../src/api_server/models/models';
+import { PackageData, PackageMetadata } from '../../src/api_server/models/models';
+import {sequelize, packages} from '../../src/api_server/db_connector';
 
 // This checks if the INTEGRATION env variable is defined
 if (process.env.INTEGRATION === undefined) {
@@ -18,9 +19,9 @@ const query_1: PackageData = {
 	URL: 'https://github.com/jashkenas/underscore'
 };
 
-describe('POST /package with debloat comparison, POST /sizecost', () => {
+describe('POST /package with debloat comparison, PUT /package/{id} with debloat comparison, POST /sizecost', () => {
 
-  test('Debloat', async () => {
+  test('Debloat on POST /package ', async () => {
 	// Add FULL package to registry
     let result = (await request(app).post('/package')
       .set('X-Authorization', `bearer ${token}`)
@@ -53,6 +54,43 @@ describe('POST /package with debloat comparison, POST /sizecost', () => {
     expect(content1.length).toBeGreaterThan(content2.length);
   });
   
+  test('Debloat on PUT /package/{id}', async () => {
+	// Update underscore (uploaded above)
+    const mdata: PackageMetadata = {
+	  Name: 'underscore',
+	  ID: 'underscore',
+	  Version: '1.13.6', // CURRENT underscore version, may change
+    };
+    const query = {
+	  metadata: mdata,
+	  data: query_1,
+    };
+    let result = await request(app).put('/package/underscore')
+      .set('X-Authorization', `bearer ${token}`)
+      .set('debloat', '0')
+      .send(query);
+    expect(result.statusCode).toEqual(200);
+    // grab encoded Content NOT debloated
+    const found_full = await packages.findOne({where: {PackageName: 'underscore'}});
+    expect(found_full).toBeDefined;
+    if (found_full !== null) {
+	    const content1 = (found_full.PackageZipB64).toString();
+	    // Update DEBLOATED package to registry
+	    result = await request(app).put('/package/underscore')
+	      .set('X-Authorization', `bearer ${token}`)
+	      .set('debloat', '1')
+	      .send(query);
+    	expect(result.statusCode).toEqual(200);
+    	
+	    const found_full2 = await packages.findOne({where: {PackageName: 'underscore'}});
+    	expect(found_full2).toBeDefined;
+    	if (found_full2 !== null) {
+			const content2 = (found_full2.PackageZipB64).toString();
+	    	// FULL package encoded string should be longer than debloated package encoded string
+	   		 expect(content1.length).toBeGreaterThan(content2.length);
+	   	}
+	}
+  });
   
   test('/sizecost endpoint tests', async () => {
 	// NO AUTH, 400
