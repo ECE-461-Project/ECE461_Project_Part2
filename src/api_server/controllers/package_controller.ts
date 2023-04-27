@@ -891,7 +891,7 @@ interface ReqRegEx {
 }
 export async function package_byRegEx_regex_post(req: Request, res: Response) {
   const {RegEx} = req.body as ReqRegEx;
-
+  globalThis.logger?.debug(`Regex: ${RegEx}`);
   try {
     let result: any[] = [];
 
@@ -906,12 +906,15 @@ export async function package_byRegEx_regex_post(req: Request, res: Response) {
           { ReadmeContent: { [Op.regexp]: RegEx } }
         ]
       },
-      attributes: ['VersionNumber', 'PackageName']
+      attributes: ['PackageID','VersionNumber', 'PackageName']
     });
-    
+
     result = result.concat(packageByRegEx);
+    globalThis.logger?.debug(`regex result: ${result[0].PackageName}`);
+    globalThis.logger?.debug(`regex result length: ${result.length}`);
+
     if(result.length > 0) {
-      res.status(200).json(result);
+      res.contentType('application/json').status(200).send(result);
     } else {
       res.status(404).send('No package found under this regex');
     }
