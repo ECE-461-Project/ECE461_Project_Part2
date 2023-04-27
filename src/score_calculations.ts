@@ -10,7 +10,7 @@ import {get_good_engineering_process_score} from './good_engineering_process_fac
 import {GitHubUrl_Info, get_url_parse_from_input} from './url_parser';
 
 import {PackageRating} from './api_server/models/models';
-import {request_aggregate} from './aggregate_request';
+import {file_aggregate, request_aggregate} from './aggregate_request';
 
 export interface SCORE_OUT {
   URL: string;
@@ -54,18 +54,18 @@ export async function score_calc(url_parse: GitHubUrl_Info, temp_dir: string) {
       PullRequest: 0,
     },
   };
-  //let temp_dir = '';
   try {
-    const aggregate = request_aggregate(temp_dir, url_parse);
+    const aggregateRequest = request_aggregate(url_parse);
+    const aggregateFile = file_aggregate(temp_dir, url_parse);
 
     // Get promises to subscores
     const subscores = await Promise.all([
-      get_license_score(url_parse, aggregate),
-      get_bus_factor_score(aggregate),
-      get_responsiveness_score(aggregate),
-      get_ramp_up_score(aggregate),
-      get_correctness_score(aggregate),
-      get_good_pinning_practice_score(url_parse.github_repo_url, aggregate),
+      get_license_score(url_parse, aggregateFile, aggregateRequest),
+      get_bus_factor_score(url_parse.github_repo_url, aggregateRequest),
+      get_responsiveness_score(url_parse.github_repo_url, aggregateRequest),
+      get_ramp_up_score(url_parse.github_repo_url, aggregateFile),
+      get_correctness_score(url_parse.github_repo_url, aggregateRequest),
+      get_good_pinning_practice_score(url_parse.github_repo_url, aggregateFile),
       get_good_engineering_process_score(url_parse.github_repo_url),
     ]);
     // Resolve subscores

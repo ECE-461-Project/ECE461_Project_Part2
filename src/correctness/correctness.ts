@@ -1,4 +1,4 @@
-import {parse_aggregate_promise} from '../aggregate_request';
+import {AggregateResponsePromise} from '../aggregate_request';
 
 export function compute_correctness_score(data: any): number {
   const totalIssues =
@@ -49,11 +49,14 @@ export function compute_correctness_score(data: any): number {
   return correctnessScore;
 }
 
-export async function get_correctness_score(aggregate: any): Promise<number> {
-  const aggregate_data = await parse_aggregate_promise(aggregate);
-  if (aggregate_data) {
-    return compute_correctness_score(aggregate_data.correctness_data);
-  } else {
-    return 0;
+export async function get_correctness_score(
+  url: string,
+  aggregate_request: AggregateResponsePromise
+): Promise<number> {
+  try {
+    return compute_correctness_score(await aggregate_request.correctness_data);
+  } catch (err) {
+    globalThis.logger?.error(`Error get_correctness_score for ${url}: ${err}`);
   }
+  return 0;
 }

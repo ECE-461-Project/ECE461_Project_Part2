@@ -1,12 +1,20 @@
-import {parse_aggregate_promise} from '../aggregate_request';
+import {AggregateResponsePromise} from '../aggregate_request';
 
 export async function get_number_forks(
-  aggregate: any
+  url: string,
+  aggregate_response: AggregateResponsePromise
 ): Promise<number | undefined> {
-  const aggregate_data = await parse_aggregate_promise(aggregate);
-  if (aggregate_data) {
-    return aggregate_data.correctness_data.repository.forks.totalCount;
-  } else {
-    return undefined;
+  try {
+    const response: any = await aggregate_response.correctness_data;
+    return response.repository.forks.totalCount;
+  } catch (err) {
+    if (err instanceof Error) {
+      globalThis.logger?.error(
+        `get_number_forks got error for repo: ${url}: ${err.message}`
+      );
+    } else {
+      globalThis.logger?.error(`get_number_forks got error: ${url}: ${err}`);
+    }
   }
+  return undefined;
 }

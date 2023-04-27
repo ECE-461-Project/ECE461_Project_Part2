@@ -1,18 +1,20 @@
 import {GitHubUrl_Info} from './url_parser';
-import {graphql, GraphqlResponseError} from '@octokit/graphql';
-import type {GraphQlQueryResponseData} from '@octokit/graphql';
+import {graphql} from '@octokit/graphql';
 import {GraphQlResponse} from '@octokit/graphql/dist-types/types';
 import {Octokit} from '@octokit/rest';
 import {git_clone} from './git_clone';
 import {find_and_read_package_json} from './api_server/get_files';
 
-export interface AggregateData {
-  correctness_data: any;
-  commits_list: any;
-  repo_data: any;
-  git_repo_path: string;
-  package_json: any;
+export interface AggregateResponsePromise {
+  correctness_data: ReturnType<typeof correctness_data>;
+  commits_list: ReturnType<typeof commits_list>;
+  repo_data: ReturnType<typeof repos>;
   octokit: Octokit;
+}
+
+export interface AggregateFilePromise {
+  git_repo_path: Promise<string>;
+  package_json: Promise<any>;
 }
 
 async function correctness_data(
@@ -151,12 +153,12 @@ function git_clone_promise(
 
 async function package_json_promise(
   git_repo_path: Promise<string>
-): Promise<string> {
+): Promise<any> {
   const git_path = await git_repo_path;
   return new Promise((resolve, reject) => {
     find_and_read_package_json(git_path).then(content => {
       if (content) {
-        resolve(content);
+        resolve(JSON.parse(content));
       } else {
         reject(new Error('Could not find package.json'));
       }
@@ -164,10 +166,7 @@ async function package_json_promise(
   });
 }
 
-export async function request_aggregate(
-  temp_dir: string,
-  url_parse: GitHubUrl_Info
-) {
+export function request_aggregate(url_parse: GitHubUrl_Info) {
   const secretKey: string | undefined = process.env.GITHUB_TOKEN;
 
   if (!secretKey) {
@@ -178,41 +177,20 @@ export async function request_aggregate(
     auth: secretKey,
     baseUrl: 'https://api.github.com',
   });
-
-  const clone_promise = git_clone_promise(temp_dir, url_parse);
-  const responses = Promise.all([
-    correctness_data(url_parse, secretKey),
-    commits_list(url_parse, octokit),
-    repos(url_parse, octokit),
-  ]);
-  const clone_data = Promise.all([
-    clone_promise,
-    package_json_promise(clone_promise),
-  ]);
-  return [responses, clone_data, octokit];
+  const responses: AggregateResponsePromise = {
+    correctness_data: correctness_data(url_parse, secretKey),
+    commits_list: commits_list(url_parse, octokit),
+    repo_data: repos(url_parse, octokit),
+    octokit: octokit,
+  };
+  return responses;
 }
 
-export async function parse_aggregate_promise(aggregate_promise: any) {
-  try {
-    const aggregate_list = await aggregate_promise;
-    const aggregate_response = await aggregate_list[0];
-    const aggregate_clone_data = await aggregate_list[1];
-    const octokit = await aggregate_list[2];
-    const aggregate: AggregateData = {
-      correctness_data: aggregate_response[0],
-      commits_list: aggregate_response[1].data,
-      repo_data: aggregate_response[2].data,
-      git_repo_path: aggregate_clone_data[0],
-      package_json: JSON.parse(aggregate_clone_data[1]),
-      octokit: octokit,
-    };
-    return aggregate;
-  } catch (err) {
-    if (err instanceof Error) {
-      globalThis.logger?.error(`Error in aggregate responses: ${err.message}`);
-    } else {
-      globalThis.logger?.error(`Error in aggregate responses: ${err}`);
-    }
-  }
-  return undefined;
+export function file_aggregate(temp_dir: string, url_parse: GitHubUrl_Info) {
+  const clone_promise = git_clone_promise(temp_dir, url_parse);
+  const aggregate_file: AggregateFilePromise = {
+    git_repo_path: clone_promise,
+    package_json: package_json_promise(clone_promise),
+  };
+  return aggregate_file;
 }
