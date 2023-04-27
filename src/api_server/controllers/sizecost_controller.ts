@@ -168,8 +168,35 @@ export async function get_size_cost(req: Request, res: Response) {
       res.status(400).send();
       return;
     }
-    globalThis.logger?.debug(input[0]);
+
+    if (input.length === 0) {
+      globalThis.logger?.info('/sizecost NO INPUTS!!');
+      res.status(400).send();
+      return;
+    }
+
+    globalThis.logger?.debug(`/sizecost INPUT ${input}`);
     //@TODO check if already in packages db and remove from input if so
+    for (let i = 0; i < input.length; i++) {
+      globalThis.logger?.debug(`Looping: input[${i}] = ${input[i]}`);
+      const found = await packages.findOne({
+        where: {PackageName: input[i]},
+      });
+      if (found) {
+        globalThis.logger?.info(`/sizecost found ${input[i]}`);
+        input.splice(i, 1);
+      }
+    }
+    if (input.length === 0) {
+      globalThis.logger?.info('/sizecost all alr uploaded, 0');
+      const ret1: PackageSizeReturn = {
+        names: input.join(),
+        size: 0,
+      };
+      res.contentType('application/json').status(200).send(ret1);
+      return;
+    }
+
     const size_cost = await npm_compute_optional_update_package_name(
       input,
       false,
