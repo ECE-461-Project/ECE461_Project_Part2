@@ -41,6 +41,7 @@
     "node-fetch": "^2.6.9",
     "octokit": "^2.0.14",
     "p-queue": "^6.0.0",
+    "parse-github-url": "^1.0.2",
     "pg": "^8.10.0",
     "sequelize": "^6.30.0",
     "swagger-ui-express": "^4.6.2",

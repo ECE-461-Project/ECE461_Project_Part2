@@ -7,7 +7,7 @@ import {get_ramp_up_score} from './ramp_up_factor/ramp_up';
 import {get_correctness_score} from './correctness/correctness';
 import {get_good_pinning_practice_score} from './good_pinning_practice_factor/good_pinning_practice';
 import {get_good_engineering_process_score} from './good_engineering_process_factor/good_engineering_process_score';
-import {get_url_parse_from_input, URL_PARSE} from './url_parser';
+import {GitHubUrl_Info, get_url_parse_from_input} from './url_parser';
 
 import {PackageRating} from './api_server/models/models';
 
@@ -38,9 +38,9 @@ function net_score_formula(subscores: SCORE_OUT): number {
   return net_score;
 }
 
-export async function score_calc(url_parse: URL_PARSE, temp_dir: string) {
+export async function score_calc(url_parse: GitHubUrl_Info, temp_dir: string) {
   const score: SCORE_OUT = {
-    URL: url_parse.original_url,
+    URL: url_parse.original,
     GitHubLink: url_parse.github_repo_url,
     Rating: {
       NetScore: 0,
@@ -121,9 +121,9 @@ export async function get_scores_from_url(
   if (url === undefined) {
     throw new Error('Undefined URL input!');
   }
-  globalThis.logger?.debug(`url: ${url[0].github_repo_url} `);
+  globalThis.logger?.debug(`url: ${url.github_repo_url} `);
 
   // Each url score computed one by one -> slow!
-  const score_list: Promise<SCORE_OUT> = score_calc(url[0], temp_dir);
+  const score_list: Promise<SCORE_OUT> = score_calc(url, temp_dir);
   return score_list;
 }

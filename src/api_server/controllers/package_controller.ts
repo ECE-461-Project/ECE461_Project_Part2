@@ -131,9 +131,9 @@ async function package_id_put_content(
     res.contentType('application/json').status(400).send();
     return;
   }
-  globalThis.logger?.debug(`url: ${real_url[0].github_repo_url} `);
+  globalThis.logger?.debug(`url: ${real_url.github_repo_url} `);
   globalThis.logger?.info(
-    `Package update Content URL found: ${real_url[0].github_repo_url}`
+    `Package update Content URL found: ${real_url.github_repo_url}`
   );
   const id: string = name.replace(/[\W]/g, '-').toLowerCase();
 
@@ -167,7 +167,7 @@ async function package_id_put_content(
     PackageID: id,
     PackageName: name,
     PackageZipB64: content,
-    GitHubLink: real_url[0].github_repo_url,
+    GitHubLink: real_url.github_repo_url,
     ReadmeContent: readme_str,
     UploadTypeURL: 0,
     VersionNumber: version,
@@ -215,8 +215,8 @@ async function package_id_put_url(
     res.contentType('application/json').status(400).send();
     return;
   }
-  globalThis.logger?.debug(`url: ${real_url[0].github_repo_url} `);
-  const git_url = real_url[0].github_repo_url;
+  globalThis.logger?.debug(`url: ${real_url.github_repo_url} `);
+  const git_url = real_url.github_repo_url;
   // clone the url
   const check_clone = await git_clone(temp_dir, git_url);
   if (check_clone === false) {
