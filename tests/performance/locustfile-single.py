@@ -13,14 +13,10 @@ auth_body = {
         "password": "correcthorsebatterystaple123(!__+@**(A'\"`;DROP TABLE packages;"
     }
 }
-with open('github_urls.txt') as f:
-    lines = f.readlines()
 
-not_uploaded_urls = set([line.strip() for line in lines])
+not_uploaded_urls = set()
+not_uploaded_urls.add('https://github.com/jashkenas/underscore')
 uploaded_package_id = set()
-
-run = []
-
 
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
@@ -33,6 +29,12 @@ def on_test_start(environment, **kwargs):
         print('reset success')
     else:
         print('reset fail')
+    if not_uploaded_urls:
+        url = random.choice(list(not_uploaded_urls))
+        json_data = {'URL': url}
+        response = requests.post(
+            f'{environment.host}/package', headers=headers, json=json_data)
+        package_post_url_response_handler(response, url)
     # r = requests.put('')
 
 
@@ -72,16 +74,3 @@ class DefaultUser(FastHttpUser):
             package_id = random.choice(list(uploaded_package_id))
             response = self.client.get(
                 f'/package/{package_id}', headers=self.headers)
-
-    @task(1)
-    def package_post_url(self):
-        try:
-            if not_uploaded_urls:
-                url = random.choice(list(not_uploaded_urls))
-                json_data = {'URL': url}
-                response = self.client.post(
-                    f'/package', headers=self.headers, json=json_data)
-                package_post_url_response_handler(response, url)
-
-        except Exception as e:
-            print(f'Exception: {e}')
