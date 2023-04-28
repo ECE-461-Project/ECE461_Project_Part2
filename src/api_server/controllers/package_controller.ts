@@ -756,9 +756,9 @@ export async function package_post(req: Request, res: Response) {
       globalThis.logger?.info('PackageData input has BOTH url and content!');
       res.contentType('application/json').status(400).send();
     } else if (content !== undefined) {
-      package_post_content(req, res, input, content, debloat_arg);
+      await package_post_content(req, res, input, content, debloat_arg);
     } else if (url_in !== undefined) {
-      package_post_url(req, res, input, url_in, debloat_arg);
+      await package_post_url(req, res, input, url_in, debloat_arg);
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
       res.contentType('application/json').status(400).send();
