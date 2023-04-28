@@ -1,4 +1,5 @@
 from locust import FastHttpUser, task, between, HttpUser
+from locust.exception import StopUser
 import requests
 import random
 import re
@@ -19,7 +20,7 @@ with open('github_urls.txt') as f:
 not_uploaded_urls = set([line.strip() for line in lines])
 uploaded_package_id = set()
 
-run = []
+run_fail = []
 
 
 @events.test_start.add_listener
@@ -34,6 +35,13 @@ def on_test_start(environment, **kwargs):
     else:
         print('reset fail')
     # r = requests.put('')
+
+
+@events.test_stop.add_listener
+def on_test_end(environment, **kwargs):
+    print(f'This many users failed to authenticate: {len(run_fail)}')
+    print(f'Number of uploaded packages: {len(uploaded_package_id)}')
+    print(uploaded_package_id)
 
 
 def package_post_url_response_handler(response, url):
@@ -60,10 +68,14 @@ class DefaultUser(FastHttpUser):
 
     def on_start(self):
         self.headers = {'Content-Type': 'application/json'}
-        for i in range(10):
+        for i in range(100):
             response = self.client.put('/authenticate', json=auth_body)
             if response.status_code == 200:
+                i = 0
                 break
+        if i > 0:
+            run_fail.append(i)
+            raise StopUser()
         self.headers['X-Authorization'] = f'{response.text}'
 
     @task(10)

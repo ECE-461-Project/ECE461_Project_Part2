@@ -10,6 +10,8 @@ run_single_locust_* runs the locust test where only package is POSTed and everyt
 run_locust_* runs the locust test that uploads 1000 packages, and GETs these packages randomly as they are uploaded. 
 
 
-For baseline for performance test, please run run_single_locust_remote.sh
+To run locust on multiple cores, use the distributed files.
+
+For baseline for performance test, please run run_single_distributed_locust_remote.sh
 This will create a remote_reports folder that contains a report at start time of performance test.
 
