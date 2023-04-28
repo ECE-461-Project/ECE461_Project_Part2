@@ -169,11 +169,10 @@ export async function get_size_cost(req: Request, res: Response) {
     }
 
     if (input.length === 0) {
-      globalThis.logger?.info('/sizecost NO INPUTS!!');
+      globalThis.logger?.error('/sizecost NO INPUTS!!');
       res.status(400).send();
       return;
     }
-
 
     // eslint-disable-next-line prefer-const
     let names_arr: PackageName[] = [];
@@ -181,18 +180,36 @@ export async function get_size_cost(req: Request, res: Response) {
     globalThis.logger?.debug(`/sizecost INPUT ${input}`);
     // check if already in packages db and remove from input if so
     for (let i = 0; i < input.length; i++) {
-      globalThis.logger?.debug(`Looping: input[${i}] = ${input[i]}`);
+      globalThis.logger?.debug(`Looping: input[${i}]`);
+      let name = '';
+      if (input[i].Name !== undefined) {
+        globalThis.logger?.debug('/sizecost input type Name');
+        name = input[i].Name;
+      } else if (input[i].URL !== undefined) {
+        globalThis.logger?.debug('/sizecost input type URL');
+        name = 'url-parser';
+      } else if (input[i].Content !== undefined) {
+        globalThis.logger?.debug('/sizecost input type Content');
+        name = 'b64-content';
+      } else {
+        globalThis.logger?.error('/sizecost input type none set!!! error');
+        res.status(400).send();
+        return;
+      }
+
+      globalThis.logger?.debug(`/sizecost name decided ${name}`);
+
       const found = await packages.findOne({
-        where: {PackageName: input[i].Name},
+        where: {PackageName: name},
       });
       if (found) {
-        globalThis.logger?.info(`/sizecost found ${input[i]}`);
+        globalThis.logger?.info(`/sizecost found ${name}`);
         input.splice(i, 1);
       } else {
-        names_arr.push(input[i].Name);
+        names_arr.push(name);
       }
     }
-    if (input.length === 0) {
+    if (names_arr.length === 0) {
       globalThis.logger?.info('/sizecost all alr uploaded, 0');
       const ret1: PackageSizeReturn = {
         names: input.join(),
