@@ -1,9 +1,11 @@
 import {Express, Request, Response, NextFunction} from 'express';
 import * as dotenv from 'dotenv';
 import express = require('express');
+import bodyParser = require('body-parser');
+const morganBody = require('morgan-body');
 import {join, resolve} from 'path';
 import OpenApiValidator = require('express-openapi-validator');
-import {morgan} from './middleware/morgan_tokens'
+import {morgan} from './middleware/morgan_tokens';
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 import sizecost = require('./routes/sizecost');
@@ -36,6 +38,12 @@ const port = process.env.EXPRESS_PORT;
 
 // Express initialization
 const app: Express = express();
+
+// must parse body before morganBody as body will be logged
+app.use(bodyParser.json());
+// hook morganBody to express app
+morganBody(app);
+
 // Set up logging using Morgan to stdout
 if (process.env.PRODUCTION) {
   app.use(
