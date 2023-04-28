@@ -6,11 +6,10 @@ import {
   usergroups,
   dependentPackageSize,
 } from '../db_connector';
-import {PackageName, PackageSizeReturn} from '../models/models';
+import {PackageName, PackageSizeReturn, SizecostInput} from '../models/models';
 import {create_tmp, delete_dir} from '../../git_clone';
 import {run_cmd} from '../../sub_process_help';
 import {join} from 'path';
-import {stringify} from 'querystring';
 
 export async function npm_compute_optional_update_package_name(
   names: PackageName[],
@@ -175,16 +174,22 @@ export async function get_size_cost(req: Request, res: Response) {
       return;
     }
 
+
+    // eslint-disable-next-line prefer-const
+    let names_arr: PackageName[] = [];
+
     globalThis.logger?.debug(`/sizecost INPUT ${input}`);
-    //@TODO check if already in packages db and remove from input if so
+    // check if already in packages db and remove from input if so
     for (let i = 0; i < input.length; i++) {
       globalThis.logger?.debug(`Looping: input[${i}] = ${input[i]}`);
       const found = await packages.findOne({
-        where: {PackageName: input[i]},
+        where: {PackageName: input[i].Name},
       });
       if (found) {
         globalThis.logger?.info(`/sizecost found ${input[i]}`);
         input.splice(i, 1);
+      } else {
+        names_arr.push(input[i].Name);
       }
     }
     if (input.length === 0) {
@@ -198,13 +203,13 @@ export async function get_size_cost(req: Request, res: Response) {
     }
 
     const size_cost = await npm_compute_optional_update_package_name(
-      input,
+      names_arr,
       false,
       false,
       false
     );
     const ret: PackageSizeReturn = {
-      names: input.join(),
+      names: names_arr.join(),
       size: size_cost,
     };
     if (size_cost === -1) {

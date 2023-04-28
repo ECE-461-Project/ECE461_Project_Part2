@@ -21,7 +21,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/PackageName'
+                $ref: '#/components/schemas/SizecostInput'
         required: true
       responses:
         "200":
@@ -34,14 +34,14 @@ paths:
                   value:
                   - names: underscore, lodash
                     size: 12800
-          description: Net size cost of all input packages
+          description: Net size cost of all input packages in bytes
         "400":
           description: "There is missing field(s) in the SizeCost Query of package names/AuthenticationToken
             \ or it is formed improperly, or the AuthenticationToken is invalid."  
       summary: Get the "what if" size cost of introducing the package to the registry.
       description: |-
         Get the size cost (in bytes) of introducing the package to the registry.
-        Accepts array input of PackageNames (must be npm, public, lowercase, not internal)
+        Accepts array input of SizecostInput objs (Either Content, URL, or public package name like cloudinary)
         Includes the size cost of transitive dependencies, if already in registry, not double counted.      
     parameters:
     - name: X-Authorization
@@ -643,6 +643,26 @@ components:
         JSProgram:
           description: A JavaScript program (for use with sensitive modules).
           type: string
+    SizecostInput:
+      description: |-
+        This is a "union" type.
+        - Either Content, URL, or Name MUST be set for the /sizecost input to work.
+      type: object
+      properties:
+        Content:
+          description: |-
+            Package contents. This is the zip file uploaded by the user. (Encoded as text using a Base64 encoding).
+
+            This will be a zipped version of an npm package's GitHub repository, minus the ".git/" directory." It will, for example, include the "package.json" file that can be used to retrieve the project homepage.
+
+            See https://docs.npmjs.com/cli/v7/configuring-npm/package-json#homepage.
+          type: string
+        URL:
+          description: Package URL (for use in public ingest).
+          type: string
+        Name:
+          description: name of a public NPM hosted package (just cloudinary, for example)
+          $ref: '#/components/schemas/PackageName'
     User:
       description: ""
       required:
