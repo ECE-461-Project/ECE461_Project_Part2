@@ -77,9 +77,6 @@ async function npm_compute_optional_update_internal(
 
     if (typeof du_out !== 'string') {
       globalThis.logger?.error('Error with du command in size cost!');
-      if (dirname === null && names !== null) {
-        delete_dir(temp_dir);
-      }
       return -1;
     }
     const du_arr = du_out.split('\n');
@@ -145,17 +142,15 @@ async function npm_compute_optional_update_internal(
       // otherwise keep adding size to the total size cost
       size_cost += Number(new_indiv_arr_entry[0]);
     }
-    if (dirname === null && names !== null) {
-      delete_dir(temp_dir);
-    }
   } catch (err) {
     if (err instanceof Error) {
-      if (dirname === null && names !== null) {
-        delete_dir(temp_dir);
-      }
       globalThis.logger?.error(`Error while npm install or du: ${err.message}`);
     }
     return -1;
+  } finally {
+    if (dirname === null && names !== null) {
+      delete_dir(temp_dir);
+    }
   }
   return size_cost;
 }

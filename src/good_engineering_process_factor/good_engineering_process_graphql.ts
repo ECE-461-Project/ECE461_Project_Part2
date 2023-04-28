@@ -238,7 +238,7 @@ export async function fetch_score_with_graphql_data(
       );
     } else {
       globalThis.logger?.error(
-        '%PR Factor: GraphQL call failed for reason unknown!'
+        `%PR Factor: GraphQL call failed for reason unknown: ${error}`
       );
     }
     return 0;

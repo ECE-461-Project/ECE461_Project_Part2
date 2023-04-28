@@ -16,7 +16,7 @@ describe('check zip manually', () => {
       const temp = await create_tmp(); 
       const url = 'https://github.com/cloudinary/cloudinary_npm';
       await git_clone(temp, url);
-      const package_path = join(temp, 'package');
+      const package_path = join(temp, '');
       const a = await zip.generate_base64_zip_of_dir(package_path, package_path, 'cloudinary_npm', 0);
       create_dir('manual_test_results/zip2');
       writeFileSync('manual_test_results/zip2/a.b64', a);
