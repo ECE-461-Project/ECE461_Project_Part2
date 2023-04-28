@@ -87,7 +87,9 @@ app.use('/sizecost', [verifyToken, sizecost.router]);
 
 // Basic Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  globalThis.logger?.error(`Error handler called: ${err}`); // dump error to console for debug
+  globalThis.logger?.error(
+    `Error handler called: ${err}, body: ${JSON.stringify(req.body)}`
+  ); // dump error to console for debug
   res.status(err.status || 500).json({
     message: err.message,
     errors: err.errors,
