@@ -22,6 +22,21 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/SizecostInput'
+            examples:
+              ExampleRequestWithContent:
+                value:
+                  - Content: UEsDBBQAAAAIANybilZ9HJ7PAwIAADcFAAAMABwAcGFja2FnZS5qc29uVVQJAAMwnDRkMJw0ZHV4CwABBOgDAAAE6AMAAJ1UsW7bMBDd/RWExqKiIjm2i0wtmqUdunRsaoCmzhYdiRRIKrYb5N97JEVJcdUMmQTee/d49+6o5wUhiWQNJHf4VSUcTboXNaSlOslasRJ08tFxnkAboaSj3dI8pzchXILhWrS2h74Ql0zGZLJXmvxA3e8mJDRMeOb9QKHHHgpKBtFnPGLAgrGO2yheMfKBunNk93Aa9QLHnWZpVjSguolaH0g5kxzqmrkOZjO5krzTGiS/jNmT4GzSiVleRUsbJUmawhk4eUhk2xBHeUgS5L/4xh/hclK6dJ3/CiJX7mPkytdp+HpWJE7y9el6NDPof5TeyvwnD6HfvivW2UppZ4LYaVV+WoYp14KDNH7fvv38GreoBVmimwIm49+rulanVEMpNHC/GMk2p/mK5rGCytrWpK1W50vKDiD9gLcretPvp1s4HHRqLy2E/ILmtNhE0DAprPgDfufjM8A71nQ5jqeEp/vZAj972ezYr+m2WNGCFlG7R51JQXWDZRVD6XBusamQt0ZkCmgwoVp8apsR8bsXtFBpbFEq/hjCSxS6jWEtGs32HnDxoTDTtaDj29qu0ZBJs5VqoEUrHebdvcuyg7BVt6NcNVk/yuytX8WuO0xM6nT9Lq1MGNOh20NlGlplhFX6MvlDoMVOHVVjd++9jzqN4TIUFtK3Mf1T2ZLiGi5eFn8BUEsBAh4DFAAAAAgA3JuKVn0cns8DAgAANwUAAAwAGAAAAAAAAQAAALSBAAAAAHBhY2thZ2UuanNvblVUBQADMJw0ZHV4CwABBOgDAAAE6AMAAFBLBQYAAAAAAQABAFIAAABJAgAAAAA=
+              ExampleRequestWithURL:
+                value:
+                  - URL: https://github.com/cloudinary/cloudinary_npm
+              ExampleRequestWithName:
+                value:
+                  - Name: underscore
+              ExampleRequestWithMultipleInputs:
+                value:
+                  - Name: underscore
+                  - URL: https://github.com/cloudinary/cloudinary_npm
+                  - Content: UEsDBBQAAAAIANybilZ9HJ7PAwIAADcFAAAMABwAcGFja2FnZS5qc29uVVQJAAMwnDRkMJw0ZHV4CwABBOgDAAAE6AMAAJ1UsW7bMBDd/RWExqKiIjm2i0wtmqUdunRsaoCmzhYdiRRIKrYb5N97JEVJcdUMmQTee/d49+6o5wUhiWQNJHf4VSUcTboXNaSlOslasRJ08tFxnkAboaSj3dI8pzchXILhWrS2h74Ql0zGZLJXmvxA3e8mJDRMeOb9QKHHHgpKBtFnPGLAgrGO2yheMfKBunNk93Aa9QLHnWZpVjSguolaH0g5kxzqmrkOZjO5krzTGiS/jNmT4GzSiVleRUsbJUmawhk4eUhk2xBHeUgS5L/4xh/hclK6dJ3/CiJX7mPkytdp+HpWJE7y9el6NDPof5TeyvwnD6HfvivW2UppZ4LYaVV+WoYp14KDNH7fvv38GreoBVmimwIm49+rulanVEMpNHC/GMk2p/mK5rGCytrWpK1W50vKDiD9gLcretPvp1s4HHRqLy2E/ILmtNhE0DAprPgDfufjM8A71nQ5jqeEp/vZAj972ezYr+m2WNGCFlG7R51JQXWDZRVD6XBusamQt0ZkCmgwoVp8apsR8bsXtFBpbFEq/hjCSxS6jWEtGs32HnDxoTDTtaDj29qu0ZBJs5VqoEUrHebdvcuyg7BVt6NcNVk/yuytX8WuO0xM6nT9Lq1MGNOh20NlGlplhFX6MvlDoMVOHVVjd++9jzqN4TIUFtK3Mf1T2ZLiGi5eFn8BUEsBAh4DFAAAAAgA3JuKVn0cns8DAgAANwUAAAwAGAAAAAAAAQAAALSBAAAAAHBhY2thZ2UuanNvblVUBQADMJw0ZHV4CwABBOgDAAAE6AMAAFBLBQYAAAAAAQABAFIAAABJAgAAAAA=
         required: true
       responses:
         "200":
