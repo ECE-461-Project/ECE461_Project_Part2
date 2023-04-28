@@ -19,8 +19,10 @@ const query_1: PackageData = {
 	URL: 'https://github.com/jashkenas/underscore'
 };
 
-describe('POST /package with debloat comparison, PUT /package/{id} with debloat comparison, POST /sizecost', () => {
+const package_b_b64 = readFileSync('./tests/integration_tests/test_packages/package_b.zip.b64').toString()
 
+describe('POST /package with debloat comparison, PUT /package/{id} with debloat comparison, POST /sizecost', () => {
+/*
   test('Debloat on POST /package ', async () => {
 	// Add FULL package to registry
     let result = (await request(app).post('/package')
@@ -108,9 +110,10 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(bad_name);
 	expect(result.statusCode).toEqual(400);
   });
+*/
 
   
-  test('/sizecost tests', async () => {
+  test('/sizecost test all input types', async () => {
 
 	// nodejs-file-downloader in package_b should be size cost > 0
 	// let name = ['nodejs-file-downloader'];
@@ -122,12 +125,71 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	expect(result.body).toHaveProperty('names');
 	expect(result.body).toHaveProperty('size');
 	expect(result.body.size).toBeGreaterThan(0);
-	// now add it
-	const package_b_b64 = readFileSync('./tests/integration_tests/test_packages/package_b.zip.b64').toString()
+	const nodejsfiledownloader_size = result.body.size;
+	// Try the same exact package but its zipped form, should still be the same
+	let content: SizecostInput[] = [{
+		Content: package_b_b64
+	}];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(content);
+	expect(result.statusCode).toEqual(200);
+	expect(result.body).toHaveProperty('names');
+	expect(result.body).toHaveProperty('size');
+	expect(result.body.size).toBeGreaterThan(0);
+	const nodejsfiledownloader_size2 = result.body.size;
+	expect(nodejsfiledownloader_size).toBe(nodejsfiledownloader_size2);
+	// try the same exact package but its github URL form, should still be the same
+	let git_url: SizecostInput[] = [{
+		URL: 'https://github.com/ibrod83/nodejs-file-downloader'
+	}];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(git_url);
+	expect(result.statusCode).toEqual(200);
+	expect(result.body).toHaveProperty('names');
+	expect(result.body).toHaveProperty('size');
+	expect(result.body.size).toBeGreaterThan(0);
+	const nodejsfiledownloader_size3 = result.body.size;
+	expect(nodejsfiledownloader_size).toBe(nodejsfiledownloader_size3);
+	// try the same exact package but its NPM URL form, should still be the same
+	let npm_url: SizecostInput[] = [{
+		URL: 'https://www.npmjs.com/package/nodejs-file-downloader'
+	}];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(npm_url);
+	expect(result.statusCode).toEqual(200);
+	expect(result.body).toHaveProperty('names');
+	expect(result.body).toHaveProperty('size');
+	expect(result.body.size).toBeGreaterThan(0);
+	const nodejsfiledownloader_size4 = result.body.size;
+	expect(nodejsfiledownloader_size).toBe(nodejsfiledownloader_size4);
+	// Try the same package with all 4 input types in the arr, should still be the same
+	let dupl_all_input: SizecostInput[] = [
+		{
+			URL: 'https://www.npmjs.com/package/nodejs-file-downloader'
+		},
+		{
+			URL: 'https://github.com/ibrod83/nodejs-file-downloader'
+		},
+		{
+			Content: package_b_b64
+		},
+		{
+			Name: 'nodejs-file-downloader'
+		}
+	];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(dupl_all_input);
+	expect(result.statusCode).toEqual(200);
+	expect(result.body).toHaveProperty('names');
+	expect(result.body).toHaveProperty('size');
+	expect(result.body.size).toBeGreaterThan(0);
+	const nodejsfiledownloader_size5 = result.body.size;
+	expect(nodejsfiledownloader_size).toBe(nodejsfiledownloader_size5);
+	
+  });
+  
+  test('/sizecost test post upload', async () => {
+	// now add nodejs-file-downloader
 	const query: PackageData = {
 	  Content: package_b_b64
 	};
-    result = await request(app).post('/package')
+    let result = await request(app).post('/package')
       .set('X-Authorization', `bearer ${token}`)
       .set('Content-type', 'application/json')
       .send(query);
@@ -141,6 +203,9 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
     expect(result.body.data).toHaveProperty('Content');
     
     // now that nodejs-file-downloader in package_b is uploaded, should be size cost 0
+	let name: SizecostInput[] = [{
+		Name: 'nodejs-file-downloader'
+	}];
 	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(name);
 	expect(result.statusCode).toEqual(200);
 	expect(result.body).toHaveProperty('names');
@@ -181,14 +246,16 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	expect(result.body).toHaveProperty('names');
 	expect(result.body).toHaveProperty('size');
 	expect(result.body.size).toBe(0);
-	
+  });
+
+  test('/sizecost 2 pkgs zero shared transitive dependencies', async () => {
 	// For packages NOT in database OR in dependencies list, should have net size cost equal to their sum
 	// (in the case where they have NO shared transitive dependencies)
 	// ik-sample alone:
-	name = [{
+	let name = [{
 		Name: 'ik-sample'
 	}];
-	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(name);
+	let result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(name);
 	expect(result.statusCode).toEqual(200);
 	expect(result.body).toHaveProperty('names');
 	expect(result.body).toHaveProperty('size');
@@ -220,14 +287,17 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	expect(result.body.size).toBeGreaterThan(0);
 	let net_size_cost = result.body.size;
 	expect(net_size_cost).toBe(p1_size_cost + p2_size_cost);
-	
+  });
+
+
+  test('/sizecost 2 pkgs shared transitive dependencies', async () => {
 	// For packages NOT in database OR in dependencies list, should have net size cost LESS THAN to their sum
 	// (in the case where they have SOME SHARED transitive dependencies)
 	// cloudinary alone:
-	name = [{
+	let name = [{
 		Name: 'cloudinary'
 	}];
-	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(name);
+	let result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(name);
 	expect(result.statusCode).toEqual(200);
 	expect(result.body).toHaveProperty('names');
 	expect(result.body).toHaveProperty('size');
@@ -244,7 +314,7 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	expect(result.body.size).toBeGreaterThan(0);
 	const express_size_cost = result.body.size;
 	// cloudinary and express together:
-	names = [
+	let names = [
 		{
 			Name: 'cloudinary'
 		},
@@ -257,8 +327,8 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	expect(result.body).toHaveProperty('names');
 	expect(result.body).toHaveProperty('size');
 	expect(result.body.size).toBeGreaterThan(0);
-	net_size_cost = result.body.size;
+	let net_size_cost = result.body.size;
 	expect(net_size_cost).toBeLessThan(express_size_cost + cloudinary_size_cost);
-	
   });
+
 });

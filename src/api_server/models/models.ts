@@ -9,7 +9,7 @@ export interface SizecostInput {
    * @type {string}
    * @memberof SizecostInput
    */
-  content?: string;
+  Content?: string;
   /**
    * Package URL (for use in public ingest).
    * @type {string}
