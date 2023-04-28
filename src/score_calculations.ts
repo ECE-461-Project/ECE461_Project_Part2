@@ -91,9 +91,6 @@ export async function score_calc(url_parse: GitHubUrl_Info, temp_dir: string) {
     } else {
       globalThis.logger?.error(`Unhandled error in score_calc: ${err}`);
     }
-  } finally {
-    // Cleanup temporary directory
-    // delete_dir(temp_dir);
   }
   globalThis.logger?.debug(
     `Score for ${url_parse.github_repo_url}: ${JSON.stringify(score.Rating)}`

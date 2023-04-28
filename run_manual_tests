@@ -2,3 +2,11 @@
 export $(cat .env | xargs)
 export MANUAL=1
 npx jest --silent=true --coverage -c tests/manual_tests/jest.config.js
+
+echo "checking that create_temp and delete_dir calls match"
+cd src
+grep -R "create_tmp()" | wc
+grep -R "delete_dir("  | wc
+grep -R "create_tmp()"
+grep -R "delete_dir("
+cd ..
