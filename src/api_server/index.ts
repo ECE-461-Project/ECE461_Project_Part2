@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import express = require('express');
 import {join, resolve} from 'path';
 import OpenApiValidator = require('express-openapi-validator');
-import morgan = require('morgan');
+import {morgan} from './middleware/morgan_tokens'
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 import sizecost = require('./routes/sizecost');
@@ -36,7 +36,6 @@ const port = process.env.EXPRESS_PORT;
 
 // Express initialization
 const app: Express = express();
-
 // Set up logging using Morgan to stdout
 if (process.env.PRODUCTION) {
   app.use(
@@ -49,12 +48,27 @@ if (process.env.PRODUCTION) {
           status: tokens['status'](req, res),
           response_time: tokens['response-time'](req, res),
           content_length: tokens['res'](req, res, 'content-length'),
+          input: tokens['input'](req, res),
         },
       });
     })
   );
 } else {
-  app.use(morgan('dev'));
+  app.use(
+    morgan((tokens, req, res) => {
+      return JSON.stringify({
+        severity: 'DEBUG',
+        message: {
+          method: tokens['method'](req, res),
+          url: tokens['url'](req, res),
+          status: tokens['status'](req, res),
+          response_time: tokens['response-time'](req, res),
+          content_length: tokens['res'](req, res, 'content-length'),
+          input: tokens['input'](req, res),
+        },
+      });
+    })
+  );
 }
 
 // set up part 1 logging
