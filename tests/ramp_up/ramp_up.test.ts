@@ -1,14 +1,28 @@
+import { AggregateFilePromise } from '../../src/aggregate_request';
 import {
   get_ramp_up_score,
   compute_ramp_up_score,
 } from '../../src/ramp_up_factor/ramp_up';
 
 describe('testing get_ramp_up_score', () => {
-  test('get_license_score invalid', async () => {
-    expect(await get_ramp_up_score('./tests/_ramp')).toBe(0);
-  });
   test('get_ramp_up_score valid', async () => {
-    expect(await get_ramp_up_score('./tests/_rampup_checks/_test_1')).toBe(1);
+    const file_promise: AggregateFilePromise = {
+      git_repo_path: new Promise((resolve) => {resolve('./tests/_rampup_checks/_test_1')}),
+      package_json: new Promise((resolve) => {resolve('a')}),
+    };
+    expect(await get_ramp_up_score('url', file_promise)).toBe(1);
+  });
+  test('get_ramp_up_score invalid', async () => {
+    const a = 2;
+    const file_promise: AggregateFilePromise = {
+      git_repo_path: new Promise((resolve, reject) => {
+        if (a == 2) {
+        reject(new Error('hi'))
+      }
+    }),
+      package_json: new Promise((resolve) => {resolve('a')}),
+    };
+    expect(await get_ramp_up_score('url', file_promise)).toBe(0);
   });
 });
 

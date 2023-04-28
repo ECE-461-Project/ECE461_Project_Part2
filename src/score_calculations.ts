@@ -1,8 +1,6 @@
 import {get_license_score} from './license_score_calc/license';
 import {get_bus_factor_score} from './bus_factor/bus_factor';
 import {get_responsiveness_score} from './responsiveness_factor/responsiveness';
-import {git_clone, create_tmp, delete_dir} from './git_clone';
-import {join} from 'path';
 import {get_ramp_up_score} from './ramp_up_factor/ramp_up';
 import {get_correctness_score} from './correctness/correctness';
 import {get_good_pinning_practice_score} from './good_pinning_practice_factor/good_pinning_practice';
@@ -86,10 +84,12 @@ export async function score_calc(url_parse: GitHubUrl_Info, temp_dir: string) {
       } else if (err.message === 'Cloning git repo failed') {
         // Do nothing already logged
       } else {
-        throw err;
+        globalThis.logger?.error(
+          `Unhandled error in score_calc: ${err.message}: ${err.stack}`
+        );
       }
     } else {
-      throw err;
+      globalThis.logger?.error(`Unhandled error in score_calc: ${err}`);
     }
   } finally {
     // Cleanup temporary directory

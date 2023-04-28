@@ -17,7 +17,7 @@ export interface AggregateFilePromise {
   package_json: Promise<any>;
 }
 
-async function correctness_data(
+export async function correctness_data(
   url_parse: GitHubUrl_Info,
   secretKey: string
 ): Promise<GraphQlResponse<unknown>> {
@@ -119,7 +119,10 @@ async function correctness_data(
   return correctness_data;
 }
 
-async function commits_list(url_parse: GitHubUrl_Info, octokit: Octokit) {
+export async function commits_list(
+  url_parse: GitHubUrl_Info,
+  octokit: Octokit
+) {
   const commits_list = octokit.rest.repos.listCommits({
     owner: url_parse.owner,
     repo: url_parse.repo,
@@ -127,7 +130,7 @@ async function commits_list(url_parse: GitHubUrl_Info, octokit: Octokit) {
   return commits_list;
 }
 
-async function repos(url_parse: GitHubUrl_Info, octokit: Octokit) {
+export async function repos(url_parse: GitHubUrl_Info, octokit: Octokit) {
   const response = octokit.rest.repos.get({
     owner: url_parse.owner,
     repo: url_parse.repo,
@@ -135,7 +138,7 @@ async function repos(url_parse: GitHubUrl_Info, octokit: Octokit) {
   return response;
 }
 
-function git_clone_promise(
+export function git_clone_promise(
   temp_dir: string,
   url_parse: GitHubUrl_Info
 ): Promise<string> {
@@ -151,7 +154,7 @@ function git_clone_promise(
   });
 }
 
-async function package_json_promise(
+export async function package_json_promise(
   git_repo_path: Promise<string>
 ): Promise<any> {
   const git_path = await git_repo_path;

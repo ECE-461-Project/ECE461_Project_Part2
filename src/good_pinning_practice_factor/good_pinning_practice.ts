@@ -24,9 +24,7 @@ export async function get_good_pinning_practice_score(
     const package_json = await aggregate_file.package_json;
     const check_exists: string | undefined = package_json.dependencies;
     if (check_exists !== null && check_exists !== undefined) {
-      const dependencies = JSON.parse(
-        JSON.stringify(package_json.dependencies)
-      );
+      const dependencies = package_json.dependencies;
 
       let num_dependencies = 0;
       let num_pinned_dependencies = 0;
