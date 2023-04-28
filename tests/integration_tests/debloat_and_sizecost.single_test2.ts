@@ -21,8 +21,7 @@ const query_1: PackageData = {
 
 const package_b_b64 = readFileSync('./tests/integration_tests/test_packages/package_b.zip.b64').toString()
 
-describe('POST /package with debloat comparison, PUT /package/{id} with debloat comparison, POST /sizecost', () => {
-/*
+describe('POST /package with debloat comparison, PUT /package/{id} with debloat comparison', () => {
   test('Debloat on POST /package ', async () => {
 	// Add FULL package to registry
     let result = (await request(app).post('/package')
@@ -93,28 +92,52 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	   	}
 	}
   });
+});
 
+describe('POST /sizecost', () => {
   test('/sizecost endpoint tests', async () => {
 	// NO AUTH, 400
-	let name = ['nodejs-file-downloader'];
+	let name: SizecostInput[] = [{
+		Name: 'nodejs-file-downloader'
+	}];
 	let result = await request(app).post('/sizecost').send(name);
 	expect(result.statusCode).toEqual(400);
 	
 	// NO INPUT, 400
-	let empty_name:string[] = [];
+	let empty_name: SizecostInput[] = [];
 	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(empty_name);
 	expect(result.statusCode).toEqual(400);
 	
 	// BAD INPUT, 400
-	let bad_name = [4];
-	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(bad_name);
+	let num_in = [4];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(num_in);
+	expect(result.statusCode).toEqual(400);
+	
+	// BAD INPUT, 400
+	let two_in_one_arr_entry = [{
+		Name: 'nodejs-file-downloader',
+		Content: package_b_b64,
+	}];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(two_in_one_arr_entry);
+	expect(result.statusCode).toEqual(400);
+	
+	// BAD CONTENT INPUT, 400
+	let bad_content = [{
+		Content: 'flop',
+	}];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(bad_content);
+	expect(result.statusCode).toEqual(400);
+	
+	// BAD CONTENT INPUT, 400
+	let bad_url = [{
+		URL: 'flop',
+	}];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(bad_url);
 	expect(result.statusCode).toEqual(400);
   });
-*/
 
   
   test('/sizecost test all input types', async () => {
-
 	// nodejs-file-downloader in package_b should be size cost > 0
 	// let name = ['nodejs-file-downloader'];
 	let name: SizecostInput[] = [{
@@ -247,6 +270,22 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	expect(result.body).toHaveProperty('size');
 	expect(result.body.size).toBe(0);
   });
+  
+  test('/sizecost test post DELETE', async () => {
+	// now delete nodejs-file-downloader
+    let  result = await request(app).delete('/package/byName/nodejs-file-downloader').set('X-Authorization', `bearer ${token}`);
+    expect(result.statusCode).toEqual(200);
+    
+    // now that nodejs-file-downloader in package_b is deleted, should be size cost  > 0
+	let name: SizecostInput[] = [{
+		Name: 'nodejs-file-downloader'
+	}];
+	result = await request(app).post('/sizecost').set('X-Authorization', `bearer ${token}`).send(name);
+	expect(result.statusCode).toEqual(200);
+	expect(result.body).toHaveProperty('names');
+	expect(result.body).toHaveProperty('size');
+	expect(result.body.size).toBeGreaterThan(0);
+  });
 
   test('/sizecost 2 pkgs zero shared transitive dependencies', async () => {
 	// For packages NOT in database OR in dependencies list, should have net size cost equal to their sum
@@ -330,5 +369,4 @@ describe('POST /package with debloat comparison, PUT /package/{id} with debloat 
 	let net_size_cost = result.body.size;
 	expect(net_size_cost).toBeLessThan(express_size_cost + cloudinary_size_cost);
   });
-
 });

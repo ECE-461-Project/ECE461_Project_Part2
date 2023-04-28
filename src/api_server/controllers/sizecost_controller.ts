@@ -189,10 +189,18 @@ export async function get_size_cost(req: Request, res: Response) {
     for (let i = 0; i < input.length; i++) {
       globalThis.logger?.debug(`Looping: input[${i}]`);
       let name = '';
-      if (input[i].Name !== undefined) {
+      if (
+        input[i].Name !== undefined &&
+        input[i].URL === undefined &&
+        input[i].Content === undefined
+      ) {
         globalThis.logger?.debug('/sizecost input type Name');
         name = input[i].Name;
-      } else if (input[i].URL !== undefined) {
+      } else if (
+        input[i].URL !== undefined &&
+        input[i].Name === undefined &&
+        input[i].Content === undefined
+      ) {
         globalThis.logger?.debug('/sizecost input type URL');
         if (check_if_npm(input[i].URL)) {
           name = get_npm_package_name(input[i].URL);
@@ -207,7 +215,11 @@ export async function get_size_cost(req: Request, res: Response) {
           }
           delete_dir(tmp);
         }
-      } else if (input[i].Content !== undefined) {
+      } else if (
+        input[i].Content !== undefined &&
+        input[i].Name === undefined &&
+        input[i].URL === undefined
+      ) {
         globalThis.logger?.debug('/sizecost input type Content');
         const tmp = await create_tmp();
         const check = await unzip_base64_to_dir(input[i].Content, tmp);
