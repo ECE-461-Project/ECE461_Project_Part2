@@ -7,9 +7,16 @@ import {
   dependentPackageSize,
 } from '../db_connector';
 import {PackageName, PackageSizeReturn, SizecostInput} from '../models/models';
-import {create_tmp, delete_dir} from '../../git_clone';
+import {create_tmp, delete_dir, git_clone} from '../../git_clone';
 import {run_cmd} from '../../sub_process_help';
 import {join} from 'path';
+import {
+  check_if_npm,
+  check_if_github,
+  get_npm_package_name,
+} from '../../url_parser';
+import {unzip_base64_to_dir} from '../zip_files';
+import {find_name_from_packagejson} from '../get_files';
 
 export async function npm_compute_optional_update_package_name(
   names: PackageName[],
@@ -187,17 +194,43 @@ export async function get_size_cost(req: Request, res: Response) {
         name = input[i].Name;
       } else if (input[i].URL !== undefined) {
         globalThis.logger?.debug('/sizecost input type URL');
-        name = 'url-parser';
+        if (check_if_npm(input[i].URL)) {
+          name = get_npm_package_name(input[i].URL);
+        } else if (check_if_github(input[i].URL)) {
+          const tmp = await create_tmp();
+          const check = await git_clone(tmp, input[i].URL);
+          if (check !== false) {
+            const name_val = await find_name_from_packagejson(tmp);
+            if (name_val !== undefined) {
+              name = name_val;
+            }
+          }
+          delete_dir(tmp);
+        }
       } else if (input[i].Content !== undefined) {
         globalThis.logger?.debug('/sizecost input type Content');
-        name = 'b64-content';
+        const tmp = await create_tmp();
+        const check = await unzip_base64_to_dir(input[i].Content, tmp);
+        if (check !== undefined) {
+          const name_val = await find_name_from_packagejson(tmp);
+          if (name_val !== undefined) {
+            name = name_val;
+          }
+        }
+        delete_dir(tmp);
       } else {
         globalThis.logger?.error('/sizecost input type none set!!! error');
         res.status(400).send();
         return;
       }
-
       globalThis.logger?.debug(`/sizecost name decided ${name}`);
+      if (name === '') {
+        globalThis.logger?.error(
+          '/sizecost could not find name on an input!!! error'
+        );
+        res.status(400).send();
+        return;
+      }
 
       const found = await packages.findOne({
         where: {PackageName: name},
@@ -209,8 +242,11 @@ export async function get_size_cost(req: Request, res: Response) {
         names_arr.push(name);
       }
     }
+
     if (names_arr.length === 0) {
-      globalThis.logger?.info('/sizecost all alr uploaded, 0');
+      globalThis.logger?.info(
+        '/sizecost all alr uploaded or no valid names, 0'
+      );
       const ret1: PackageSizeReturn = {
         names: input.join(),
         size: 0,
@@ -230,6 +266,7 @@ export async function get_size_cost(req: Request, res: Response) {
       size: size_cost,
     };
     if (size_cost === -1) {
+      globalThis.logger?.error('Size cost failed on the function to du');
       res.status(400).send();
       return;
     }
