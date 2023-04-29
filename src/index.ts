@@ -7,73 +7,82 @@ async function main() {
   const args = process.argv.slice(2);
   globalThis.logger?.debug(`main args: ${args}`);
 
-  let temp_dir = await create_tmp();
-  // All scores out at same time
-  let score_list_resolved = await get_scores_from_url(
-    'https://github.com/jashkenas/underscore',
-    temp_dir
-  );
-  delete_dir(temp_dir);
-  console.log(score_list_resolved);
+  if (args.length === 1) {
+    const tmp = await create_tmp();
+    // All scores out at same time
+    const score_list_resolved1 = await get_scores_from_url(args[0], tmp);
+    delete_dir(tmp);
+    console.log(score_list_resolved1);
 
-  temp_dir = await create_tmp();
-  // All scores out at same time
-  score_list_resolved = await get_scores_from_url(
-    'https://github.com/cloudinary/cloudinary_npm',
-    temp_dir
-  );
-  delete_dir(temp_dir);
-  console.log(score_list_resolved);
+  } else if (args.length === 0) {
+    let temp_dir = await create_tmp();
+    // All scores out at same time
+    let score_list_resolved = await get_scores_from_url(
+      'https://github.com/jashkenas/underscore',
+      temp_dir
+    );
+    delete_dir(temp_dir);
+    console.log(score_list_resolved);
 
-  temp_dir = await create_tmp();
-  // All scores out at same time
-  score_list_resolved = await get_scores_from_url(
-    'https://www.npmjs.com/package/express',
-    temp_dir
-  );
-  delete_dir(temp_dir);
+    temp_dir = await create_tmp();
+    // All scores out at same time
+    score_list_resolved = await get_scores_from_url(
+      'https://github.com/cloudinary/cloudinary_npm',
+      temp_dir
+    );
+    delete_dir(temp_dir);
+    console.log(score_list_resolved);
 
-  console.log(score_list_resolved);
+    temp_dir = await create_tmp();
+    // All scores out at same time
+    score_list_resolved = await get_scores_from_url(
+      'https://www.npmjs.com/package/express',
+      temp_dir
+    );
+    delete_dir(temp_dir);
 
-  temp_dir = await create_tmp();
-  // All scores out at same time
-  score_list_resolved = await get_scores_from_url(
-    'https://github.com/nullivex/nodist',
-    temp_dir
-  );
-  delete_dir(temp_dir);
+    console.log(score_list_resolved);
 
-  console.log(score_list_resolved);
+    temp_dir = await create_tmp();
+    // All scores out at same time
+    score_list_resolved = await get_scores_from_url(
+      'https://github.com/nullivex/nodist',
+      temp_dir
+    );
+    delete_dir(temp_dir);
 
-  temp_dir = await create_tmp();
-  // All scores out at same time
-  score_list_resolved = await get_scores_from_url(
-    'https://github.com/lodash/lodash',
-    temp_dir
-  );
-  delete_dir(temp_dir);
+    console.log(score_list_resolved);
 
-  console.log(score_list_resolved);
+    temp_dir = await create_tmp();
+    // All scores out at same time
+    score_list_resolved = await get_scores_from_url(
+      'https://github.com/lodash/lodash',
+      temp_dir
+    );
+    delete_dir(temp_dir);
 
-  temp_dir = await create_tmp();
-  // All scores out at same time
-  score_list_resolved = await get_scores_from_url(
-    'https://www.npmjs.com/package/browserify',
-    temp_dir
-  );
-  delete_dir(temp_dir);
+    console.log(score_list_resolved);
 
-  console.log(score_list_resolved);
+    temp_dir = await create_tmp();
+    // All scores out at same time
+    score_list_resolved = await get_scores_from_url(
+      'https://www.npmjs.com/package/browserify',
+      temp_dir
+    );
+    delete_dir(temp_dir);
 
-  temp_dir = await create_tmp();
-  // All scores out at same time
-  score_list_resolved = await get_scores_from_url(
-    'https://github.com/jashkenas/underscore',
-    temp_dir
-  );
-  delete_dir(temp_dir);
+    console.log(score_list_resolved);
 
-  console.log(score_list_resolved);
+    temp_dir = await create_tmp();
+    // All scores out at same time
+    score_list_resolved = await get_scores_from_url(
+      'https://github.com/jashkenas/underscore',
+      temp_dir
+    );
+    delete_dir(temp_dir);
+
+    console.log(score_list_resolved);
+  }
 }
 
 main();
