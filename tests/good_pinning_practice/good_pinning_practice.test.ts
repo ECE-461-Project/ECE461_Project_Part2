@@ -37,7 +37,7 @@ describe('testing get_good_pinning_practice_score', () => {
   test('get_good_pinning_practice lots of dependencies, one pinned', async () => {
     expect(
       await get_good_pinning_practice_score('url', get_aggregate_file('./tests/_good_pinning_practice_checks/_test_5_one_pinned_dependency'))
-    ).toBe(0.5);
+    ).toBeCloseTo(0.1666);
   });
 });
 

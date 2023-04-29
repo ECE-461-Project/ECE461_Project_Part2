@@ -81,7 +81,7 @@ export async function fetch_score_with_graphql_data(
     query_result = await graphql({
       query: `query PR_TOTCOMMIT_Query($owner: String!, $repo: String!) {
   repository(owner: $owner, name: $repo) {
-    object(expression: "master") {
+    object(expression: "HEAD") {
       ... on Commit {
         history {
           totalCount

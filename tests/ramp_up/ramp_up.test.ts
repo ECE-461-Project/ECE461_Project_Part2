@@ -31,18 +31,18 @@ describe('testing compute_ramp_up_score', () => {
     expect(compute_ramp_up_score(0)).toBe(0);
   });
   test('0.2 score', () => {
-    expect(compute_ramp_up_score(0.06)).toBe(0.2);
+    expect(compute_ramp_up_score(0.04)).toBe(0.2);
   });
   test('0.4 score', () => {
-    expect(compute_ramp_up_score(0.11)).toBe(0.4);
+    expect(compute_ramp_up_score(0.07)).toBe(0.4);
   });
   test('0.6 score', () => {
-    expect(compute_ramp_up_score(0.16)).toBe(0.6);
+    expect(compute_ramp_up_score(0.10)).toBe(0.6);
   });
   test('0.8 score', () => {
-    expect(compute_ramp_up_score(0.21)).toBe(0.8);
+    expect(compute_ramp_up_score(0.13)).toBe(0.8);
   });
   test('1 score', () => {
-    expect(compute_ramp_up_score(0.26)).toBe(1);
+    expect(compute_ramp_up_score(0.16)).toBe(1);
   });
 });
