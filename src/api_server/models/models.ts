@@ -102,19 +102,19 @@ export interface PackageData {
    * @type {string}
    * @memberof PackageData
    */
-  Content?: string;
+  Content?: string | null;
   /**
    * Package URL (for use in public ingest).
    * @type {string}
    * @memberof PackageData
    */
-  URL?: string;
+  URL?: string | null;
   /**
    * A JavaScript program (for use with sensitive modules).
    * @type {string}
    * @memberof PackageData
    */
-  JSProgram?: string;
+  JSProgram?: string | null;
 }
 /**
  *

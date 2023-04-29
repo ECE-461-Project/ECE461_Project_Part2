@@ -652,12 +652,15 @@ components:
 
             See https://docs.npmjs.com/cli/v7/configuring-npm/package-json#homepage.
           type: string
+          nullable: true
         URL:
           description: Package URL (for use in public ingest).
           type: string
+          nullable: true
         JSProgram:
           description: A JavaScript program (for use with sensitive modules).
           type: string
+          nullable: true
     SizecostInput:
       description: |-
         This is a "union" type.

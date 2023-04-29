@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import express = require('express');
 import bodyParser = require('body-parser');
 const morganBody = require('morgan-body');
+import {StreamOptions} from 'morgan';
 import {join, resolve} from 'path';
 import OpenApiValidator = require('express-openapi-validator');
 import {morgan} from './middleware/morgan_tokens';
@@ -39,13 +40,24 @@ const port = process.env.EXPRESS_PORT;
 // Express initialization
 const app: Express = express();
 
-// must parse body before morganBody as body will be logged
-app.use(bodyParser.json());
-// hook morganBody to express app
-morganBody(app);
-
+// set up part 1 logging
+create_logger();
 // Set up logging using Morgan to stdout
+// Set up streaming for setting debug for Morgan-Body parsing
+// https://dev.to/vassalloandrea/better-logs-for-expressjs-using-winston-and-morgan-with-typescript-516n
+const streamLogs: StreamOptions = {
+  write: message => globalThis.logger?.debug(message),
+};
+
 if (process.env.PRODUCTION) {
+  // must parse body before morganBody as body will be logged
+  app.use(bodyParser.json());
+  // hook morganBody to express app
+  morganBody(app, {
+    noColors: true,
+    prettify: false,
+    stream: streamLogs,
+  });
   app.use(
     morgan((tokens, req, res) => {
       return JSON.stringify({
@@ -62,6 +74,13 @@ if (process.env.PRODUCTION) {
     })
   );
 } else {
+  // must parse body before morganBody as body will be logged
+  app.use(bodyParser.json());
+  // hook morganBody to express app
+  morganBody(app, {
+    prettify: false,
+    stream: streamLogs,
+  });
   app.use(
     morgan((tokens, req, res) => {
       return JSON.stringify({
@@ -78,9 +97,6 @@ if (process.env.PRODUCTION) {
     })
   );
 }
-
-// set up part 1 logging
-create_logger();
 
 // Set up body parsers middleware
 app.use(express.json());
