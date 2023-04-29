@@ -6,8 +6,22 @@ const bearer = 'bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUg
 //                        FIX THE HTTP SEARCH                         //
 ////////////////////////////////////////////////////////////////////////
 
-function packageSearch(){
-
+async function packageSearch(){
+    try {
+      newurl = url + 'package/byName/' + document.getElementById('searchbar').value;
+      const response = await(fetch(newurl, {
+        headers: {
+            'X-Authorization': bearer,
+            'Content-Type': 'application/json'
+        }
+      }));
+      items = response;
+      document.getElementById("return").innerHTML = items;
+    } catch (err) {
+      items = err;
+      document.getElementById("return").innerHTML = items;
+    }
+    /*
     newurl = url + 'package/byName/' + document.getElementById('searchbar').value + '/';
     var items;
     fetch(newurl, {
@@ -18,15 +32,15 @@ function packageSearch(){
             'Authorization': bearer,
             'Content-Type': 'application/json'
         }
-    }).then(responseJson => {
-        items = JSON.parse(responseJson._bodyInit);
+    }).then(response => {
+        items = response;
+        document.getElementById("return").innerHTML = items;
     })
-    .catch(error => this.setState({
-        isLoading: false,
-        message: 'Something bad happened ' + error
-    }));
-    document.getElementById("return").innerHTML = items;
-    
+    .catch(error => {
+        items = error;
+        document.getElementById("return").innerHTML = items;
+    });
+    */
 }
 ////////////////////////////////////////////////////////////////////////
 //                          PACKAGE UPLOAD                            //
@@ -43,8 +57,6 @@ function packageUpload(){
             "Content": document.getElementById("content").value,
             "JSProgram": document.getElementById("js").value
         },
-        withCredentials: true,
-        credentials: 'include',
         headers: {
             'Authorization': bearer,
             'Content-Type': 'application/json'
