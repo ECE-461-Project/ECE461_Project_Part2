@@ -39,13 +39,15 @@ const port = process.env.EXPRESS_PORT;
 // Express initialization
 const app: Express = express();
 
-// must parse body before morganBody as body will be logged
-app.use(bodyParser.json());
-// hook morganBody to express app
-morganBody(app);
-
 // Set up logging using Morgan to stdout
 if (process.env.PRODUCTION) {
+  // must parse body before morganBody as body will be logged
+  app.use(bodyParser.json());
+  // hook morganBody to express app
+  morganBody(app, {
+    noColors: true,
+    prettify: false,
+  });
   app.use(
     morgan((tokens, req, res) => {
       return JSON.stringify({
@@ -62,6 +64,12 @@ if (process.env.PRODUCTION) {
     })
   );
 } else {
+  // must parse body before morganBody as body will be logged
+  app.use(bodyParser.json());
+  // hook morganBody to express app
+  morganBody(app, {
+    prettify: false,
+  });
   app.use(
     morgan((tokens, req, res) => {
       return JSON.stringify({
