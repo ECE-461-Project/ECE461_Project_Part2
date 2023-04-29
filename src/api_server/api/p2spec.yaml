@@ -21,7 +21,22 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/PackageName'
+                $ref: '#/components/schemas/SizecostInput'
+            examples:
+              ExampleRequestWithContent:
+                value:
+                  - Content: UEsDBBQAAAAIANybilZ9HJ7PAwIAADcFAAAMABwAcGFja2FnZS5qc29uVVQJAAMwnDRkMJw0ZHV4CwABBOgDAAAE6AMAAJ1UsW7bMBDd/RWExqKiIjm2i0wtmqUdunRsaoCmzhYdiRRIKrYb5N97JEVJcdUMmQTee/d49+6o5wUhiWQNJHf4VSUcTboXNaSlOslasRJ08tFxnkAboaSj3dI8pzchXILhWrS2h74Ql0zGZLJXmvxA3e8mJDRMeOb9QKHHHgpKBtFnPGLAgrGO2yheMfKBunNk93Aa9QLHnWZpVjSguolaH0g5kxzqmrkOZjO5krzTGiS/jNmT4GzSiVleRUsbJUmawhk4eUhk2xBHeUgS5L/4xh/hclK6dJ3/CiJX7mPkytdp+HpWJE7y9el6NDPof5TeyvwnD6HfvivW2UppZ4LYaVV+WoYp14KDNH7fvv38GreoBVmimwIm49+rulanVEMpNHC/GMk2p/mK5rGCytrWpK1W50vKDiD9gLcretPvp1s4HHRqLy2E/ILmtNhE0DAprPgDfufjM8A71nQ5jqeEp/vZAj972ezYr+m2WNGCFlG7R51JQXWDZRVD6XBusamQt0ZkCmgwoVp8apsR8bsXtFBpbFEq/hjCSxS6jWEtGs32HnDxoTDTtaDj29qu0ZBJs5VqoEUrHebdvcuyg7BVt6NcNVk/yuytX8WuO0xM6nT9Lq1MGNOh20NlGlplhFX6MvlDoMVOHVVjd++9jzqN4TIUFtK3Mf1T2ZLiGi5eFn8BUEsBAh4DFAAAAAgA3JuKVn0cns8DAgAANwUAAAwAGAAAAAAAAQAAALSBAAAAAHBhY2thZ2UuanNvblVUBQADMJw0ZHV4CwABBOgDAAAE6AMAAFBLBQYAAAAAAQABAFIAAABJAgAAAAA=
+              ExampleRequestWithURL:
+                value:
+                  - URL: https://github.com/cloudinary/cloudinary_npm
+              ExampleRequestWithName:
+                value:
+                  - Name: underscore
+              ExampleRequestWithMultipleInputs:
+                value:
+                  - Name: underscore
+                  - URL: https://github.com/cloudinary/cloudinary_npm
+                  - Content: UEsDBBQAAAAIANybilZ9HJ7PAwIAADcFAAAMABwAcGFja2FnZS5qc29uVVQJAAMwnDRkMJw0ZHV4CwABBOgDAAAE6AMAAJ1UsW7bMBDd/RWExqKiIjm2i0wtmqUdunRsaoCmzhYdiRRIKrYb5N97JEVJcdUMmQTee/d49+6o5wUhiWQNJHf4VSUcTboXNaSlOslasRJ08tFxnkAboaSj3dI8pzchXILhWrS2h74Ql0zGZLJXmvxA3e8mJDRMeOb9QKHHHgpKBtFnPGLAgrGO2yheMfKBunNk93Aa9QLHnWZpVjSguolaH0g5kxzqmrkOZjO5krzTGiS/jNmT4GzSiVleRUsbJUmawhk4eUhk2xBHeUgS5L/4xh/hclK6dJ3/CiJX7mPkytdp+HpWJE7y9el6NDPof5TeyvwnD6HfvivW2UppZ4LYaVV+WoYp14KDNH7fvv38GreoBVmimwIm49+rulanVEMpNHC/GMk2p/mK5rGCytrWpK1W50vKDiD9gLcretPvp1s4HHRqLy2E/ILmtNhE0DAprPgDfufjM8A71nQ5jqeEp/vZAj972ezYr+m2WNGCFlG7R51JQXWDZRVD6XBusamQt0ZkCmgwoVp8apsR8bsXtFBpbFEq/hjCSxS6jWEtGs32HnDxoTDTtaDj29qu0ZBJs5VqoEUrHebdvcuyg7BVt6NcNVk/yuytX8WuO0xM6nT9Lq1MGNOh20NlGlplhFX6MvlDoMVOHVVjd++9jzqN4TIUFtK3Mf1T2ZLiGi5eFn8BUEsBAh4DFAAAAAgA3JuKVn0cns8DAgAANwUAAAwAGAAAAAAAAQAAALSBAAAAAHBhY2thZ2UuanNvblVUBQADMJw0ZHV4CwABBOgDAAAE6AMAAFBLBQYAAAAAAQABAFIAAABJAgAAAAA=
         required: true
       responses:
         "200":
@@ -34,14 +49,14 @@ paths:
                   value:
                   - names: underscore, lodash
                     size: 12800
-          description: Net size cost of all input packages
+          description: Net size cost of all input packages in bytes
         "400":
           description: "There is missing field(s) in the SizeCost Query of package names/AuthenticationToken
             \ or it is formed improperly, or the AuthenticationToken is invalid."  
       summary: Get the "what if" size cost of introducing the package to the registry.
       description: |-
         Get the size cost (in bytes) of introducing the package to the registry.
-        Accepts array input of PackageNames (must be npm, public, lowercase, not internal)
+        Accepts array input of SizecostInput objs (Either Content, URL, or public package name like cloudinary)
         Includes the size cost of transitive dependencies, if already in registry, not double counted.      
     parameters:
     - name: X-Authorization
@@ -637,12 +652,35 @@ components:
 
             See https://docs.npmjs.com/cli/v7/configuring-npm/package-json#homepage.
           type: string
+          nullable: true
         URL:
           description: Package URL (for use in public ingest).
           type: string
+          nullable: true
         JSProgram:
           description: A JavaScript program (for use with sensitive modules).
           type: string
+          nullable: true
+    SizecostInput:
+      description: |-
+        This is a "union" type.
+        - Either Content, URL, or Name MUST be set for the /sizecost input to work.
+      type: object
+      properties:
+        Content:
+          description: |-
+            Package contents. This is the zip file uploaded by the user. (Encoded as text using a Base64 encoding).
+
+            This will be a zipped version of an npm package's GitHub repository, minus the ".git/" directory." It will, for example, include the "package.json" file that can be used to retrieve the project homepage.
+
+            See https://docs.npmjs.com/cli/v7/configuring-npm/package-json#homepage.
+          type: string
+        URL:
+          description: Package URL (for use in public ingest).
+          type: string
+        Name:
+          description: name of a public NPM hosted package (just cloudinary, for example)
+          $ref: '#/components/schemas/PackageName'
     User:
       description: ""
       required:

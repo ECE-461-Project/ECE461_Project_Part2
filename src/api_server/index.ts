@@ -1,9 +1,12 @@
 import {Express, Request, Response, NextFunction} from 'express';
 import * as dotenv from 'dotenv';
 import express = require('express');
+import bodyParser = require('body-parser');
+const morganBody = require('morgan-body');
+import {StreamOptions} from 'morgan';
 import {join, resolve} from 'path';
 import OpenApiValidator = require('express-openapi-validator');
-import morgan = require('morgan');
+import {morgan} from './middleware/morgan_tokens';
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 import sizecost = require('./routes/sizecost');
@@ -14,6 +17,7 @@ import pack = require('./routes/package');
 import {create_logger} from '../logging_setup';
 import {verifyToken} from './middleware/authorize';
 import {sequelize, users} from './db_connector';
+const cors = require('cors');
 
 // Environment Setup
 dotenv.config({
@@ -37,8 +41,24 @@ const port = process.env.EXPRESS_PORT;
 // Express initialization
 const app: Express = express();
 
+// set up part 1 logging
+create_logger();
 // Set up logging using Morgan to stdout
+// Set up streaming for setting debug for Morgan-Body parsing
+// https://dev.to/vassalloandrea/better-logs-for-expressjs-using-winston-and-morgan-with-typescript-516n
+const streamLogs: StreamOptions = {
+  write: message => globalThis.logger?.debug(message),
+};
+
 if (process.env.PRODUCTION) {
+  // must parse body before morganBody as body will be logged
+  app.use(bodyParser.json());
+  // hook morganBody to express app
+  morganBody(app, {
+    noColors: true,
+    prettify: false,
+    stream: streamLogs,
+  });
   app.use(
     morgan((tokens, req, res) => {
       return JSON.stringify({
@@ -49,16 +69,35 @@ if (process.env.PRODUCTION) {
           status: tokens['status'](req, res),
           response_time: tokens['response-time'](req, res),
           content_length: tokens['res'](req, res, 'content-length'),
+          input: tokens['input'](req, res),
         },
       });
     })
   );
 } else {
-  app.use(morgan('dev'));
+  // must parse body before morganBody as body will be logged
+  app.use(bodyParser.json());
+  // hook morganBody to express app
+  morganBody(app, {
+    prettify: false,
+    stream: streamLogs,
+  });
+  app.use(
+    morgan((tokens, req, res) => {
+      return JSON.stringify({
+        severity: 'DEBUG',
+        message: {
+          method: tokens['method'](req, res),
+          url: tokens['url'](req, res),
+          status: tokens['status'](req, res),
+          response_time: tokens['response-time'](req, res),
+          content_length: tokens['res'](req, res, 'content-length'),
+          input: tokens['input'](req, res),
+        },
+      });
+    })
+  );
 }
-
-// set up part 1 logging
-create_logger();
 
 // Set up body parsers middleware
 app.use(express.json());
@@ -68,6 +107,9 @@ const spec = join(process.cwd(), 'src', 'api_server', 'api', 'p2spec.yaml');
 const swaggerDocument = YAML.load(spec);
 //app.use('/spec', express.static(spec));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Setup default cors to allow all origins
+app.use(cors());
 
 // Set up OpenApiValidator middleware
 app.use(

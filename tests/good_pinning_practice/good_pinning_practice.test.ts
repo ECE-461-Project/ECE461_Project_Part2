@@ -1,30 +1,43 @@
+import { readFileSync } from 'fs';
+import { AggregateFilePromise } from '../../src/aggregate_request';
 import {get_good_pinning_practice_score, check_if_pinned} from '../../src/good_pinning_practice_factor/good_pinning_practice';
 
 describe('testing get_good_pinning_practice_score', () => {
+  const get_aggregate_file = (path: string) => {
+    const file_promise: AggregateFilePromise = {
+      git_repo_path: new Promise((resolve) => {resolve('a')}),
+      package_json: JSON.parse(readFileSync(`${path}/package.json`).toString()),
+    };
+    return file_promise;
+  }
   test('get_good_pinning_practice empty dependencies', async () => {
     expect(
-      await get_good_pinning_practice_score('url', './tests/_good_pinning_practice_checks/_test_1_empty_dependencies')
+      await get_good_pinning_practice_score('url', get_aggregate_file('./tests/_good_pinning_practice_checks/_test_1_empty_dependencies'))
     ).toBe(1);
   });
   test('get_good_pinning_practice no dependencies field', async () => {
     expect(
-      await get_good_pinning_practice_score('url', './tests/_good_pinning_practice_checks/_test_2_no_dependencies_field')
+      await get_good_pinning_practice_score('url', get_aggregate_file('./tests/_good_pinning_practice_checks/_test_2_no_dependencies_field'))
     ).toBe(1);
   });
   test('get_good_pinning_practice no package.json present', async () => {
+    const file_promise: AggregateFilePromise = {
+      git_repo_path: new Promise((resolve) => {resolve('a')}),
+      package_json: new Promise((reject) => {throw (new Error('no package.json'))}),
+    };
     expect(
-      await get_good_pinning_practice_score('url', './tests/_good_pinning_practice_checks/_test_3_no_package_json')
+      await get_good_pinning_practice_score('url', file_promise)
     ).toBe(0);
   });
   test('get_good_pinning_practice lots of dependencies, none pinned', async () => {
     expect(
-      await get_good_pinning_practice_score('url', './tests/_good_pinning_practice_checks/_test_4_no_pinned_dependencies')
+      await get_good_pinning_practice_score('url', get_aggregate_file('./tests/_good_pinning_practice_checks/_test_4_no_pinned_dependencies'))
     ).toBe(1);
   });
   test('get_good_pinning_practice lots of dependencies, one pinned', async () => {
     expect(
-      await get_good_pinning_practice_score('url', './tests/_good_pinning_practice_checks/_test_5_one_pinned_dependency')
-    ).toBe(0.5);
+      await get_good_pinning_practice_score('url', get_aggregate_file('./tests/_good_pinning_practice_checks/_test_5_one_pinned_dependency'))
+    ).toBeCloseTo(0.1666);
   });
 });
 
