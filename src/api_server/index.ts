@@ -98,7 +98,6 @@ if (process.env.PRODUCTION) {
   );
 }
 
-
 // Set up body parsers middleware
 app.use(express.json());
 
