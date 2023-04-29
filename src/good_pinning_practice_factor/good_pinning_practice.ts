@@ -6,7 +6,7 @@ import {AggregateFilePromise} from '../aggregate_request';
 export function check_if_pinned(dependency_version: string): boolean {
   // figure out if tilde patching is valid spec
   // figure out if 1.2.x is valid spec (is probably, this regex does not do this)
-  globalThis.logger?.debug(`check_if_pinned: ${dependency_version}`);
+  // globalThis.logger?.debug(`check_if_pinned: ${dependency_version}`);
   const pinned_regex =
     /^~?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]|x\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
   const match = dependency_version.match(pinned_regex);

@@ -41,15 +41,15 @@ async function get_ratio(repoName: string): Promise<number> {
 
 export function compute_ramp_up_score(ratio_lines: number): number {
   let commentScore = 0;
-  if (ratio_lines > 0.25) {
+  if (ratio_lines > 0.15) {
     commentScore = 1;
-  } else if (ratio_lines > 0.2) {
+  } else if (ratio_lines > 0.12) {
     commentScore = 0.8;
-  } else if (ratio_lines > 0.15) {
+  } else if (ratio_lines > 0.09) {
     commentScore = 0.6;
-  } else if (ratio_lines > 0.1) {
+  } else if (ratio_lines > 0.06) {
     commentScore = 0.4;
-  } else if (ratio_lines > 0.05) {
+  } else if (ratio_lines > 0.03) {
     commentScore = 0.2;
   } else {
     commentScore = 0;
