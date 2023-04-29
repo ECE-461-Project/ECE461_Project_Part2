@@ -17,6 +17,7 @@ import pack = require('./routes/package');
 import {create_logger} from '../logging_setup';
 import {verifyToken} from './middleware/authorize';
 import {sequelize, users} from './db_connector';
+const cors = require('cors');
 
 // Environment Setup
 dotenv.config({
@@ -106,6 +107,9 @@ const spec = join(process.cwd(), 'src', 'api_server', 'api', 'p2spec.yaml');
 const swaggerDocument = YAML.load(spec);
 //app.use('/spec', express.static(spec));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Setup default cors to allow all origins
+app.use(cors());
 
 // Set up OpenApiValidator middleware
 app.use(
