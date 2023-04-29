@@ -1,5 +1,7 @@
-// src/routes/index.ts
-import { Router } from "express";
+import express = require('express');
+export const router = express.Router();
+
+
 import {
   signup,
   updateUser,
@@ -7,11 +9,8 @@ import {
   getUserAuthInfo,
 } from "../controllers/user_controller";
 
-const router = Router();
 
-router.post("/signup", signup);
-router.post("/updateUser", updateUser);
-router.post("/deleteUser", deleteUser);
-router.post("/getUserAuthInfo", getUserAuthInfo);
-
-export default router;
+router.post("/", signup);
+router.post("/", updateUser);
+router.post("/", deleteUser);
+router.post("/", getUserAuthInfo);

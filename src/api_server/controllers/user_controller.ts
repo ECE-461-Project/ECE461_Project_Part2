@@ -1,39 +1,35 @@
 // src/controllers/index.ts
 import { Request, Response } from "express";
-import { User } from "../models/user";
+import { users } from "../db_connector";
 
-export const signup = async (req: Request, res: Response) => {
+export async function signup (req: Request, res: Response) {
   try {
     const { adminUsername, adminPassword, newUser } = req.body;
 
-    // You may want to implement an authentication check for adminUsername and adminPassword here
     if (!(await isAdmin(adminUsername, adminPassword))) {
       res.status(403).json({ message: "Unauthorized" });
       return;
     }
 
-    const user = await User.create(newUser);
+    const user = await users.create(newUser);
 
     res.status(200).json({
       message: "User created successfully",
-      user,
     });
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({
         message: "Error creating user",
-        error: error.message,
       });
     } else {
       res.status(400).json({
         message: "Error creating user",
-        error: "Unknown error",
       });
     }
   }
 }
 
-export const updateUser = async (req: Request, res: Response) => {
+export async function updateUser (req: Request, res: Response) {
   try {
     const { adminUsername, adminPassword, userId, updatedUserData } = req.body;
 
@@ -43,7 +39,7 @@ export const updateUser = async (req: Request, res: Response) => {
       return;
     }
 
-    const user = await User.findByPk(userId);
+    const user = await users.findByPk(userId);
     if (!user) {
       res.status(400).json({
         message: "User not found",
@@ -72,7 +68,7 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 }
 
-export const deleteUser = async (req: Request, res: Response) => {
+export async function deleteUser (req: Request, res: Response) {
   try {
     const { username, password } = req.body;
 
@@ -82,7 +78,7 @@ export const deleteUser = async (req: Request, res: Response) => {
       return;
     }
 
-    const user = await User.findOne({ where: { username } });
+    const user = await users.findOne({ where: { username } });
     if (!user) {
       res.status(400).json({
         message: "User not found",
@@ -111,7 +107,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 }
   
 
-export const getUserAuthInfo = async (req: Request, res: Response) => {
+export async function getUserAuthInfo (req: Request, res: Response) {
   try {
     const { username, password } = req.body;
 
@@ -121,7 +117,7 @@ export const getUserAuthInfo = async (req: Request, res: Response) => {
       return;
     }
 
-    const user = await User.findOne({ where: { username } });
+    const user = await users.findOne({ where: { username } });
     if (!user) {
       res.status(400).json({
         message: "User not found",
@@ -130,13 +126,13 @@ export const getUserAuthInfo = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({
-      UserID: user.id,
-      Username: user.username,
-      UserPassword: user.password,
-      Permissions: user.permissions,
-      UserGroups: user.userGroups,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      UserID: user.UserID,
+      Username: user.Username,
+      UserPassword: user.UserPassword,
+      Permissions: user.Permissions,
+      UserGroups: user.UserGroups,
+      //createdAt: user.,
+      //updatedAt: user.updatedAt,
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -155,8 +151,8 @@ export const getUserAuthInfo = async (req: Request, res: Response) => {
 
 export const isAdmin = async (username: string, password: string): Promise<boolean> => {
   try {
-    const user = await User.findOne({ where: { username } });
-    if (user && user.password === password && user.permissions === "admin") {
+    const user = await users.findOne({ where: { username } });
+    if (user && user.UserPassword === password && user.Permissions.isAdmin === true) {
       return true;
     }
     return false;
