@@ -368,17 +368,20 @@ export async function package_id_put(req: Request, res: Response) {
       res.contentType('application/json').status(400).send();
       return;
     }
-    const content: string | undefined = pdata.Content;
-    const url_in: string | undefined = pdata.URL;
+    const content: string | null | undefined = pdata.Content;
+    const url_in: string | null | undefined = pdata.URL;
     globalThis.logger?.debug(content);
     globalThis.logger?.debug(url_in);
     // we are not implementing the JSProgram
-    if (content !== undefined && url_in !== undefined) {
-      globalThis.logger?.info('PackageData input has BOTH url and content!');
-      res.contentType('application/json').status(400).send();
-      return;
-    } else if (content !== undefined) {
-      package_id_put_content(
+    if (
+      content !== undefined &&
+      content !== null &&
+      (url_in === undefined || url_in === null)
+    ) {
+      globalThis.logger?.debug(
+        'PackageData input has defined, non-null Content, AND url is either undefined or null'
+      );
+      await package_id_put_content(
         req,
         res,
         mdata,
@@ -388,11 +391,28 @@ export async function package_id_put(req: Request, res: Response) {
         debloat_arg
       );
       return;
-    } else if (url_in !== undefined) {
-      package_id_put_url(req, res, mdata, pdata, result, url_in, debloat_arg);
+    } else if (
+      url_in !== undefined &&
+      url_in !== null &&
+      (content === undefined || content === null)
+    ) {
+      globalThis.logger?.debug(
+        'PackageData input has defined, non-null URL, AND content is either undefined or null'
+      );
+      await package_id_put_url(
+        req,
+        res,
+        mdata,
+        pdata,
+        result,
+        url_in,
+        debloat_arg
+      );
       return;
     } else {
-      globalThis.logger?.info('PackageData input does not have Content or URL');
+      globalThis.logger?.info(
+        'PackageData input does not have Content or URL as non-null or defined'
+      );
       res.contentType('application/json').status(400).send();
       return;
     }
@@ -747,17 +767,28 @@ export async function package_post(req: Request, res: Response) {
       debloat_arg = Number(debloat_in);
     }
     const input: PackageData = req.body;
-    const content: string | undefined = input.Content;
-    const url_in: string | undefined = input.URL;
+    const content: string | null | undefined = input.Content;
+    const url_in: string | null | undefined = input.URL;
     globalThis.logger?.debug(content);
     globalThis.logger?.debug(url_in);
     // we are not implementing the JSProgram
-    if (content !== undefined && url_in !== undefined) {
-      globalThis.logger?.info('PackageData input has BOTH url and content!');
-      res.contentType('application/json').status(400).send();
-    } else if (content !== undefined) {
+    if (
+      content !== undefined &&
+      content !== null &&
+      (url_in === undefined || url_in === null)
+    ) {
+      globalThis.logger?.debug(
+        'PackageData input has defined, non-null Content, AND url is either undefined or null'
+      );
       await package_post_content(req, res, input, content, debloat_arg);
-    } else if (url_in !== undefined) {
+    } else if (
+      url_in !== undefined &&
+      url_in !== null &&
+      (content === undefined || content === null)
+    ) {
+      globalThis.logger?.debug(
+        'PackageData input has defined, non-null URL, AND content is either undefined or null'
+      );
       await package_post_url(req, res, input, url_in, debloat_arg);
     } else {
       globalThis.logger?.info('PackageData input does not have Content or URL');
