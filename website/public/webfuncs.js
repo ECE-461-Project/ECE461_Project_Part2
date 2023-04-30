@@ -6,23 +6,25 @@ const bearer = 'bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUg
 //                        FIX THE HTTP SEARCH                         //
 ////////////////////////////////////////////////////////////////////////
 
-async function packageSearch(){
+async function packageSearch() {
     try {
-      newurl = url + 'package/byName/' + document.getElementById('searchbar').value;
-      const response = await(fetch(newurl, {
-        headers: {
-            'X-Authorization': bearer,
-            'Content-Type': 'application/json'
-        }
-      }));
-      items = response;
-      document.getElementById("return").innerHTML = items;
+        regex = document.getElementById("searchbar").value
+        newurl = url + 'package/byRegEx/';
+        var response = await fetch(newurl, {
+            method: 'POST',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'RegEx': regex })
+        })
+        var items = await response.text()
+        document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
     } catch (err) {
-      items = err;
-      document.getElementById("return").innerHTML = items;
+        document.getElementById("return").innerHTML = "Package not found.";
     }
-    /*
-    newurl = url + 'package/byName/' + document.getElementById('searchbar').value + '/';
+
+    /*newurl = url + 'package/byName/' + document.getElementById('searchbar').value + '/';
     var items;
     fetch(newurl, {
         method: 'GET',
@@ -41,15 +43,16 @@ async function packageSearch(){
         document.getElementById("return").innerHTML = items;
     });
     */
+
 }
 ////////////////////////////////////////////////////////////////////////
 //                          PACKAGE UPLOAD                            //
 //  FIX THE HTTP SEARCH AND ADD ALL OF THE RELEVANT FIELDS TO BODY    //
 ////////////////////////////////////////////////////////////////////////
 
-function packageUpload(){
+async function packageUpload() {
 
-    newurl = url + 'package/';
+    /*newurl = url + 'package/';
     var items = "Upload Failed.";
     fetch(newurl, { //Edit the fields in this section
         method: 'POST',
@@ -64,11 +67,35 @@ function packageUpload(){
     }).then(responseJson => {
         items = "Upload Successful."
     })
-    .catch(error => this.setState({
-        isLoading: false,
-        message: 'Something bad happened ' + error
-    }));
-    document.getElementById("return").innerHTML = items;
+        .catch(error => this.setState({
+            isLoading: false,
+            message: 'Something bad happened ' + error
+        }));
+    document.getElementById("return").innerHTML = items;*/
+    try {
+        var localUrl = document.getElementById("url").value
+        var content = document.getElementById("content").value
+        if (content === ""){
+            content = null
+        }
+        if (localUrl === ""){
+            localUrl = null
+        }
+        newurl = url + 'package/';
+        var response = await fetch(newurl, {
+            method: 'POST',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'URL': localUrl, 'Content': content })
+        })
+        var items = await response.text()
+        document.getElementById("return").innerHTML = "Upload Success.";
+        
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -76,36 +103,47 @@ function packageUpload(){
 //  FIX THE HTTP SEARCH AND ADD ALL OF THE RELEVANT FIELDS TO BODY    //
 ////////////////////////////////////////////////////////////////////////
 
-function packageUpdate(){
-
-    newurl = url + 'package/' + document.getElementById('searchBar') + '/';
-    var items = "Update Successful.";
-    fetch(newurl, { 
-        body: {
-            "metadata": {
-                "Name": document.getElementById("name").value,
-                "Version": document.getElementById("version").value,
-                "ID": document.getElementById("ID").value
-            },
-            "data": {
-                "Content": document.getElementById("content").value,
-                "URL": document.getElementById("URL").value,
-                "JSProgram": document.getElementById("JSProgram").value
-            }
-        },
-        method: 'PUT',
-        withCredentials: true,
-        credentials: 'include',
-        headers: {
-            'Authorization': bearer,
-            'Content-Type': 'application/json'
+async function packageUpdate() {
+    try {
+        var name = document.getElementById("name").value;
+        var version = document.getElementById("version").value
+        var ID = document.getElementById("ID").value
+        var content = document.getElementById("content").value
+        var URL = document.getElementById("URL").value
+        if (content === ""){
+            content = null
         }
-    })
-    .catch(error => this.setState({
-        isLoading: false,
-        message: 'Something bad happened ' + error
-    }));
-    document.getElementById("return").innerHTML = items;
+        if (URL === ""){
+            URL = null
+        }
+        if (name === ""){
+            name = null
+        }
+        if (ID === ""){
+            ID = null
+        }
+        if (version === ""){
+            version = null
+        }
+        newurl = url + 'package/' + document.getElementById('ID').value + '/';
+        var response = await fetch(newurl, {
+            method: 'PUT',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'metadata':{'ID': ID, 'Version': version, 'Name': name },'data':{'URL': URL, 'Content': content,}})
+        })
+        if(response.status == 200){
+            var items = await response.text()
+            document.getElementById("return").innerHTML = "Update Success.";
+        }
+        else{
+            document.getElementById("return").innerHTML = "Update Failed. Ensure you have the proper fields filled out.";
+        }
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -113,23 +151,20 @@ function packageUpdate(){
 //                       FIX THE HTTP SEARCH                          //
 ////////////////////////////////////////////////////////////////////////
 
-function systemReset(){
-
-    newurl = url + 'reset/'
-    var items = "System has been reset!";
-    fetch(newurl, { 
-        method: 'DELETE',
-        withCredentials: true,
-        credentials: 'include',
-        headers: {
-            'Authorization': bearer,
-            'Content-Type': 'application/json'
-        }
-    }).catch(error => this.setState({
-        isLoading: false,
-        message: 'Something bad happened ' + error
-    }));
-    document.getElementById("return").innerHTML = items;
+async function systemReset() {
+    try{
+        newurl = url + 'reset'
+        var response = await fetch(newurl, {
+            method: 'DELETE',
+            headers: {
+                'X-Authorization': bearer,
+            },
+        })
+        var items = await response.text()
+        document.getElementById("return").innerHTML = newurl;
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -137,9 +172,9 @@ function systemReset(){
 //                      FIX THE HTTP SEARCH                           //
 ////////////////////////////////////////////////////////////////////////
 
-function packageRate(){
+async function packageRate() {
 
-    newurl = url + 'package/' + document.getElementById('searchbar').value + '/rate/';
+    /*newurl = url + 'package/' + document.getElementById('searchbar').value + '/rate/';
     var items;
     fetch(newurl, {
         method: 'GET',
@@ -152,11 +187,26 @@ function packageRate(){
     }).then(responseJson => {
         items = JSON.parse(responseJson._bodyInit);
     })
-    .catch(error => this.setState({
-        isLoading: false,
-        message: 'Something bad happened ' + error
-    }));
+        .catch(error => this.setState({
+            isLoading: false,
+            message: 'Something bad happened ' + error
+        }));
     document.getElementById("return").innerHTML = items;
+    */
+    try {
+        newurl = url + 'package/' + document.getElementById('searchbar').value + '/rate/';
+        var response = await fetch(newurl, {
+            method: 'GET',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+        })
+        var items = await response.text()
+        document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -164,26 +214,22 @@ function packageRate(){
 //                        FIX THE HTTP SEARCH                         //
 ////////////////////////////////////////////////////////////////////////
 
-function packageDownload(){
+async function packageDownload() {
 
-    newurl = url + 'package/' + document.getElementById('searchbar').value + '/';
-    var items;
-    fetch(newurl, {
-        method: 'GET',
-        withCredentials: true,
-        credentials: 'include',
-        headers: {
-            'Authorization': bearer,
-            'Content-Type': 'application/json'
-        }
-    }).then(responseJson => {
-        items = JSON.parse(responseJson._bodyInit);
-    })
-    .catch(error => this.setState({
-        isLoading: false,
-        message: 'Something bad happened ' + error
-    }));
-    document.getElementById("return").innerHTML = items;
+    try {
+        newurl = url + 'package/' + document.getElementById('searchbar').value + '/';
+        var response = await fetch(newurl, {
+            method: 'GET',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+        })
+        var items = await response.text()
+        document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -191,28 +237,30 @@ function packageDownload(){
 //                        FIX THE HTTP SEARCH                         //
 ////////////////////////////////////////////////////////////////////////
 
-function packageDirect(){
+async function packageDirect() {
 
-    newurl = url + 'packages/';
-    var items;
-    fetch(newurl, {
-        method: 'POST',
-        body: {
-            "Version": document.getElementById("searchbar").value,
-            "Name": document.getElementById("searchbarName").value,
-        },
-        withCredentials: true,
-        credentials: 'include',
-        headers: {
-            'Authorization': bearer,
-            'Content-Type': 'application/json'
+    try {
+        var version = document.getElementById("searchbar").value
+        var name = document.getElementById("searchbarName").value
+        if (version === ""){
+            version = null
         }
-    }).then(responseJson => {
-        items = JSON.parse(responseJson._bodyInit);
-    })
-    .catch(error => this.setState({
-        isLoading: false,
-        message: 'Something bad happened ' + error
-    }));
-    document.getElementById("return").innerHTML = items;
+        if (name === ""){
+            name = null
+        }
+        newurl = url + 'packages/';
+        var response = await fetch(newurl, {
+            method: 'POST',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'Version': version, 'Name': name })
+        })
+        var items = await response.text();
+        document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
+        
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
 }
