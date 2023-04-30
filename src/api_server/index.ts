@@ -20,7 +20,6 @@ import {sequelize, users} from './db_connector';
 import user_router = require('./routes/users');
 const cors = require('cors');
 
-
 // Environment Setup
 dotenv.config({
   path: resolve(process.cwd(), '.env.express'),
@@ -129,7 +128,6 @@ app.use('/reset', [verifyToken, reset.router]);
 app.use('/package', [verifyToken, pack.router]);
 app.use('/sizecost', [verifyToken, sizecost.router]);
 app.use('/user', [verifyToken, user_router.router]);
-
 
 // Basic Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
