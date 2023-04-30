@@ -14,11 +14,7 @@ import pack = require('./routes/package');
 import {create_logger} from '../logging_setup';
 import {verifyToken} from './middleware/authorize';
 import {sequelize, users} from './db_connector';
-import signup = require('./routes/users');
-import updateUser = require('./routes/users');
-import deleteUser = require('./routes/users');
-import getUserAuthInfo = require('./routes/users');
-
+import user_router = require('./routes/users');
 
 // Environment Setup
 dotenv.config({
@@ -89,10 +85,8 @@ app.use('/authenticate', authenticate.router);
 app.use('/reset', [verifyToken, reset.router]);
 app.use('/package', [verifyToken, pack.router]);
 app.use('/sizecost', [verifyToken, sizecost.router]);
-app.use('/signup', [verifyToken, signup.router]);
-app.use('/updateUser', [verifyToken, updateUser.router]);
-app.use('/deleteUser', [verifyToken, deleteUser.router]);
-app.use('/getUserAuthInfo', [verifyToken, getUserAuthInfo.router]);
+app.use('/user', [verifyToken, user_router.router]);
+
 
 // Basic Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
