@@ -233,7 +233,7 @@ async function packageDownload() {
 }
 
 ////////////////////////////////////////////////////////////////////////
-//                          PACKAGE DIRECTORY                          //
+//                          PACKAGE DIRECTORY                         //
 //                        FIX THE HTTP SEARCH                         //
 ////////////////////////////////////////////////////////////////////////
 
@@ -260,6 +260,46 @@ async function packageDirect() {
         var items = await response.text();
         document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
         
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+//                          LOGIN FUNCTION                            //
+//                        FIX THE HTTP SEARCH                         //
+////////////////////////////////////////////////////////////////////////
+
+async function loginFunc() {
+    try {
+        var username = document.getElementById("username").value;
+        var password = document.getElementById("password").value
+        var isAdmin = false
+        if (username === ""){
+            username = null
+        }
+        if (password === ""){
+            password = null
+        }
+        if (username == "ece30861defaultadminuser" && password == "correcthorsebatterystaple123(!__+@**(A'+\"'\"+'\"`;DROP TABLE packages;"){
+            isAdmin = true
+        }
+        newurl = url + 'authenticate/';
+        var response = await fetch(newurl, {
+            method: 'PUT',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'User':{'name': username, 'isAdmin': isAdmin},'Secret':{'password': password}})
+        })
+        if(response.status == 200){
+            //bearer = await response.text()
+            document.getElementById("return").innerHTML = response.text();
+        }
+        else{
+            document.getElementById("return").innerHTML = "Login Failed";
+        }
     } catch (err) {
         document.getElementById("return").innerHTML = err;
     }
