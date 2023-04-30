@@ -1,36 +1,11 @@
-import {get_github_url} from '../url_parser';
-
-const axios = require('axios');
+import {AggregateResponsePromise} from '../aggregate_request';
 
 export async function get_responsiveness_score(
-  github_repo_url: string
+  url: string,
+  aggregate_response: AggregateResponsePromise
 ): Promise<number> {
-  const reg = new RegExp('github\\.com/(.+)/(.+)');
-  const matches = github_repo_url.match(reg);
-  if (matches === null) {
-    return 0;
-  }
-  if (process.env.GITHUB_TOKEN === undefined) {
-    throw new Error('GITHUB_TOKEN is not defined');
-  }
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'bearer ' + process.env.GITHUB_TOKEN,
-      'User-Agent': 'Node',
-    },
-  };
-  const commitsAdr: string =
-    'https://api.github.com/repos/' +
-    matches[1] +
-    '/' +
-    matches[2] +
-    '/commits';
   try {
-    let commitsData: any = 0;
-    await axios.get(commitsAdr, config).then((response: any) => {
-      commitsData = response.data;
-    });
+    const commitsData = (await aggregate_response.commits_list).data;
     let sum = 0;
     let i = 0;
     const time_elapsed = Date.now();
@@ -45,21 +20,23 @@ export async function get_responsiveness_score(
       if (commitsData[i] === undefined) {
         break;
       }
-      const last_commit_date = new Date(commitsData[i].commit.author.date);
-      const utc2 = Date.UTC(
-        last_commit_date.getFullYear(),
-        last_commit_date.getMonth(),
-        last_commit_date.getDate()
-      );
-      const diff_in_days = Math.abs(
-        Math.round((utc2 - utc1) / (1000 * 60 * 60 * 24))
-      );
-      sum = sum + diff_in_days;
+      const date = commitsData[i].commit.author?.date;
+      if (date) {
+        const last_commit_date = new Date(date);
+        const utc2 = Date.UTC(
+          last_commit_date.getFullYear(),
+          last_commit_date.getMonth(),
+          last_commit_date.getDate()
+        );
+        const diff_in_days = Math.abs(
+          Math.round((utc2 - utc1) / (1000 * 60 * 60 * 24))
+        );
+        sum = sum + diff_in_days;
+      }
     }
     const average = sum / (i - 1);
-    globalThis.logger?.debug(`Responsiveness: avg ${average}`);
+    globalThis.logger?.debug(`Responsiveness: avg ${average} for ${url}`);
     if (average <= 90) {
-      globalThis.logger?.debug('Responsiveness score 1');
       return 1;
     } else if (average <= 180) {
       return 0.9;
@@ -85,7 +62,7 @@ export async function get_responsiveness_score(
       return 0;
     }
   } catch (err) {
-    globalThis.logger?.error('Error in get_percent_owner ' + err);
+    globalThis.logger?.error(`Error in responsiveness for ${url} {err}`);
   }
   return 0;
 }

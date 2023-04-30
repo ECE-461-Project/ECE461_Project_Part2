@@ -1,5 +1,6 @@
 import {readFile} from 'fs/promises';
 import {getFiles} from '../api_server/get_files';
+import {AggregateFilePromise} from '../aggregate_request';
 
 async function get_ratio(repoName: string): Promise<number> {
   // Get a list of all files in the repository
@@ -40,15 +41,15 @@ async function get_ratio(repoName: string): Promise<number> {
 
 export function compute_ramp_up_score(ratio_lines: number): number {
   let commentScore = 0;
-  if (ratio_lines > 0.25) {
+  if (ratio_lines > 0.15) {
     commentScore = 1;
-  } else if (ratio_lines > 0.2) {
+  } else if (ratio_lines > 0.12) {
     commentScore = 0.8;
-  } else if (ratio_lines > 0.15) {
+  } else if (ratio_lines > 0.09) {
     commentScore = 0.6;
-  } else if (ratio_lines > 0.1) {
+  } else if (ratio_lines > 0.06) {
     commentScore = 0.4;
-  } else if (ratio_lines > 0.05) {
+  } else if (ratio_lines > 0.03) {
     commentScore = 0.2;
   } else {
     commentScore = 0;
@@ -57,13 +58,15 @@ export function compute_ramp_up_score(ratio_lines: number): number {
 }
 
 export async function get_ramp_up_score(
-  local_repo_path: string
+  url: string,
+  aggregate_file: AggregateFilePromise
 ): Promise<number> {
   try {
+    const local_repo_path = await aggregate_file.git_repo_path;
     const ratio_lines: number = await get_ratio(local_repo_path);
     return compute_ramp_up_score(ratio_lines);
   } catch (err) {
-    globalThis.logger?.error(`RampUp Score calc got error: ${err}`);
+    globalThis.logger?.error(`RampUp Score calc got error for ${url}: ${err}`);
   }
   return 0;
 }

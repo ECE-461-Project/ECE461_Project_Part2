@@ -78,3 +78,21 @@ export async function find_and_read_readme(
   }
   return null;
 }
+
+export async function find_name_from_packagejson(
+  directory: string
+): Promise<string | undefined> {
+  globalThis.logger?.debug(
+    `dir input to find_and_read_package_json ${directory}`
+  );
+  // getFiles changed so it returns files in base directory first
+  for await (const filename of getFiles(directory)) {
+    if (path.basename(filename) === 'package.json') {
+      const strcontent = await readFile(filename);
+      globalThis.logger?.debug(`found package.json: ${filename}`);
+      const strjson = JSON.parse(strcontent.toString());
+      return strjson.name.toString();
+    }
+  }
+  return undefined;
+}
