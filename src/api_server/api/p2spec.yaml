@@ -568,7 +568,7 @@ paths:
         $ref: '#/components/schemas/AuthenticationToken'
       in: header
       required: true
-  /signup:
+  /user/signup:
     post:
       summary: Signup a new user
       requestBody:
@@ -590,7 +590,16 @@ paths:
                     UserPassword:
                       type: string
                     Permissions:
-                      type: string
+                      type: object
+                      properties: 
+                        isAdmin:
+                          type: boolean
+                        upload:
+                          type: boolean
+                        search:
+                          type: boolean
+                        download:
+                          type: boolean
                     UserGroups:
                       type: string
                       nullable: true
@@ -613,7 +622,7 @@ paths:
                 properties:
                   message:
                     type: string
-  /updateUser:
+  /user/updateUser:
     post:
       summary: Update a user
       requestBody:
@@ -663,7 +672,7 @@ paths:
                 properties:
                   message:
                     type: string
-  /deleteUser:
+  /user/deleteUser:
     post:
       summary: Delete a user
       requestBody:
@@ -689,53 +698,6 @@ paths:
                     type: string
         400:
           description: Error deleting user
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-  /getUserAuthInfo:
-    post:
-      summary: Get authentication information for a user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
-      responses:
-        200:
-          description: User authentication information retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  UserID:
-                    type: integer
-                  Username:
-                    type: string
-                  UserPassword:
-                    type: string
-                  Permissions:
-                    type: string
-                  UserGroups:
-                    type: string
-                  createdAt:
-                    type: string
-                    format: date-time
-                  updatedAt:
-                    type: string
-                    format: date-time
-        400:
-          description: Error getting user authentication info
           content:
             application/json:
               schema:
