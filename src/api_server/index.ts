@@ -17,6 +17,7 @@ import pack = require('./routes/package');
 import {create_logger} from '../logging_setup';
 import {verifyToken} from './middleware/authorize';
 import {sequelize, users} from './db_connector';
+import user_router = require('./routes/users');
 const cors = require('cors');
 
 // Environment Setup
@@ -126,6 +127,7 @@ app.use('/authenticate', authenticate.router);
 app.use('/reset', [verifyToken, reset.router]);
 app.use('/package', [verifyToken, pack.router]);
 app.use('/sizecost', [verifyToken, sizecost.router]);
+app.use('/user', [verifyToken, user_router.router]);
 
 // Basic Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
