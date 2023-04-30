@@ -6,11 +6,9 @@ import {
   signup,
   updateUser,
   deleteUser,
-  getUserAuthInfo,
 } from "../controllers/user_controller";
 
 
-router.post("/", signup);
-router.post("/", updateUser);
-router.post("/", deleteUser);
-router.post("/", getUserAuthInfo);
+router.post("/signup", signup);
+router.post("/updateUser", updateUser);
+router.post("/deleteUser", deleteUser);
