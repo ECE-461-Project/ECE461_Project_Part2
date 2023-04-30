@@ -12,7 +12,7 @@ interface Payload {
   ID: string | null;
 }
 export async function packages_list(req: Request, res: Response) {
-  const pa : Payload[] = req.body;
+  const pa: Payload[] = req.body;
 
   try {
     globalThis.logger?.debug(`request parameters: ${req.params.offset}`);
@@ -62,7 +62,7 @@ export async function packages_list(req: Request, res: Response) {
           attributes: ['PackageName', 'VersionNumber', 'PackageID'],
         });
 
-        //Semver matches the request body 
+        //Semver matches the request body
         if (semver.satisfies(matchingPackage?.VersionNumber, Version)) {
           store.push(matchingPackage);
         }
