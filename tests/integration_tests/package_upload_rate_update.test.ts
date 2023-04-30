@@ -52,7 +52,7 @@ describe('POST /package', () => {
 
   test('Fail 424 non-ingestible URL', async () => {
 	const query: PackageData = {
-	  URL: 'https://github.com/cloudinary/cloudinary_npm'
+	  URL: 'https://github.com/ECE-461-Project/ECE461_Project_Part2'
 	};
     const result = await request(app).post('/package')
       .set('X-Authorization', `bearer ${token}`)

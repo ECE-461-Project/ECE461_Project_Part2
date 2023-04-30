@@ -45,11 +45,7 @@ export async function get_good_pinning_practice_score(
     if (num_dependencies === 0) {
       return 1;
     }
-    if (num_pinned_dependencies > 0) {
-      return num_pinned_dependencies / num_dependencies;
-    } else {
-      return 1;
-    }
+    return num_pinned_dependencies / num_dependencies;
   } catch (err) {
     if (err instanceof Error) {
       globalThis.logger?.error(
