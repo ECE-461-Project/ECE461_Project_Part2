@@ -71,6 +71,9 @@ usergroups.init(
 
 export interface PermissionsObject {
   isAdmin: boolean;
+  upload: boolean;
+  search: boolean;
+  download: boolean;
 }
 
 export class users extends Model {
@@ -103,7 +106,7 @@ users.init(
     },
     UserGroups: {
       type: DataTypes.JSON,
-      allowNull: false,
+      allowNull: true,
     },
   },
   {sequelize}
