@@ -40,8 +40,21 @@
                 padding: 15px 20px;
             }
             .body_sec {
-            text-align: center;
-            margin-top: 50px;
+                text-align: center;
+                margin-top: 50px;
+            }
+            .Content{
+                display: flex;
+                justify-content: space-between;
+            }
+            #username{
+                padding: 15px 25px;
+            }
+            #password{
+                padding: 15px 25px;
+            }
+            p{
+                justify-content: center;
             }
         </style>
     </head>
@@ -56,7 +69,7 @@
             <a href="rate.html">Rate Packages</a>
             <a href="download.html">Download Packages</a>
             <a href="search.html">Package search</a>
-            <a href="direct.html">Package Directory</a>
+            <a href="index.html">Package Directory</a>
             <a href="reset.html">System Reset</a>
 
             <div class="menu-log">
@@ -65,12 +78,19 @@
         </nav>
         <main class="body_sec">
             <section id="Content">
-                <input id="searchbar" type ="text" placeholder ="Enter the package to search for...">
-                <button id="button" onclick="packageSearch()">Search</button>
+                <div class="Content">
+                    <input id="name" type ="text" placeholder ="Package Name:">
+                    <input id="version" type ="text" placeholder ="Package Version:">
+                    <input id="ID" type ="text" placeholder ="Package ID:">
+                    <input id="content" type ="text" placeholder ="Package Content:">
+                    <input id="URL" type ="text" placeholder ="Package URL:">
+                    <button id="button" onclick="packageUpdate()">Update</button>
+                </div>
             </section>
+            <div class="returns">
+                <p id = "return"></p>
+            </div>
         </main>
-        
-
-        <script src="search.js"></script>
+        <script src="webfuncs.js"></script>
 </body>
 </html>

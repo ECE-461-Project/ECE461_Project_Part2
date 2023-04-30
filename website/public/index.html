@@ -1,0 +1,96 @@
+<html>
+    <head>
+        <style>
+            .head1 {
+            font-size: 40px;
+            color: #000000;
+            font-weight: bold;
+            text-align: center;
+            }
+
+            .menu {
+            position: sticky;
+            top: 0;
+            background-color: #c3c6c9;
+            padding: 3px 0px 3px 0px;
+            color: black;
+            margin: 0 auto;
+            overflow: hidden;
+            }
+ 
+            .menu a {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 25px;
+            }
+ 
+            .menu-log {
+            right: auto;
+            float: right;
+            }
+
+            #searchbar{
+                padding: 15px 25px;
+            }
+            #searchbarName{
+                padding: 15px 25px;
+            }
+
+            #button{
+                padding: 15px 20px;
+            }
+            .body_sec {
+                text-align: center;
+                margin-top: 50px;
+            }
+            .Content{
+                display: flex;
+                justify-content: space-between;
+            }
+            #username{
+                padding: 15px 25px;
+            }
+            #password{
+                padding: 15px 25px;
+            }
+            p{
+                justify-content: center;
+            }
+        </style>
+    </head>
+
+<body>
+        <div class = "head1">
+            ECE461 Project
+        </div>
+        <nav class="menu">
+            <a href="upload.html">Upload Packages</a>
+            <a href="update.html">Update Packages</a>
+            <a href="rate.html">Rate Packages</a>
+            <a href="download.html">Download Packages</a>
+            <a href="search.html">Package search</a>
+            <a href="index.html">Package Directory</a>
+            <a href="reset.html">System Reset</a>
+
+            <div class="menu-log">
+                <a href="login.html">Login</a>
+            </div>
+        </nav>
+        <main class="body_sec">
+            <section id="Content">
+                <div class="Content">
+                    <input id="searchbar" type ="text" placeholder ="Version (Exact, range, etc.)">
+                    <input id="searchbarName" type ="text" placeholder ="Package Name:">
+                    <button id="button" onclick="packageDownload()">Search</button>
+                </div>
+            </section>
+            <div class="returns">
+                <p id = "return"></p>
+            </div>
+        </main>
+        <script src="webfuncs.js"></script>
+</body>
+</html>`
