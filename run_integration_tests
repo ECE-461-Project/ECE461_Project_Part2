@@ -3,6 +3,6 @@
 export $(cat .env | xargs)
 export INTEGRATION=1
 # Start test
-npx jest --silent=true --coverage -c tests/integration_tests/jest.config.js #--detectOpenHandles tests/integration_tests/users.test.ts
+npx jest --silent=true --coverage -c tests/integration_tests/jest.config.js --detectOpenHandles 
 npx jest --silent=true --coverage -c tests/integration_tests/jest.config.single_test1.js --detectOpenHandles
 npx jest --silent=true --coverage -c tests/integration_tests/jest.config.single_test2.js --detectOpenHandles
