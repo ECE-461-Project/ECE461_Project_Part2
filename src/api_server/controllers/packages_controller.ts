@@ -71,6 +71,7 @@ export async function packages_list(req: Request, res: Response) {
           break;
         }
       }
+
       const tempList: PackageMetadata[] = [];
       if (store.length !== 0) {
         for (let i = 0; i < store.length; i++) {
@@ -83,9 +84,9 @@ export async function packages_list(req: Request, res: Response) {
           tempList.push(content);
         }
       }
-      packageList.push(...tempList.slice(offsetPag, offsetPag + limitRes));
-      res.contentType('application/json').status(200).send(packageList);
-    }
+        packageList.push(...tempList.slice(offsetPag, offsetPag + limitRes));
+        res.contentType('application/json').status(200).send(packageList);
+      }
   } catch (err: any) {
     globalThis.logger?.error('There is an error here');
     res.status(400).send();
