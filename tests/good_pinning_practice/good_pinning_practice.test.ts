@@ -32,7 +32,7 @@ describe('testing get_good_pinning_practice_score', () => {
   test('get_good_pinning_practice lots of dependencies, none pinned', async () => {
     expect(
       await get_good_pinning_practice_score('url', get_aggregate_file('./tests/_good_pinning_practice_checks/_test_4_no_pinned_dependencies'))
-    ).toBe(1);
+    ).toBe(0);
   });
   test('get_good_pinning_practice lots of dependencies, one pinned', async () => {
     expect(

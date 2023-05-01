@@ -31,10 +31,35 @@
             right: auto;
             float: right;
             }
+
+            #searchbar{
+                padding: 15px 25px;
+            }
+
+            #button{
+                padding: 15px 20px;
+            }
+            .body_sec {
+                text-align: center;
+                margin-top: 50px;
+            }
+            .Content{
+                display: flex;
+                justify-content: space-between;
+            }
+            #username{
+                padding: 15px 25px;
+            }
+            #password{
+                padding: 15px 25px;
+            }
+            p{
+                justify-content: center;
+            }
         </style>
     </head>
 
-    <body>
+<body>
         <div class = "head1">
             ECE461 Project
         </div>
@@ -44,12 +69,24 @@
             <a href="rate.html">Rate Packages</a>
             <a href="download.html">Download Packages</a>
             <a href="search.html">Package search</a>
-            <a href="direct.html">Package Directory</a>
+            <a href="index.html">Package Directory</a>
             <a href="reset.html">System Reset</a>
+
             <div class="menu-log">
                 <a href="login.html">Login</a>
             </div>
         </nav>
-        
-    </body>
-</html>
+        <main class="body_sec">
+            <section id="Content">
+                <div class="Content">
+                    <input id="searchbar" type ="text" placeholder ="Enter package ID...">
+                    <button id="button" onclick="packageDownload()">Download</button>
+                </div>
+            </section>
+            <div class="returns">
+                <p id = "return"></p>
+            </div>
+        </main>
+        <script src="webfuncs.js"></script>
+</body>
+</html>`

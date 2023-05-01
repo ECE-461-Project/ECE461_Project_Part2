@@ -583,6 +583,143 @@ paths:
         $ref: '#/components/schemas/AuthenticationToken'
       in: header
       required: true
+  /user/signup:
+    post:
+      summary: Signup a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                adminUsername:
+                  type: string
+                adminPassword:
+                  type: string
+                newUser:
+                  type: object
+                  properties:
+                    Username:
+                      type: string
+                    UserPassword:
+                      type: string
+                    Permissions:
+                      type: object
+                      properties: 
+                        isAdmin:
+                          type: boolean
+                        upload:
+                          type: boolean
+                        search:
+                          type: boolean
+                        download:
+                          type: boolean
+                    UserGroups:
+                      type: string
+                      nullable: true
+      responses:
+        200:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Error creating user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /user/updateUser:
+    post:
+      summary: Update a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                adminUsername:
+                  type: string
+                adminPassword:
+                  type: string
+                userId:
+                  type: integer
+                updatedUserData:
+                  type: object
+                  properties:
+                    Username:
+                      type: string
+                      nullable: true
+                    UserPassword:
+                      type: string
+                      nullable: true
+                    Permissions:
+                      type: string
+                      nullable: true
+                    UserGroups:
+                      type: string
+                      nullable: true
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Error updating user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /user/deleteUser:
+    post:
+      summary: Delete a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Error deleting user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
 components:
   schemas:
     PackageSize:
@@ -850,3 +987,10 @@ components:
           description: A regular expression over package names and READMEs that is
             used for searching for a package
           type: string
+  securitySchemes:
+    UserAndPasswordYieldsToken:
+      type: apiKey
+      description: Use the /authentication endpoint to obtain an authorization token.
+      name: X-Authorization
+      in: header
+  
