@@ -238,4 +238,42 @@ describe('POST /package/byRegEx', () => {
   });
 });
 
-	
+describe('POST /packages', () => {
+  test('Packages found 200', async() => {
+    const result = await request(app)
+      .post('/packages')
+      .send([{ Name: '*', Version: '1.0.0'}])
+      .set('X-Authorization', `bearer ${token}`)
+      .set('offset', '1')
+      .set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Name: expect.any(String),
+          Version: expect.any(String),
+          ID: expect.any(String),
+        }),
+      ]),
+    );
+  });
+
+  test('Packages found query', async() => {
+    const result = await request(app)
+      .post('/packages')
+      .send([{ Name: 'underscore', Version: '^1.1.0'}])
+      .set('X-Authorization', `bearer ${token}`)
+      .set('offset', '1')
+      .set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Name: expect.any(String),
+          Version: expect.any(String),
+          ID: expect.any(String),
+        }),
+      ]),
+    );
+  });
+});
