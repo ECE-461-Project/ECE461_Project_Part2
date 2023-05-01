@@ -71,6 +71,7 @@ export async function packages_list(req: Request, res: Response) {
           break;
         }
       }
+      const tempList: PackageMetadata[] = [];
       if (store.length !== 0) {
         for (let i = 0; i < store.length; i++) {
           const content: PackageMetadata = {
@@ -79,10 +80,10 @@ export async function packages_list(req: Request, res: Response) {
             ID: store[i].PackageID.toString(),
           };
           globalThis.logger?.debug(`regex result: ${content}`);
-          packageList.push(content);
+          tempList.push(content);
         }
       }
-      packageList.push(...packageList.slice(offsetPag, offsetPag + limitRes));
+      packageList.push(...tempList.slice(offsetPag, offsetPag + limitRes));
       res.contentType('application/json').status(200).send(packageList);
     }
   } catch (err: any) {

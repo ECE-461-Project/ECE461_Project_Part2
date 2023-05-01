@@ -261,7 +261,7 @@ describe('POST /packages', () => {
   test('Packages found query', async() => {
     const result = await request(app)
       .post('/packages')
-      .send([{ Name: 'cloudinary', Version: '^1.2.0'}])
+      .send([{ Name: 'underscore', Version: '^1.1.0'}])
       .set('X-Authorization', `bearer ${token}`)
       .set('offset', '1')
       .set('Content-Type', 'application/json');
