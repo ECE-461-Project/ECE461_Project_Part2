@@ -260,9 +260,10 @@ async function packageDirect() {
             method: 'POST',
             headers: {
                 'X-Authorization': bearer,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({ 'Version': version, 'Name': name })
+            body: [{ 'Version': version, 'Name': name}],
         })
         console.log(response)
         var items = await response.text();
