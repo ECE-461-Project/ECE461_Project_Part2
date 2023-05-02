@@ -74,10 +74,10 @@ async function packageUpload() {
     try {
         var localUrl = document.getElementById("url").value
         var content = document.getElementById("content").value
-        if (content === ""){
+        if (content === "") {
             content = null
         }
-        if (localUrl === ""){
+        if (localUrl === "") {
             localUrl = null
         }
         newurl = url + 'package/';
@@ -91,7 +91,7 @@ async function packageUpload() {
         })
         var items = await response.text()
         document.getElementById("return").innerHTML = "Upload Success.";
-        
+
     } catch (err) {
         document.getElementById("return").innerHTML = err;
     }
@@ -109,19 +109,19 @@ async function packageUpdate() {
         var ID = document.getElementById("ID").value
         var content = document.getElementById("content").value
         var URL = document.getElementById("URL").value
-        if (content === ""){
+        if (content === "") {
             content = null
         }
-        if (URL === ""){
+        if (URL === "") {
             URL = null
         }
-        if (name === ""){
+        if (name === "") {
             name = null
         }
-        if (ID === ""){
+        if (ID === "") {
             ID = null
         }
-        if (version === ""){
+        if (version === "") {
             version = null
         }
         newurl = url + 'package/' + document.getElementById('ID').value + '/';
@@ -131,13 +131,13 @@ async function packageUpdate() {
                 'X-Authorization': bearer,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'metadata':{'ID': ID, 'Version': version, 'Name': name },'data':{'URL': URL, 'Content': content,}})
+            body: JSON.stringify({ 'metadata': { 'ID': ID, 'Version': version, 'Name': name }, 'data': { 'URL': URL, 'Content': content, } })
         })
-        if(response.status == 200){
+        if (response.status == 200) {
             var items = await response.text()
             document.getElementById("return").innerHTML = "Update Success.";
         }
-        else{
+        else {
             document.getElementById("return").innerHTML = "Update Failed. Ensure you have the proper fields filled out.";
         }
     } catch (err) {
@@ -151,16 +151,24 @@ async function packageUpdate() {
 ////////////////////////////////////////////////////////////////////////
 
 async function systemReset() {
-    try{
+    try {
         newurl = url + 'reset'
-        var response = await fetch(newurl, {
-            method: 'DELETE',
-            headers: {
-                'X-Authorization': bearer,
-            },
-        })
-        var items = await response.text()
-        document.getElementById("return").innerHTML = newurl;
+        var locbearer = localStorage.getItem("key");
+        if (localStorage.getItem("flag") == 0) {
+            document.getElementById("return").innerHTML = "Please enter your username and password for access."
+        } else {
+            var response = await fetch(newurl, {
+                method: 'DELETE',
+                headers: {
+                    'X-Authorization': locbearer,
+                },
+            })
+            console.log(localStorage.getItem("flag"))
+            var items = await response.text()
+            document.getElementById("return").innerHTML = "Success!";
+            localStorage.setItem("flag", 0)
+            console.log(localStorage.getItem("flag"))
+        }
     } catch (err) {
         document.getElementById("return").innerHTML = err;
     }
@@ -241,10 +249,10 @@ async function packageDirect() {
     try {
         var version = document.getElementById("searchbar").value
         var name = document.getElementById("searchbarName").value
-        if (version === ""){
+        if (version === "") {
             version = null
         }
-        if (name === ""){
+        if (name === "") {
             name = null
         }
         newurl = url + 'packages/';
@@ -254,12 +262,12 @@ async function packageDirect() {
                 'X-Authorization': bearer,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'Version': version, 'Name': name})
+            body: JSON.stringify({ 'Version': version, 'Name': name })
         })
         console.log(response)
         var items = await response.text();
         document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
-        
+
     } catch (err) {
         document.getElementById("return").innerHTML = err;
     }
@@ -275,10 +283,10 @@ async function loginFunc() {
         var username = document.getElementById("username").value;
         var password = document.getElementById("password").value
         var isAdmin = true
-        if (username === ""){
+        if (username === "") {
             username = null
         }
-        if (password === ""){
+        if (password === "") {
             password = null
         }
         newurl = url + 'authenticate/';
@@ -288,13 +296,15 @@ async function loginFunc() {
                 'X-Authorization': bearer,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'User':{'name': username, 'isAdmin': isAdmin},'Secret':{'password': password}})
+            body: JSON.stringify({ 'User': { 'name': username, 'isAdmin': isAdmin }, 'Secret': { 'password': password } })
         })
         var items = await response.text();
-            //bearer = await response.text()
-        console.log(username)
-        console.log(password)
-        document.getElementById("return").innerHTML = items;
+        //bearer = await response.text()
+        console.log(bearer)
+        document.getElementById("return").innerHTML = "Authentication Success. New Token added";
+        localStorage.setItem("key", items);
+        localStorage.setItem("flag", 1)
+        console.log(localStorage.getItem("flag"))
     } catch (err) {
         document.getElementById("return").innerHTML = err;
     }
@@ -328,12 +338,12 @@ async function sizeCost() {
                 'X-Authorization': bearer,
                 'Content-Type': 'application/json'
             },
-            body: [{ 'Content': content, 'Name': name, 'URL': locURL},],
+            body: [{ 'Content': content, 'Name': name, 'URL': locURL },],
         })
         console.log(response)
         var items = await response.text();
         document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
-        
+
     } catch (err) {
         document.getElementById("return").innerHTML = err;
     }
