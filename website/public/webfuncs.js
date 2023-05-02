@@ -1,6 +1,5 @@
 const url = 'https://main-zo6hfspdfa-uc.a.run.app/';
 const bearer = 'bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2ODA2NTg3MDIsImV4cCI6MTcxMjE5NDcyMiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIlVzZXJuYW1lIjoicHJpeWFua2EifQ.ln-9bSIm9Br2u2OJBb5Cft67CpzcRuXcHYTfRTLp3Rk';
-
 ////////////////////////////////////////////////////////////////////////
 //                          PACKAGE SEARCH                            //
 //                        FIX THE HTTP SEARCH                         //
@@ -255,8 +254,9 @@ async function packageDirect() {
                 'X-Authorization': bearer,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'Version': version, 'Name': name })
+            body: JSON.stringify({ 'Version': version, 'Name': name})
         })
+        console.log(response)
         var items = await response.text();
         document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
         
@@ -274,15 +274,12 @@ async function loginFunc() {
     try {
         var username = document.getElementById("username").value;
         var password = document.getElementById("password").value
-        var isAdmin = false
+        var isAdmin = true
         if (username === ""){
             username = null
         }
         if (password === ""){
             password = null
-        }
-        if (username == "ece30861defaultadminuser" && password == "correcthorsebatterystaple123(!__+@**(A'+\"'\"+'\"`;DROP TABLE packages;"){
-            isAdmin = true
         }
         newurl = url + 'authenticate/';
         var response = await fetch(newurl, {
@@ -293,13 +290,50 @@ async function loginFunc() {
             },
             body: JSON.stringify({ 'User':{'name': username, 'isAdmin': isAdmin},'Secret':{'password': password}})
         })
-        if(response.status == 200){
+        var items = await response.text();
             //bearer = await response.text()
-            document.getElementById("return").innerHTML = response.text();
+        console.log(username)
+        console.log(password)
+        document.getElementById("return").innerHTML = items;
+    } catch (err) {
+        document.getElementById("return").innerHTML = err;
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+//                          SIZE COST                                 //
+//                        FIX THE HTTP SEARCH                         //
+////////////////////////////////////////////////////////////////////////
+
+async function sizeCost() {
+
+    try {
+        var content = document.getElementById("content").value
+        var name = document.getElementById("name").value
+        var locURL = document.getElementById("url").value
+        /*if (content === ""){
+            content = null
         }
-        else{
-            document.getElementById("return").innerHTML = "Login Failed";
+        if (name === ""){
+            name = null
         }
+        if (locURL === ""){
+            locURL = null
+        }*/
+        newurl = url + 'packages/';
+        var response = await fetch(newurl, {
+            method: 'POST',
+            headers: {
+                'X-Authorization': bearer,
+                'Content-Type': 'application/json'
+            },
+            body: [{ 'Content': content, 'Name': name, 'URL': locURL},],
+        })
+        console.log(response)
+        var items = await response.text();
+        document.getElementById("return").innerHTML = JSON.stringify(JSON.parse(items));
+        
     } catch (err) {
         document.getElementById("return").innerHTML = err;
     }
