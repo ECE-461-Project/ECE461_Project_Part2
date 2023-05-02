@@ -52,13 +52,32 @@ describe('POST /package', () => {
 
   test('Fail 424 non-ingestible URL', async () => {
 	const query: PackageData = {
-	  URL: 'https://github.com/cloudinary/cloudinary_npm'
+	  URL: 'https://github.com/ECE-461-Project/ECE461_Project_Part2'
 	};
     const result = await request(app).post('/package')
       .set('X-Authorization', `bearer ${token}`)
       .set('Content-type', 'application/json')
       .send(query);
     expect(result.statusCode).toEqual(424);
+  });
+  
+  
+  test('Successful 201 ingestible URL', async () => {
+	const query: PackageData = {
+	  URL: 'https://github.com/jashkenas/underscore'
+	};
+    const result = await request(app).post('/package')
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-type', 'application/json')
+      .send(query);
+    expect(result.statusCode).toEqual(201);
+    expect(result.body).toHaveProperty('metadata');
+    expect(result.body.metadata).toHaveProperty('Name');
+    expect(result.body.metadata.Name).toBe('underscore')
+    expect(result.body.metadata).toHaveProperty('Version');
+    expect(result.body.metadata).toHaveProperty('ID');
+    expect(result.body).toHaveProperty('data');
+    expect(result.body.data).toHaveProperty('Content');
   });
 
   test('Duplicate zip input package 409 package_a', async () => {
@@ -89,7 +108,7 @@ describe('POST /package', () => {
     expect(result.body.metadata).toHaveProperty('Version');
     expect(result.body.metadata).toHaveProperty('ID');
     expect(result.body).toHaveProperty('data');
-    expect(result.body.data).toHaveProperty('URL');
+    expect(result.body.data).toHaveProperty('Content');
   });
 
   test('RATE file_downloader post-upload 200', async () => {
@@ -181,4 +200,80 @@ describe('POST /package', () => {
   });
 });
 
-	
+describe('POST /package/byRegEx', () => {
+  test('Invalid regular expression 400', async () => {
+    const result = await request(app)
+      .post('/package/byRegEx')
+      .send({ RegEx: '[' })
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(400);
+  });
+
+  test('No packages found 404', async () => {
+    const result = await request(app)
+      .post('/package/byRegEx')
+      .send({ RegEx: 'hello' })
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(404);
+  });
+
+  test('Packages found 200', async () => {
+    const result = await request(app)
+      .post('/package/byRegEx')
+      .send({ RegEx: 'package_a' })
+      .set('X-Authorization', `bearer ${token}`)
+      .set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Name: expect.any(String),
+          Version: expect.any(String),
+          ID: expect.any(String),
+        }),
+      ]),
+    );
+  });
+});
+
+describe('POST /packages', () => {
+  test('Packages found 200', async() => {
+    const result = await request(app)
+      .post('/packages')
+      .send([{ Name: '*', Version: '1.0.0'}])
+      .set('X-Authorization', `bearer ${token}`)
+      .set('offset', '1')
+      .set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Name: expect.any(String),
+          Version: expect.any(String),
+          ID: expect.any(String),
+        }),
+      ]),
+    );
+  });
+
+  test('Packages found query', async() => {
+    const result = await request(app)
+      .post('/packages')
+      .send([{ Name: 'underscore', Version: '^1.1.0'}])
+      .set('X-Authorization', `bearer ${token}`)
+      .set('offset', '1')
+      .set('Content-Type', 'application/json');
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Name: expect.any(String),
+          Version: expect.any(String),
+          ID: expect.any(String),
+        }),
+      ]),
+    );
+  });
+});

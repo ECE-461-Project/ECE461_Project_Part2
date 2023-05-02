@@ -1,6 +1,10 @@
 import {readFile} from 'fs/promises';
 import {join} from 'path';
-const fetch = require('node-fetch');
+import {
+  AggregateFilePromise,
+  AggregateResponsePromise,
+} from '../aggregate_request';
+import {GitHubUrl_Info} from '../url_parser';
 
 // Example of using promise using async
 // https://janelia-flyem.github.io/licenses.html
@@ -11,15 +15,16 @@ const fetch = require('node-fetch');
 //  This uses SPDX Identifiers
 // Does NOT handle custom or unlicenses modules. Defaults them to invalid for now.
 export async function get_license_score(
-  repo_url: string,
-  local_repo_path: string
+  url_parse: GitHubUrl_Info,
+  aggregate_file: AggregateFilePromise,
+  aggregate_response: AggregateResponsePromise
 ): Promise<number> {
   try {
-    const package_json = JSON.parse(
-      (await readFile(join(local_repo_path, 'package.json'))).toString()
+    const package_json = await aggregate_file.package_json;
+    let license: string | undefined | null = package_json.license;
+    globalThis.logger?.info(
+      `${url_parse.github_repo_url} has license: ${license}`
     );
-    let license: string | undefined = package_json.license;
-    globalThis.logger?.info(`${repo_url} has license: ${license}`);
 
     const license_regex = new RegExp(
       'MIT|Apache|ISC|WTFPL|BSD|BSD-Source-Code|CC0-1.0|Public Domain|LGPL-2.1-only|CC-BY-*'
@@ -30,32 +35,24 @@ export async function get_license_score(
       return license_regex.exec(license) ? 1 : 0;
     }
     // Check LICENSE file using github API
-    const reg = new RegExp('github\\.com/(.+)/(.+)');
-    const matches = repo_url.match(reg);
-    if (matches === null) {
-      return 0;
-    }
-    if (process.env.GITHUB_TOKEN === undefined) {
-      throw new Error('GITHUB_TOKEN is not defined');
-    }
-    const licenseAdr = `https://api.github.com/repos/${matches[1]}/${matches[2]}/license`;
-    const response = await fetch(licenseAdr, {
-      method: 'GET',
-      headers: {
-        Authorization: `Token ${process.env.GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github+json',
-      },
+    const octokit = aggregate_response.octokit;
+    const response = await octokit.rest.licenses.getForRepo({
+      owner: url_parse.owner,
+      repo: url_parse.repo,
     });
-    license = (await response.json()).license.spdx_id;
+    license = response.data.license?.spdx_id;
     if (license) {
       return license_regex.exec(license) ? 1 : 0;
     }
-    return 0;
   } catch (err) {
     if (err instanceof Error) {
-      globalThis.logger?.error(`License Score calc got error: ${err.message}`);
+      globalThis.logger?.error(
+        `License Score calc got error for repo: ${url_parse.github_repo_url}: ${err.message}`
+      );
     } else {
-      globalThis.logger?.error(`License Score calc got error: ${err}`);
+      globalThis.logger?.error(
+        `License Score calc got error: ${url_parse.github_repo_url}: ${err}`
+      );
     }
   }
   return 0;
